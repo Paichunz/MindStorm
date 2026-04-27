@@ -1808,13 +1808,15 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               display:"flex", alignItems:"center", gap:5 }}>
             ✦{!isMobile && " Análisis IA"}
           </button>
-          <button onClick={() => setKeyModal(true)} title="Configurar clave de API de Claude"
+          <button onClick={() => setKeyModal(true)}
+            title={getAIKey() ? "IA conectada — clic para cambiar clave" : "Conectar IA gratuita"}
             style={{ background: getAIKey() ? T.greenBg : T.bgPanel,
               border:"1px solid "+(getAIKey() ? T.green+"44" : T.border),
               color: getAIKey() ? T.green : T.ink4,
-              padding:"7px 9px", borderRadius:8, fontSize:13, cursor:"pointer",
-              fontFamily:"var(--sans)", transition:"all .2s" }}>
-            🔑
+              padding:"7px 10px", borderRadius:8, fontSize:12, cursor:"pointer",
+              fontFamily:"var(--sans)", transition:"all .2s",
+              display:"flex", alignItems:"center", gap:4, fontWeight:600 }}>
+            {getAIKey() ? <><span style={{fontSize:13}}>🔑</span>{!isMobile && " IA ✓"}</> : <><span style={{fontSize:13}}>🔑</span>{!isMobile && " Conectar IA"}</>}
           </button>
           {cat.worldbuilding && (
             <button onClick={() => setWbPanel(true)}
@@ -1963,6 +1965,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
             comments={comments}
             user={user}
             onEditCard={setEditCard}
+            onReadCard={setReadCard}
             canvasPositions={data.canvasPositions || { cards:{}, stickers:{} }}
             onSavePositions={saveCanvasPositions}
             cat={cat}
@@ -2442,17 +2445,6 @@ function CardReaderModal({ card, cardComments, connections, allCards, user, onEd
             )}
           </div>
           <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-            {isOwner && (
-              <button onClick={() => { onClose(); onEdit(); }}
-                style={{ background:T.accentBg, color:T.accent, border:"1px solid "+T.accent+"44",
-                  borderRadius:8, padding:"6px 14px", fontSize:12, fontWeight:700,
-                  cursor:"pointer", fontFamily:"var(--sans)", transition:"all .15s" }}
-                onMouseEnter={e => e.currentTarget.style.background = T.accent}
-                onMouseEnter={e => { e.currentTarget.style.background=T.accent; e.currentTarget.style.color="#fff"; }}
-                onMouseLeave={e => { e.currentTarget.style.background=T.accentBg; e.currentTarget.style.color=T.accent; }}>
-                ✎ Editar
-              </button>
-            )}
             <button onClick={onClose}
               style={{ background:"none", border:"none", color:T.ink4, cursor:"pointer",
                 fontSize:24, lineHeight:1, padding:"0 4px", transition:"color .12s" }}
@@ -3764,6 +3756,20 @@ Escribe en español. Usa markdown con headers (##), bullets (-) y énfasis (**).
 
 // ─── CANVAS LAYOUTS ───────────────────────────────────────────────────────────
 const CARD_W = 210, CARD_H = 60; // collapsed card dimensions
+const NODE_R  = 34; // skill-tree node radius (px)
+
+// Pastel colors for skill nodes (always light — stand out on any bg)
+const NODE_PASTEL_BG = { tarea:"#EEF2FF", idea:"#FFFBEB", pregunta:"#EFF6FF", referencia:"#F0FDF4", bloqueo:"#FFF1F2" };
+const NODE_PASTEL_BD = { tarea:"#818CF8", idea:"#FBBF24", pregunta:"#60A5FA", referencia:"#4ADE80", bloqueo:"#F87171" };
+const NODE_PASTEL_IC = { tarea:"#4338CA", idea:"#D97706", pregunta:"#2563EB", referencia:"#15803D", bloqueo:"#E11D48" };
+const NODE_ICONS     = { tarea:"✦", idea:"💡", pregunta:"?", referencia:"◎", bloqueo:"⚡" };
+
+// Circle-edge connection endpoint
+function circleEdgePt(cx, cy, tx, ty, r) {
+  const dx = tx - cx, dy = ty - cy;
+  const d  = Math.sqrt(dx*dx + dy*dy) || 1;
+  return { x: cx + (dx/d)*r, y: cy + (dy/d)*r };
+}
 
 // Edge-to-edge connection endpoint
 function edgePt(cx, cy, tx, ty) {
@@ -3967,7 +3973,7 @@ function CanvasStickerNode({ s, sp, color, rot, icon, onMouseDown, onTouchStart 
 }
 
 // ─── CANVAS VIEW ──────────────────────────────────────────────────────────────
-function CanvasView({ cards, connections, comments, user, onEditCard, canvasPositions, onSavePositions, cat }) {
+function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard, canvasPositions, onSavePositions, cat }) {
   const initPos = { cards:{...canvasPositions.cards}, stickers:{...canvasPositions.stickers} };
   const posRef      = useRef(initPos);
   const [pos, setPos] = useState(initPos);
@@ -4213,42 +4219,50 @@ function CanvasView({ cards, connections, comments, user, onEditCard, canvasPosi
 
   return (
     <div ref={containerRef}
-      style={{position:"relative",flex:1,overflow:"hidden",background:T.bg,cursor:"grab",touchAction:"none",
-        backgroundImage:`radial-gradient(${T.border2} 1px, transparent 1px)`,
-        backgroundSize:"28px 28px"}}
+      style={{position:"relative",flex:1,overflow:"hidden",cursor:"grab",touchAction:"none",
+        background: layoutMode==="micelio" ? "#F5F3FF" : T.bg,
+        backgroundImage: layoutMode==="micelio"
+          ? "radial-gradient(#C4B5FD44 1px, transparent 1px), radial-gradient(#DDD6FE22 1px, transparent 1px)"
+          : `radial-gradient(${T.border2} 1px, transparent 1px)`,
+        backgroundSize: layoutMode==="micelio" ? "36px 36px, 18px 18px" : "28px 28px",
+        backgroundPosition: layoutMode==="micelio" ? "0 0, 18px 18px" : "0 0"}}
       onMouseDown={startPan}
       onTouchStart={onTouchStart}
     >
       {/* Toolbar — fixed above transform layer */}
       <div style={{position:"absolute",top:12,left:"50%",transform:"translateX(-50%)",zIndex:20,pointerEvents:"none"}}>
-        <div style={{background:"rgba(13,13,30,0.92)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,padding:"8px 16px",
-          display:"flex",gap:10,alignItems:"center",boxShadow:"0 8px 32px rgba(0,0,0,.4)",pointerEvents:"auto",flexWrap:"wrap",
-          backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)"}}>
-          <span style={{color:T.ink4,fontFamily:"var(--mono)",fontSize:11}}>
-            {cards.length} tarjetas · {allStickers.length} stickers
+        <div style={{background:"rgba(255,255,255,0.94)",border:"1px solid rgba(0,0,0,0.09)",borderRadius:14,padding:"8px 16px",
+          display:"flex",gap:10,alignItems:"center",boxShadow:"0 4px 24px rgba(0,0,0,.10), 0 1px 4px rgba(0,0,0,.06)",pointerEvents:"auto",flexWrap:"wrap",
+          backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)"}}>
+          <span style={{color:"#64748B",fontFamily:"var(--mono)",fontSize:11}}>
+            {cards.length} nodos · {allStickers.length} stickers
           </span>
-          <div style={{width:1,height:14,background:T.border}}/>
+          <div style={{width:1,height:14,background:"rgba(0,0,0,0.1)"}}/>
           {/* Layout buttons */}
-          {[["stack","▦ Stack"],["tree","⊤ Árbol"],["micelio","◎ Micelio"]].map(([m,label])=>(
+          {[["stack","▦ Stack"],["tree","⊤ Árbol"],["micelio","✦ Red"]].map(([m,label])=>(
             <button key={m} onClick={()=>{setLayoutMode(m);runLayout(m);}} disabled={running}
-              style={{background:layoutMode===m?T.accent:T.bgPanel,color:layoutMode===m?"#fff":T.ink3,
-                border:"1px solid "+(layoutMode===m?T.accent:T.border2),padding:"4px 10px",borderRadius:6,
-                cursor:"pointer",fontSize:11,fontFamily:"var(--sans)",fontWeight:600,transition:"all .2s"}}>
+              style={{background:layoutMode===m ? T.accent : "rgba(0,0,0,0.04)",
+                color:layoutMode===m?"#fff":"#475569",
+                border:"1px solid "+(layoutMode===m ? T.accent : "rgba(0,0,0,0.10)"),
+                padding:"4px 11px",borderRadius:7,
+                cursor:"pointer",fontSize:11,fontFamily:"var(--sans)",fontWeight:600,transition:"all .18s"}}>
               {label}
             </button>
           ))}
-          {running && <span style={{color:T.ink4,fontFamily:"var(--mono)",fontSize:11}}>Organizando…</span>}
-          <div style={{width:1,height:14,background:T.border}}/>
-          <button onClick={()=>zoomStep(-1)} style={{background:"none",border:"none",color:T.ink3,cursor:"pointer",fontSize:17,fontWeight:700,padding:"0 3px",lineHeight:1}}>−</button>
-          <span style={{color:T.ink3,fontFamily:"var(--mono)",fontSize:11,minWidth:36,textAlign:"center"}}>{zoomPct}%</span>
-          <button onClick={()=>zoomStep(+1)} style={{background:"none",border:"none",color:T.ink3,cursor:"pointer",fontSize:17,fontWeight:700,padding:"0 3px",lineHeight:1}}>+</button>
-          <button onClick={resetZoom} style={{background:"none",border:"none",color:T.ink4,cursor:"pointer",fontSize:10,padding:"0 2px",fontFamily:"var(--mono)"}}>↺</button>
+          {running && <span style={{color:"#94A3B8",fontFamily:"var(--mono)",fontSize:11}}>Organizando…</span>}
+          <div style={{width:1,height:14,background:"rgba(0,0,0,0.1)"}}/>
+          <button onClick={()=>zoomStep(-1)} style={{background:"none",border:"none",color:"#64748B",cursor:"pointer",fontSize:17,fontWeight:700,padding:"0 3px",lineHeight:1}}>−</button>
+          <span style={{color:"#475569",fontFamily:"var(--mono)",fontSize:11,minWidth:36,textAlign:"center"}}>{zoomPct}%</span>
+          <button onClick={()=>zoomStep(+1)} style={{background:"none",border:"none",color:"#64748B",cursor:"pointer",fontSize:17,fontWeight:700,padding:"0 3px",lineHeight:1}}>+</button>
+          <button onClick={resetZoom} style={{background:"none",border:"none",color:"#94A3B8",cursor:"pointer",fontSize:10,padding:"0 2px",fontFamily:"var(--mono)"}}>↺</button>
         </div>
       </div>
 
       {/* Hint */}
-      <div style={{position:"absolute",bottom:12,right:14,zIndex:20,color:T.ink4,fontFamily:"var(--mono)",fontSize:10,pointerEvents:"none"}}>
-        Arrastra fondo = mover · Rueda/pinch = zoom · Click tarjeta = expandir
+      <div style={{position:"absolute",bottom:12,right:14,zIndex:20,fontFamily:"var(--mono)",fontSize:10,pointerEvents:"none",
+        color:"#64748B",background:"rgba(255,255,255,0.78)",padding:"4px 10px",borderRadius:8,
+        backdropFilter:"blur(6px)", boxShadow:"0 1px 4px rgba(0,0,0,0.06)"}}>
+        Arrastra = mover · Rueda = zoom · Click nodo = leer
       </div>
 
       {/* Empty state */}
@@ -4274,21 +4288,36 @@ function CanvasView({ cards, connections, comments, user, onEditCard, canvasPosi
             const pa=pos.cards[conn.cardA], pb=pos.cards[conn.cardB];
             const acx=pa.x+CARD_W/2+3000, acy=pa.y+CARD_H/2+3000;
             const bcx=pb.x+CARD_W/2+3000, bcy=pb.y+CARD_H/2+3000;
-            const ep1=edgePt(acx,acy,bcx,bcy);
-            const ep2=edgePt(bcx,bcy,acx,acy);
+            // Use circular edge points in micelio mode, rectangular in others
+            const ep1 = layoutMode==="micelio"
+              ? circleEdgePt(acx,acy,bcx,bcy,NODE_R+6)
+              : edgePt(acx,acy,bcx,bcy);
+            const ep2 = layoutMode==="micelio"
+              ? circleEdgePt(bcx,bcy,acx,acy,NODE_R+6)
+              : edgePt(bcx,bcy,acx,acy);
             const mx=(ep1.x+ep2.x)/2, my=(ep1.y+ep2.y)/2;
             const ox=-(ep2.y-ep1.y)*0.18, oy=(ep2.x-ep1.x)*0.18;
             const color=CONN_COLORS[conn.type]||T.accent;
             const str=conn.strength||7;
             const bx=mx+ox, by=my+oy;
+            const isMicelio = layoutMode==="micelio";
             return (
               <g key={conn.id}>
+                {/* Glow line underneath in micelio mode */}
+                {isMicelio && (
+                  <path d={`M${ep1.x} ${ep1.y} Q${bx} ${by} ${ep2.x} ${ep2.y}`}
+                    fill="none" stroke={color} strokeWidth="7" opacity="0.13"
+                    strokeLinecap="round"/>
+                )}
                 <path d={`M${ep1.x} ${ep1.y} Q${bx} ${by} ${ep2.x} ${ep2.y}`}
-                  fill="none" stroke={color} strokeWidth="2" opacity="0.55"
+                  fill="none" stroke={color}
+                  strokeWidth={isMicelio ? "2.5" : "2"}
+                  opacity={isMicelio ? "0.75" : "0.55"}
                   strokeDasharray={conn.type==="contraste"?"7 4":undefined}
                   markerEnd="url(#cv-arr)"/>
-                <rect x={bx-28} y={by-11} width="56" height="22" rx="4"
-                  fill={color} fillOpacity="0.12" stroke={color} strokeOpacity="0.35" strokeWidth="1"/>
+                <rect x={bx-28} y={by-11} width="56" height="22" rx="5"
+                  fill="#fff" fillOpacity={isMicelio?"0.92":"0.12"}
+                  stroke={color} strokeOpacity="0.45" strokeWidth="1"/>
                 <text x={bx} y={by-1} textAnchor="middle" fontSize="8" fontWeight="700" fill={color} fontFamily="system-ui,sans-serif">
                   {CONN_ICONS[conn.type]} {CONN_LABELS[conn.type]}
                 </text>
@@ -4319,7 +4348,7 @@ function CanvasView({ cards, connections, comments, user, onEditCard, canvasPosi
           })}
         </svg>
 
-        {/* Card nodes */}
+        {/* Card nodes — skill tree in micelio, rectangular in stack/tree */}
         {cards.map(card=>{
           const p=pos.cards[card.id];
           if(!p)return null;
@@ -4328,6 +4357,14 @@ function CanvasView({ cards, connections, comments, user, onEditCard, canvasPosi
           const cc=(comments[card.id]||[]).length;
           const sc=(card.stickers||[]).filter(s=>s.status!=="discarded").length;
           const isOwner=card.author===user.name;
+          if (layoutMode === "micelio") {
+            return (
+              <CanvasSkillNode key={card.id} card={card} p={p} col={col} cc={cc} sc={sc}
+                onOpen={onReadCard || onEditCard}
+                onMouseDown={e=>startDrag(e,"card",card.id,null)}
+                onTouchStart={e=>startTouchDrag(e,"card",card.id,null)}/>
+            );
+          }
           return (
             <CanvasCardNode key={card.id} card={card} p={p} tc={tc} col={col} cc={cc} sc={sc}
               isOwner={isOwner} onEditCard={onEditCard}
@@ -4355,7 +4392,7 @@ function CanvasView({ cards, connections, comments, user, onEditCard, canvasPosi
   );
 }
 
-// Standalone canvas card node — keeps expanded state stable
+// Standalone canvas card node (for Stack / Árbol views)
 function CanvasCardNode({ card, p, tc, col, cc, sc, isOwner, onEditCard, onMouseDown, onTouchStart }) {
   const [expanded, setExpanded] = useState(false);
   return (
@@ -4397,6 +4434,73 @@ function CanvasCardNode({ card, p, tc, col, cc, sc, isOwner, onEditCard, onMouse
               <span style={{color:T.ink4,fontSize:10,fontFamily:"var(--mono)"}}>{col.label}</span>
             </div>}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Skill-Tree circular node (Micelio view) ───────────────────────────────────
+function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchStart }) {
+  const [hovered, setHovered] = useState(false);
+  const cx  = p.x + CARD_W/2;
+  const cy  = p.y + CARD_H/2;
+  const pbg = NODE_PASTEL_BG[card.type] || "#F1F5F9";
+  const pbd = NODE_PASTEL_BD[card.type] || "#94A3B8";
+  const pic = NODE_PASTEL_IC[card.type] || "#475569";
+  const ico = NODE_ICONS[card.type]     || "◈";
+  const colClr = col?.color || "#94A3B8";
+  const title  = card.title.length > 14 ? card.title.substring(0,13)+"…" : card.title;
+
+  return (
+    <div style={{ position:"absolute", left:cx - NODE_R - 44, top:cy - NODE_R - 8,
+      width:(NODE_R+44)*2, zIndex:5, display:"flex", flexDirection:"column",
+      alignItems:"center", cursor:"grab", userSelect:"none" }}
+      onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
+
+      {/* Outer ring — column status color */}
+      <div style={{ width:NODE_R*2+10, height:NODE_R*2+10, borderRadius:"50%",
+        background: colClr+"22", border:`2px solid ${colClr}55`,
+        display:"flex", alignItems:"center", justifyContent:"center",
+        transition:"transform .18s, box-shadow .18s",
+        transform: hovered ? "scale(1.1)" : "scale(1)",
+        boxShadow: hovered
+          ? `0 0 0 8px ${pbd}30, 0 8px 28px ${pbd}50`
+          : `0 2px 12px rgba(0,0,0,0.10)` }}>
+
+        {/* Inner circle — type color */}
+        <div onClick={e => { e.stopPropagation(); onOpen(card); }}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          style={{ width:NODE_R*2, height:NODE_R*2, borderRadius:"50%",
+            background:`radial-gradient(135deg at 35% 35%, #fff 0%, ${pbg} 100%)`,
+            border:`2.5px solid ${pbd}`,
+            display:"flex", alignItems:"center", justifyContent:"center",
+            cursor:"pointer", fontSize:NODE_R*0.7, color:pic,
+            fontWeight:800, fontFamily:"var(--sans)",
+            boxShadow:`inset 0 1px 3px rgba(255,255,255,0.8), 0 1px 4px ${pbd}40` }}>
+          {ico}
+        </div>
+      </div>
+
+      {/* Title */}
+      <div style={{ marginTop:7, color:"#1E293B", fontSize:11, fontWeight:700,
+        fontFamily:"var(--sans)", textAlign:"center", lineHeight:1.3, maxWidth:110,
+        padding:"2px 6px", borderRadius:6,
+        background:"rgba(255,255,255,0.82)", backdropFilter:"blur(4px)",
+        boxShadow:"0 1px 4px rgba(0,0,0,0.07)" }}>
+        {title}
+      </div>
+
+      {/* Badges */}
+      {(cc>0 || sc>0) && (
+        <div style={{ display:"flex", gap:3, marginTop:4 }}>
+          {cc>0 && <span style={{ background:"rgba(255,255,255,0.9)", border:"1px solid #E2E8F0",
+            borderRadius:99, padding:"1px 5px", fontSize:9, color:"#64748B",
+            fontFamily:"var(--mono)" }}>💬{cc}</span>}
+          {sc>0 && <span style={{ background:"rgba(255,255,255,0.9)", border:"1px solid #E2E8F0",
+            borderRadius:99, padding:"1px 5px", fontSize:9, color:"#64748B",
+            fontFamily:"var(--mono)" }}>🗂{sc}</span>}
         </div>
       )}
     </div>
