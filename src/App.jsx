@@ -16,44 +16,50 @@ const THEMES = {
     orange:"#FF7A40",orangeBg:"rgba(255,122,64,0.1)",
     cyan:"#00D4FF",  cyanBg:"rgba(0,212,255,0.1)",
   },
-  zen: {
-    id:"zen", label:"Zen", icon:"◎",
-    bg:"#F2F0D8", bgReal:"#F2F0D8", bgPanel:"#E8E6CF", bgCard:"#FFFFFF", bgHover:"#D8D9C5",
-    border:"rgba(69,134,191,0.18)", border2:"rgba(69,134,191,0.32)",
-    ink:"#1A3040", ink2:"#2D4D66", ink3:"#4586BF", ink4:"#8FB2BF",
-    accent:"#4586BF", accentBg:"rgba(69,134,191,0.13)", accentHover:"#2D6A9F",
-    green:"#1A7A54",  greenBg:"rgba(26,122,84,0.12)",
-    amber:"#8B6200",  amberBg:"rgba(139,98,0,0.1)",
-    rose:"#C0243E",   roseBg:"rgba(192,36,62,0.1)",
-    blue:"#2D6A9F",   blueBg:"rgba(45,106,159,0.1)",
-    orange:"#B54A0A", orangeBg:"rgba(181,74,10,0.1)",
-    cyan:"#007A94",   cyanBg:"rgba(0,122,148,0.1)",
+  // ── Índigo — Concentración profunda ───────────────────────────────────────
+  // Azul frío activa el córtex prefrontal → foco analítico, calma cognitiva.
+  indigo: {
+    id:"indigo", label:"Índigo", icon:"◈",
+    bg:"#F7F8FE", bgReal:"#F7F8FE", bgPanel:"#ECEEF9", bgCard:"#FFFFFF", bgHover:"#E0E3F5",
+    border:"rgba(67,56,202,0.11)", border2:"rgba(67,56,202,0.22)",
+    ink:"#1E1B4B", ink2:"#3730A3", ink3:"#6366F1", ink4:"#A5B4FC",
+    accent:"#4338CA", accentBg:"rgba(67,56,202,0.09)", accentHover:"#3730A3",
+    green:"#059669",  greenBg:"rgba(5,150,105,0.09)",
+    amber:"#D97706",  amberBg:"rgba(217,119,6,0.09)",
+    rose:"#DC2626",   roseBg:"rgba(220,38,38,0.09)",
+    blue:"#2563EB",   blueBg:"rgba(37,99,235,0.09)",
+    orange:"#EA580C", orangeBg:"rgba(234,88,12,0.09)",
+    cyan:"#0891B2",   cyanBg:"rgba(8,145,178,0.09)",
   },
-  neutral: {
-    id:"neutral", label:"Neutral", icon:"◇",
-    bg:"#EBE6D2", bgReal:"#EBE6D2", bgPanel:"#DDD8C4", bgCard:"#F5F2E8", bgHover:"#DBD3C6",
-    border:"rgba(144,120,80,0.18)", border2:"rgba(144,120,80,0.32)",
-    ink:"#2E2515", ink2:"#4A3820", ink3:"#7A6448", ink4:"#B8B68F",
-    accent:"#7A5C14", accentBg:"rgba(122,92,20,0.11)", accentHover:"#5C4510",
-    green:"#3D6B2A",  greenBg:"rgba(61,107,42,0.1)",
-    amber:"#8B6400",  amberBg:"rgba(139,100,0,0.1)",
-    rose:"#A52030",   roseBg:"rgba(165,32,48,0.1)",
-    blue:"#2E5F8F",   blueBg:"rgba(46,95,143,0.1)",
-    orange:"#9E3F0A", orangeBg:"rgba(158,63,10,0.1)",
-    cyan:"#2B7B8E",   cyanBg:"rgba(43,123,142,0.1)",
+  // ── Bosque — Flujo creativo ───────────────────────────────────────────────
+  // Verde restaura la atención (ART) y estimula la ideación. Como pensar en la naturaleza.
+  bosque: {
+    id:"bosque", label:"Bosque", icon:"◎",
+    bg:"#F3FAF4", bgReal:"#F3FAF4", bgPanel:"#E4F4E6", bgCard:"#FFFFFF", bgHover:"#CEE9D1",
+    border:"rgba(21,128,61,0.12)", border2:"rgba(21,128,61,0.23)",
+    ink:"#052E16", ink2:"#166534", ink3:"#16A34A", ink4:"#86EFAC",
+    accent:"#15803D", accentBg:"rgba(21,128,61,0.09)", accentHover:"#166534",
+    green:"#059669",  greenBg:"rgba(5,150,105,0.09)",
+    amber:"#B45309",  amberBg:"rgba(180,83,9,0.09)",
+    rose:"#BE185D",   roseBg:"rgba(190,24,93,0.09)",
+    blue:"#1D4ED8",   blueBg:"rgba(29,78,216,0.09)",
+    orange:"#C2410C", orangeBg:"rgba(194,65,12,0.09)",
+    cyan:"#0E7490",   cyanBg:"rgba(14,116,144,0.09)",
   },
-  sumer: {
-    id:"sumer", label:"Sumer", icon:"◆",
-    bg:"#011E28", bgReal:"#011E28", bgPanel:"#012E3A", bgCard:"#013A4A", bgHover:"#025E73",
-    border:"rgba(242,221,160,0.1)", border2:"rgba(242,221,160,0.22)",
-    ink:"#F2DEA0", ink2:"#D9A441", ink3:"#BF8641", ink4:"rgba(191,134,65,0.55)",
-    accent:"#D9A441", accentBg:"rgba(217,164,65,0.15)", accentHover:"#C4912E",
-    green:"#2DC493",  greenBg:"rgba(45,196,147,0.1)",
-    amber:"#F2DEA0",  amberBg:"rgba(242,221,160,0.1)",
-    rose:"#E05555",   roseBg:"rgba(224,85,85,0.1)",
-    blue:"#037F8C",   blueBg:"rgba(3,127,140,0.1)",
-    orange:"#D9A441", orangeBg:"rgba(217,164,65,0.1)",
-    cyan:"#6FA0BF",   cyanBg:"rgba(111,160,191,0.1)",
+  // ── Aurora — Imaginación y síntesis ──────────────────────────────────────
+  // Violeta activa la imaginación, el pensamiento divergente y la síntesis creativa.
+  aurora: {
+    id:"aurora", label:"Aurora", icon:"◇",
+    bg:"#FAF9FF", bgReal:"#FAF9FF", bgPanel:"#EDE9FF", bgCard:"#FFFFFF", bgHover:"#DDD6FE",
+    border:"rgba(109,40,217,0.11)", border2:"rgba(109,40,217,0.22)",
+    ink:"#2E1065", ink2:"#4C1D95", ink3:"#7C3AED", ink4:"#C4B5FD",
+    accent:"#7C3AED", accentBg:"rgba(124,58,237,0.09)", accentHover:"#6D28D9",
+    green:"#059669",  greenBg:"rgba(5,150,105,0.09)",
+    amber:"#D97706",  amberBg:"rgba(217,119,6,0.09)",
+    rose:"#DB2777",   roseBg:"rgba(219,39,119,0.09)",
+    blue:"#2563EB",   blueBg:"rgba(37,99,235,0.09)",
+    orange:"#EA580C", orangeBg:"rgba(234,88,12,0.09)",
+    cyan:"#0891B2",   cyanBg:"rgba(8,145,178,0.09)",
   },
 };
 
@@ -290,22 +296,64 @@ function resizeImage(file) {
 // ─── THEME OVERRIDE CSS ───────────────────────────────────────────────────────
 function getThemeCSS(id) {
   const t = THEMES[id];
-  if (id === "dark") return "";
-  const isLight = id === "zen" || id === "neutral";
+  if (!t || id === "dark") return "";
+  // All non-dark themes are light
   return `
-    html,body { background:${t.bg} !important; }
+    html,body { background:${t.bg} !important; color:${t.ink} !important; }
     ::selection { background:${t.accentBg}; color:${t.ink}; }
-    ::-webkit-scrollbar-thumb { background:${t.accent}66; }
-    ::-webkit-scrollbar-thumb:hover { background:${t.accent}99; }
-    .glass { background:${isLight?"rgba(255,255,255,0.72)":"rgba(1,46,58,0.72)"} !important; }
-    .grad-text { background:linear-gradient(135deg,${t.accent},${t.blue}) !important;
-      -webkit-background-clip:text !important; -webkit-text-fill-color:transparent !important; background-clip:text !important; }
-    .ai-glow { animation:none !important; border-color:${t.accent}55 !important; }
-    .orb-bg::before { background:radial-gradient(ellipse at 30% 20%,${t.accent}18 0%,transparent 60%) !important; }
-    .orb-bg::after  { background:radial-gradient(ellipse at 70% 80%,${t.blue}14 0%,transparent 60%) !important; }
-    .wcard { background:${isLight?"rgba(255,255,255,0.82)":"rgba(1,58,74,0.82)"} !important; border-color:${t.border} !important; }
-    .wcard:hover { box-shadow:0 4px 20px ${t.accent}22 !important; }
-    .toast { background:${isLight?"rgba(255,253,245,0.95)":"rgba(1,30,40,0.95)"} !important; }
+    ::-webkit-scrollbar-thumb { background:${t.accent}55; border-radius:4px; }
+    ::-webkit-scrollbar-thumb:hover { background:${t.accent}88; }
+    .glass {
+      background:rgba(255,255,255,0.82) !important;
+      border-color:${t.border} !important;
+    }
+    .glass-light {
+      background:rgba(255,255,255,0.65) !important;
+      border-color:${t.border} !important;
+    }
+    .grad-text {
+      background:linear-gradient(135deg,${t.accent},${t.blue}) !important;
+      -webkit-background-clip:text !important;
+      -webkit-text-fill-color:transparent !important;
+      background-clip:text !important;
+    }
+    .ai-glow {
+      animation:none !important;
+      border-color:${t.accent}55 !important;
+      box-shadow:0 0 12px ${t.accent}22 !important;
+    }
+    .orb-bg::before {
+      background:radial-gradient(ellipse at 30% 20%,${t.accent}14 0%,transparent 60%) !important;
+    }
+    .orb-bg::after {
+      background:radial-gradient(ellipse at 70% 80%,${t.blue}10 0%,transparent 60%) !important;
+    }
+    .wcard {
+      background:rgba(255,255,255,0.88) !important;
+      border-color:${t.border} !important;
+    }
+    .wcard:hover {
+      box-shadow:0 6px 24px ${t.accent}18, 0 0 0 1px ${t.accent}22 !important;
+      transform:translateY(-2px) !important;
+    }
+    .tile:hover {
+      box-shadow:0 12px 32px ${t.accent}18, 0 0 0 1px ${t.accent}33 !important;
+      border-color:${t.accent}33 !important;
+    }
+    .toast {
+      background:rgba(255,255,255,0.97) !important;
+      color:${t.ink} !important;
+      border-color:${t.border2} !important;
+    }
+    .add-btn {
+      background:${t.accentBg} !important;
+      border-color:${t.accent}44 !important;
+      color:${t.accent} !important;
+    }
+    .add-btn:hover {
+      background:${t.accentBg} !important;
+      border-color:${t.accent}88 !important;
+    }
   `;
 }
 
@@ -483,7 +531,10 @@ export default function App() {
   const [boards, setBoards]           = useState([]);
   const [activeBoard, setActiveBoard] = useState(null);
   const [boardData, setBoardData]     = useState(null);
-  const [themeId, setThemeIdRaw]      = useState(() => getL("mindstorm-theme", "dark"));
+  const [themeId, setThemeIdRaw]      = useState(() => {
+    const stored = getL("mindstorm-theme", "dark");
+    return THEMES[stored] ? stored : "dark"; // fallback for old theme IDs (zen/neutral/sumer)
+  });
 
   const setThemeId = (id) => {
     if (!THEMES[id]) return;
@@ -591,15 +642,20 @@ export default function App() {
 // ─── THEME SWITCHER ──────────────────────────────────────────────────────────
 function ThemeSwitcher() {
   const { themeId, setThemeId } = useTheme();
-  const swatches = { dark:"#9B6DFF", zen:"#4586BF", neutral:"#B8B68F", sumer:"#D9A441" };
+  const swatches = { dark:"#9B6DFF", indigo:"#4338CA", bosque:"#15803D", aurora:"#7C3AED" };
+  const labels   = { dark:"Dark — modo nocturno", indigo:"Índigo — concentración profunda", bosque:"Bosque — flujo creativo", aurora:"Aurora — imaginación y síntesis" };
   return (
-    <div style={{ display:"flex", gap:6, alignItems:"center" }}>
+    <div style={{ display:"flex", gap:7, alignItems:"center" }}>
       {Object.entries(THEMES).map(([id, th]) => (
-        <button key={id} title={th.label} onClick={() => setThemeId(id)}
-          style={{ width:20, height:20, borderRadius:"50%", border:`2px solid ${themeId===id?"#fff":"transparent"}`,
+        <button key={id} title={labels[id] || th.label} onClick={() => setThemeId(id)}
+          style={{ width:22, height:22, borderRadius:"50%",
+            border:`2.5px solid ${themeId===id ? swatches[id] : "transparent"}`,
             background:swatches[id], cursor:"pointer", padding:0, flexShrink:0,
-            boxShadow:themeId===id?`0 0 0 1px ${swatches[id]}`:"none",
-            transition:"all .15s", outline:"none" }} />
+            boxShadow: themeId===id
+              ? `0 0 0 2px ${T.bgCard}, 0 0 0 4px ${swatches[id]}`
+              : `0 1px 3px rgba(0,0,0,.18)`,
+            transform: themeId===id ? "scale(1.18)" : "scale(1)",
+            transition:"all .18s cubic-bezier(.34,1.56,.64,1)", outline:"none" }} />
       ))}
     </div>
   );
@@ -1458,6 +1514,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
   const [wbPanel, setWbPanel]           = useState(false);
   const [toast, setToast]               = useState(null);
   const [keyModal, setKeyModal]         = useState(false);
+  const [readCard, setReadCard]         = useState(null);
   const [filterQuery, setFilterQuery]   = useState("");
   const [filterType, setFilterType]     = useState("");
   const [filterAuthor, setFilterAuthor] = useState("");
@@ -1972,6 +2029,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                       commentCount={(comments[card.id]||[]).length}
                       connCount={connections.filter(c=>(c.cardA===card.id||c.cardB===card.id)&&c.status==="approved").length}
                       isOwner={card.author === user.name}
+                      onOpen={() => setReadCard(card)}
                       onEdit={() => setEditCard(card)}
                       onMove={c => moveCard(card.id, c)}
                       onDragStart={() => setDragCard(card.id)}
@@ -2182,6 +2240,17 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
       </div>
       }
 
+      {readCard && (() => {
+        const live = activeCards.find(c => c.id === readCard.id) || readCard;
+        return <CardReaderModal
+          card={live}
+          cardComments={comments[live.id]||[]}
+          connections={connections}
+          allCards={activeCards}
+          user={user}
+          onEdit={() => setEditCard(live)}
+          onClose={() => setReadCard(null)} />;
+      })()}
       {editCard && (() => { const liveCard = activeCards.find(c => c.id === editCard.id) || editCard; return <EditCardModal card={liveCard} cardComments={comments[liveCard.id]||[]} user={user} onSave={updateCard} onDelete={softDeleteCard} onClose={() => setEditCard(null)} onAddComment={addComment} allCards={activeCards} onAddSticker={(parentId, data) => addSticker(liveCard.id, parentId, data)} onUpdateSticker={(stickerId, status) => updateStickerStatus(liveCard.id, stickerId, status)} />; })()}
       {editConcept && <EditConceptModal concept={concept} onSave={c => { setConcept(c); setEditConcept(false); }} onClose={() => setEditConcept(false)} cat={cat} />}
       {aiPanel && <AIPanel board={board} concept={concept} cards={activeCards} cat={cat} onClose={() => setAiPanel(false)} />}
@@ -2215,7 +2284,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
 }
 
 // ─── WORK CARD ────────────────────────────────────────────────────────────────
-function WorkCard({ card, commentCount, connCount, onEdit, onMove, onDragStart, currentCol, isOwner }) {
+function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDragStart, currentCol, isOwner }) {
   const [expanded, setExpanded] = useState(false);
   const tc  = TYPE_COLOR[card.type] || T.accent;
   const tbg = TYPE_BG[card.type]    || T.accentBg;
@@ -2243,13 +2312,13 @@ function WorkCard({ card, commentCount, connCount, onEdit, onMove, onDragStart, 
           onMouseLeave={e => e.currentTarget.style.background = "transparent"}
         >{expanded ? "▼" : "▶"}</span>
         <div
-          onClick={e => { e.stopPropagation(); onEdit(); }}
-          title="Abrir tarjeta completa"
+          onClick={e => { e.stopPropagation(); onOpen(); }}
+          title="Leer tarjeta completa"
           style={{ color:T.ink, fontWeight:700, fontSize:13, lineHeight:1.3, flex:1,
             overflow:"hidden", textOverflow:"ellipsis", whiteSpace: expanded?"normal":"nowrap",
             cursor:"pointer" }}
-          onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"}
-          onMouseLeave={e => e.currentTarget.style.textDecoration = "none"}
+          onMouseEnter={e => e.currentTarget.style.color = T.accent}
+          onMouseLeave={e => e.currentTarget.style.color = T.ink}
         >{card.title}</div>
         <div style={{ display:"flex", gap:5, alignItems:"center", flexShrink:0 }}>
           {commentCount > 0 && <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>💬{commentCount}</span>}
@@ -2311,6 +2380,251 @@ function WorkCard({ card, commentCount, connCount, onEdit, onMove, onDragStart, 
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── CARD READER MODAL ────────────────────────────────────────────────────────
+// Abre la tarjeta como documento de lectura. NO edita — solo muestra.
+function CardReaderModal({ card, cardComments, connections, allCards, user, onEdit, onClose }) {
+  const isOwner = card.author === user.name;
+  const tc  = TYPE_COLOR[card.type] || T.accent;
+  const tbg = TYPE_BG[card.type]    || T.accentBg;
+  const imgs  = (card.attachments || []).filter(a => a.type === "image");
+  const files = (card.attachments || []).filter(a => a.type !== "image");
+  const stickers = (card.stickers || []).filter(s => s.status !== "discarded");
+  const col = COLUMNS.find(c => c.id === card.col);
+  const connectedCards = (connections || [])
+    .filter(c => c.status === "approved" && (c.cardA === card.id || c.cardB === card.id))
+    .map(c => {
+      const otherId = c.cardA === card.id ? c.cardB : c.cardA;
+      const other = (allCards || []).find(x => x.id === otherId);
+      return other ? { conn: c, other } : null;
+    }).filter(Boolean);
+
+  // Close on Escape
+  useEffect(() => {
+    const fn = e => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", fn);
+    return () => document.removeEventListener("keydown", fn);
+  }, []);
+
+  return (
+    <div onClick={onClose}
+      style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.48)", display:"flex",
+        alignItems:"center", justifyContent:"center", zIndex:300,
+        backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", padding:"20px 16px" }}>
+      <div onClick={e => e.stopPropagation()}
+        style={{ background:T.bgCard, borderRadius:20, width:"100%", maxWidth:700,
+          maxHeight:"92vh", display:"flex", flexDirection:"column",
+          boxShadow:"0 32px 80px rgba(0,0,0,.35), 0 0 0 1px "+T.border,
+          overflow:"hidden", animation:"scaleIn .22s cubic-bezier(.34,1.56,.64,1)" }}>
+
+        {/* ── Barra superior ── */}
+        <div style={{ padding:"14px 20px", borderBottom:"1px solid "+T.border,
+          display:"flex", justifyContent:"space-between", alignItems:"center",
+          background:T.bgPanel, flexShrink:0 }}>
+          <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+            <span style={{ background:tbg, color:tc, fontFamily:"var(--mono)", fontSize:10,
+              padding:"3px 10px", borderRadius:99, fontWeight:700, letterSpacing:"0.04em" }}>
+              {card.type}
+            </span>
+            {col && (
+              <span style={{ color:T.ink4, fontSize:11, fontFamily:"var(--mono)",
+                display:"flex", alignItems:"center", gap:4 }}>
+                <span style={{ color:col.color }}>{col.icon}</span>{col.label}
+              </span>
+            )}
+            {connectedCards.length > 0 && (
+              <span style={{ color:T.accent, fontSize:11, fontFamily:"var(--mono)" }}>
+                🔗 {connectedCards.length}
+              </span>
+            )}
+          </div>
+          <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+            {isOwner && (
+              <button onClick={() => { onClose(); onEdit(); }}
+                style={{ background:T.accentBg, color:T.accent, border:"1px solid "+T.accent+"44",
+                  borderRadius:8, padding:"6px 14px", fontSize:12, fontWeight:700,
+                  cursor:"pointer", fontFamily:"var(--sans)", transition:"all .15s" }}
+                onMouseEnter={e => e.currentTarget.style.background = T.accent}
+                onMouseEnter={e => { e.currentTarget.style.background=T.accent; e.currentTarget.style.color="#fff"; }}
+                onMouseLeave={e => { e.currentTarget.style.background=T.accentBg; e.currentTarget.style.color=T.accent; }}>
+                ✎ Editar
+              </button>
+            )}
+            <button onClick={onClose}
+              style={{ background:"none", border:"none", color:T.ink4, cursor:"pointer",
+                fontSize:24, lineHeight:1, padding:"0 4px", transition:"color .12s" }}
+              onMouseEnter={e => e.currentTarget.style.color = T.ink}
+              onMouseLeave={e => e.currentTarget.style.color = T.ink4}>
+              ×
+            </button>
+          </div>
+        </div>
+
+        {/* ── Cuerpo del documento ── */}
+        <div style={{ flex:1, overflow:"auto", padding:"32px 36px" }}>
+
+          {/* Título */}
+          <h1 style={{ color:T.ink, fontSize:28, fontWeight:800, lineHeight:1.2,
+            fontFamily:"var(--sans)", letterSpacing:"-0.025em", marginBottom:14 }}>
+            {card.title}
+          </h1>
+
+          {/* Meta */}
+          <div style={{ display:"flex", gap:16, alignItems:"center", marginBottom:28,
+            paddingBottom:22, borderBottom:"2px solid "+T.border,
+            flexWrap:"wrap" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+              <div style={{ width:26, height:26, borderRadius:"50%", background:tc+"22",
+                display:"flex", alignItems:"center", justifyContent:"center",
+                color:tc, fontSize:13, fontWeight:700 }}>
+                {card.author[0]?.toUpperCase()}
+              </div>
+              <span style={{ color:T.ink3, fontSize:13, fontWeight:600 }}>@{card.author}</span>
+            </div>
+            <span style={{ color:T.ink4, fontSize:12 }}>{fmtDate(card.createdAt)}</span>
+            {(cardComments||[]).length > 0 && (
+              <span style={{ color:T.ink4, fontSize:12 }}>💬 {cardComments.length} comentarios</span>
+            )}
+            {stickers.length > 0 && (
+              <span style={{ color:T.ink4, fontSize:12 }}>🗂 {stickers.length} stickers</span>
+            )}
+          </div>
+
+          {/* Imágenes */}
+          {imgs.length > 0 && (
+            <div style={{ display:"grid",
+              gridTemplateColumns: imgs.length === 1 ? "1fr" : "repeat(auto-fill, minmax(200px,1fr))",
+              gap:10, marginBottom:28 }}>
+              {imgs.map((img, i) => (
+                <div key={i} style={{ borderRadius:12, overflow:"hidden",
+                  background:T.bgPanel,
+                  maxHeight: imgs.length === 1 ? 340 : 180 }}>
+                  {img.data && <img src={img.data} alt=""
+                    style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} />}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Cuerpo / descripción */}
+          {card.body ? (
+            <div style={{ color:T.ink2, fontSize:15, lineHeight:1.8,
+              fontFamily:"var(--sans)", whiteSpace:"pre-wrap", marginBottom:28,
+              borderLeft:"3px solid "+tc+"44", paddingLeft:18 }}>
+              {card.body}
+            </div>
+          ) : (
+            <div style={{ color:T.ink4, fontSize:14, fontStyle:"italic",
+              marginBottom:28, opacity:.7 }}>
+              Sin descripción.
+            </div>
+          )}
+
+          {/* Archivos adjuntos */}
+          {files.length > 0 && (
+            <div style={{ marginBottom:28 }}>
+              <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10,
+                letterSpacing:"0.1em", marginBottom:10, textTransform:"uppercase" }}>
+                Archivos adjuntos
+              </div>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+                {files.map((f, i) => (
+                  <div key={i} style={{ background:T.bgPanel, border:"1px solid "+T.border,
+                    borderRadius:9, padding:"8px 14px", display:"flex", gap:7, alignItems:"center" }}>
+                    <span style={{ fontSize:16 }}>{fileIcon(f.name)}</span>
+                    <div>
+                      <div style={{ color:T.ink2, fontSize:12, fontWeight:600 }}>{f.name}</div>
+                      {f.size && <div style={{ color:T.ink4, fontSize:10 }}>{fmtSize(f.size)}</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Tarjetas conectadas */}
+          {connectedCards.length > 0 && (
+            <div style={{ marginBottom:28 }}>
+              <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10,
+                letterSpacing:"0.1em", marginBottom:10, textTransform:"uppercase" }}>
+                Conectado con
+              </div>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+                {connectedCards.map(({ conn, other }) => (
+                  <div key={conn.id} style={{ background:T.accentBg,
+                    border:"1px solid "+T.accent+"33", borderRadius:9,
+                    padding:"7px 13px", display:"flex", gap:7, alignItems:"center" }}>
+                    <span style={{ color:T.accent, fontSize:12 }}>🔗</span>
+                    <div>
+                      <div style={{ color:T.ink, fontSize:12, fontWeight:700 }}>{other.title}</div>
+                      <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>
+                        {CONN_LABELS[conn.type] || conn.type}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Comentarios */}
+          {(cardComments||[]).length > 0 && (
+            <div>
+              <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10,
+                letterSpacing:"0.1em", marginBottom:14, textTransform:"uppercase" }}>
+                Comentarios · {cardComments.length}
+              </div>
+              <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                {cardComments.map((c, i) => (
+                  <div key={i} style={{ background:T.bgPanel, border:"1px solid "+T.border,
+                    borderRadius:11, padding:"13px 16px" }}>
+                    <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:7 }}>
+                      <span style={{ color:T.accent, fontWeight:700, fontSize:13 }}>
+                        @{c.author}
+                      </span>
+                      <span style={{ color:T.ink4, fontSize:11 }}>{fmtDate(c.createdAt)}</span>
+                    </div>
+                    <div style={{ color:T.ink2, fontSize:14, lineHeight:1.6 }}>{c.text}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Si está vacía */}
+          {!card.body && imgs.length === 0 && files.length === 0 && (cardComments||[]).length === 0 && (
+            <div style={{ textAlign:"center", padding:"30px 0", color:T.ink4 }}>
+              <div style={{ fontSize:36, marginBottom:12, opacity:.3 }}>◎</div>
+              <p style={{ fontSize:13, fontFamily:"var(--mono)" }}>
+                Tarjeta vacía — abre ✎ para agregar contenido.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* ── Pie ── */}
+        <div style={{ padding:"12px 20px", borderTop:"1px solid "+T.border,
+          background:T.bgPanel, display:"flex", justifyContent:"flex-end",
+          gap:8, flexShrink:0 }}>
+          <button onClick={onClose}
+            style={{ background:"none", border:"1px solid "+T.border2, color:T.ink3,
+              borderRadius:8, padding:"7px 18px", fontSize:13, cursor:"pointer",
+              fontFamily:"var(--sans)", transition:"all .15s" }}>
+            Cerrar
+          </button>
+          {isOwner && (
+            <button onClick={() => { onClose(); onEdit(); }}
+              style={{ background:T.accent, color:"#fff", border:"none",
+                borderRadius:8, padding:"7px 18px", fontSize:13, fontWeight:700,
+                cursor:"pointer", fontFamily:"var(--sans)", transition:"all .15s" }}>
+              ✎ Editar tarjeta
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -3899,8 +4213,8 @@ function CanvasView({ cards, connections, comments, user, onEditCard, canvasPosi
 
   return (
     <div ref={containerRef}
-      style={{position:"relative",flex:1,overflow:"hidden",background:"#070712",cursor:"grab",touchAction:"none",
-        backgroundImage:"radial-gradient(rgba(155,109,255,0.04) 1px, transparent 1px)",
+      style={{position:"relative",flex:1,overflow:"hidden",background:T.bg,cursor:"grab",touchAction:"none",
+        backgroundImage:`radial-gradient(${T.border2} 1px, transparent 1px)`,
         backgroundSize:"28px 28px"}}
       onMouseDown={startPan}
       onTouchStart={onTouchStart}
