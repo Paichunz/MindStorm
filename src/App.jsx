@@ -1,35 +1,68 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-// ─── THEME ───────────────────────────────────────────────────────────────────
-const T = {
-  bg:          "#070712",
-  bgReal:      "#070712",
-  bgPanel:     "#0C0C1E",
-  bgCard:      "#111126",
-  bgHover:     "#18183A",
-  border:      "rgba(255,255,255,0.07)",
-  border2:     "rgba(255,255,255,0.13)",
-  ink:         "#EDE8FF",
-  ink2:        "#B0AADC",
-  ink3:        "#6E6898",
-  ink4:        "#3C3860",
-  accent:      "#9B6DFF",
-  accentBg:    "rgba(155,109,255,0.12)",
-  accentHover: "#8050FF",
-  green:       "#0FD68A",
-  greenBg:     "rgba(15,214,138,0.1)",
-  amber:       "#FFB84D",
-  amberBg:     "rgba(255,184,77,0.1)",
-  rose:        "#FF4D7E",
-  roseBg:      "rgba(255,77,126,0.1)",
-  blue:        "#5AAFFF",
-  blueBg:      "rgba(90,175,255,0.1)",
-  orange:      "#FF7A40",
-  orangeBg:    "rgba(255,122,64,0.1)",
-  cyan:        "#00D4FF",
-  cyanBg:      "rgba(0,212,255,0.1)",
+// ─── THEMES ──────────────────────────────────────────────────────────────────
+const THEMES = {
+  dark: {
+    id:"dark", label:"Dark", icon:"◈",
+    bg:"#070712", bgReal:"#070712", bgPanel:"#0C0C1E", bgCard:"#111126", bgHover:"#18183A",
+    border:"rgba(255,255,255,0.07)", border2:"rgba(255,255,255,0.13)",
+    ink:"#EDE8FF", ink2:"#B0AADC", ink3:"#6E6898", ink4:"#3C3860",
+    accent:"#9B6DFF", accentBg:"rgba(155,109,255,0.12)", accentHover:"#8050FF",
+    green:"#0FD68A", greenBg:"rgba(15,214,138,0.1)",
+    amber:"#FFB84D", amberBg:"rgba(255,184,77,0.1)",
+    rose:"#FF4D7E",  roseBg:"rgba(255,77,126,0.1)",
+    blue:"#5AAFFF",  blueBg:"rgba(90,175,255,0.1)",
+    orange:"#FF7A40",orangeBg:"rgba(255,122,64,0.1)",
+    cyan:"#00D4FF",  cyanBg:"rgba(0,212,255,0.1)",
+  },
+  zen: {
+    id:"zen", label:"Zen", icon:"◎",
+    bg:"#F2F0D8", bgReal:"#F2F0D8", bgPanel:"#E8E6CF", bgCard:"#FFFFFF", bgHover:"#D8D9C5",
+    border:"rgba(69,134,191,0.18)", border2:"rgba(69,134,191,0.32)",
+    ink:"#1A3040", ink2:"#2D4D66", ink3:"#4586BF", ink4:"#8FB2BF",
+    accent:"#4586BF", accentBg:"rgba(69,134,191,0.13)", accentHover:"#2D6A9F",
+    green:"#1A7A54",  greenBg:"rgba(26,122,84,0.12)",
+    amber:"#8B6200",  amberBg:"rgba(139,98,0,0.1)",
+    rose:"#C0243E",   roseBg:"rgba(192,36,62,0.1)",
+    blue:"#2D6A9F",   blueBg:"rgba(45,106,159,0.1)",
+    orange:"#B54A0A", orangeBg:"rgba(181,74,10,0.1)",
+    cyan:"#007A94",   cyanBg:"rgba(0,122,148,0.1)",
+  },
+  neutral: {
+    id:"neutral", label:"Neutral", icon:"◇",
+    bg:"#EBE6D2", bgReal:"#EBE6D2", bgPanel:"#DDD8C4", bgCard:"#F5F2E8", bgHover:"#DBD3C6",
+    border:"rgba(144,120,80,0.18)", border2:"rgba(144,120,80,0.32)",
+    ink:"#2E2515", ink2:"#4A3820", ink3:"#7A6448", ink4:"#B8B68F",
+    accent:"#7A5C14", accentBg:"rgba(122,92,20,0.11)", accentHover:"#5C4510",
+    green:"#3D6B2A",  greenBg:"rgba(61,107,42,0.1)",
+    amber:"#8B6400",  amberBg:"rgba(139,100,0,0.1)",
+    rose:"#A52030",   roseBg:"rgba(165,32,48,0.1)",
+    blue:"#2E5F8F",   blueBg:"rgba(46,95,143,0.1)",
+    orange:"#9E3F0A", orangeBg:"rgba(158,63,10,0.1)",
+    cyan:"#2B7B8E",   cyanBg:"rgba(43,123,142,0.1)",
+  },
+  sumer: {
+    id:"sumer", label:"Sumer", icon:"◆",
+    bg:"#011E28", bgReal:"#011E28", bgPanel:"#012E3A", bgCard:"#013A4A", bgHover:"#025E73",
+    border:"rgba(242,221,160,0.1)", border2:"rgba(242,221,160,0.22)",
+    ink:"#F2DEA0", ink2:"#D9A441", ink3:"#BF8641", ink4:"rgba(191,134,65,0.55)",
+    accent:"#D9A441", accentBg:"rgba(217,164,65,0.15)", accentHover:"#C4912E",
+    green:"#2DC493",  greenBg:"rgba(45,196,147,0.1)",
+    amber:"#F2DEA0",  amberBg:"rgba(242,221,160,0.1)",
+    rose:"#E05555",   roseBg:"rgba(224,85,85,0.1)",
+    blue:"#037F8C",   blueBg:"rgba(3,127,140,0.1)",
+    orange:"#D9A441", orangeBg:"rgba(217,164,65,0.1)",
+    cyan:"#6FA0BF",   cyanBg:"rgba(111,160,191,0.1)",
+  },
 };
+
+// T is mutable — updated when theme changes
+let T = { ...THEMES.dark };
+
+// Theme context
+const ThemeCtx = createContext({ themeId:"dark", setThemeId:()=>{} });
+const useTheme = () => useContext(ThemeCtx);
 
 const CATEGORIES = [
   { id:"app",      label:"📱 App / Software",   color:T.accent, colorBg:T.accentBg, subcategories:["App móvil","Web app","SaaS","Herramienta interna","API / Backend"], expert:"Eres un líder senior de producto digital con 15 años de experiencia. Analizas ideas con criterio brutal y honesto. No eres complaciente." },
@@ -52,9 +85,9 @@ const COLUMNS = [
 ];
 
 const CARD_TYPES = ["tarea","idea","pregunta","referencia","bloqueo"];
-const TYPE_COLOR = { tarea:T.accent, idea:T.amber, pregunta:T.blue, referencia:T.green, bloqueo:T.rose };
-const TYPE_BG    = { tarea:T.accentBg, idea:T.amberBg, pregunta:T.blueBg, referencia:T.greenBg, bloqueo:T.roseBg };
-const REC_COLOR  = { seguir:T.green, "rediseñar":T.amber, simplificar:T.blue, pivotar:T.accent, pausar:T.orange, descartar:T.rose };
+const TYPE_COLOR = { get tarea(){return T.accent}, get idea(){return T.amber}, get pregunta(){return T.blue}, get referencia(){return T.green}, get bloqueo(){return T.rose} };
+const TYPE_BG    = { get tarea(){return T.accentBg}, get idea(){return T.amberBg}, get pregunta(){return T.blueBg}, get referencia(){return T.greenBg}, get bloqueo(){return T.roseBg} };
+const REC_COLOR  = { get seguir(){return T.green}, get "rediseñar"(){return T.amber}, get simplificar(){return T.blue}, get pivotar(){return T.accent}, get pausar(){return T.orange}, get descartar(){return T.rose} };
 const ACCEPTED   = "image/*,.pdf,.doc,.docx,.txt,.md,.xls,.xlsx,.ppt,.pptx,.zip,.csv";
 
 const SECURITY_QUESTIONS = [
@@ -70,7 +103,7 @@ const SECURITY_QUESTIONS = [
 
 const STICKER_TYPES = ["opinión","complemento","pregunta","objeción","referencia"];
 const STICKER_ICON  = { "opinión":"💬", "complemento":"➕", "pregunta":"❓", "objeción":"⚡", "referencia":"🔗" };
-const STICKER_COLOR = { "opinión":T.blue, "complemento":T.green, "pregunta":T.amber, "objeción":T.rose, "referencia":T.accent };
+const STICKER_COLOR = { get "opinión"(){return T.blue}, get "complemento"(){return T.green}, get "pregunta"(){return T.amber}, get "objeción"(){return T.rose}, get "referencia"(){return T.accent} };
 
 function genId()    { return Math.random().toString(36).substr(2, 9); }
 function nowTs()    { return Date.now(); }
@@ -166,6 +199,73 @@ async function dbSaveBoardData(boardId, data) {
   return { ...data, lastUpdated: now };
 }
 
+// ─── AI HELPER ────────────────────────────────────────────────────────────────
+function getAIKey()     { return getL("mindstorm-apikey", ""); }
+function saveAIKey(k)   { setL("mindstorm-apikey", k.trim()); }
+
+async function callAI(system, userMessages, maxTokens = 1200) {
+  const key = getAIKey();
+  if (!key) throw Object.assign(new Error("NO_KEY"), { code:"NO_KEY" });
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: maxTokens,
+      system,
+      messages: Array.isArray(userMessages) ? userMessages : [{ role:"user", content: userMessages }],
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    if (res.status === 401) throw Object.assign(new Error("INVALID_KEY"), { code:"INVALID_KEY" });
+    throw Object.assign(new Error("API_ERROR"), { code:"API_ERROR", detail: err?.error?.message || String(res.status) });
+  }
+  const d = await res.json();
+  return (d.content || []).map(b => b.text || "").join("");
+}
+
+// Small reusable key-setup widget rendered inside AI panels when no key exists
+function AIKeySetup({ onSaved }) {
+  const [val, setVal] = useState("");
+  const [err, setErr] = useState("");
+  function save() {
+    const k = val.trim();
+    if (!k.startsWith("sk-ant-")) { setErr("La clave debe comenzar con sk-ant-"); return; }
+    saveAIKey(k); onSaved();
+  }
+  return (
+    <div style={{ background:T.amberBg, border:"1px solid "+T.amber+"44", borderRadius:12, padding:20, textAlign:"center" }}>
+      <div style={{ fontSize:28, marginBottom:10 }}>🔑</div>
+      <div style={{ color:T.ink, fontWeight:700, fontSize:14, marginBottom:6 }}>Configura tu clave de Claude</div>
+      <p style={{ color:T.ink3, fontSize:12, lineHeight:1.5, marginBottom:14 }}>
+        Para usar funciones de IA necesitas una clave de API de Anthropic.<br/>
+        Consíguela en <strong style={{color:T.amber}}>console.anthropic.com</strong> → API Keys.
+      </p>
+      <input
+        placeholder="sk-ant-api03-…"
+        value={val}
+        onChange={e => { setVal(e.target.value); setErr(""); }}
+        onKeyDown={e => e.key==="Enter" && save()}
+        style={{ background:"rgba(255,255,255,0.06)", border:"1.5px solid "+(err?T.rose:T.border2),
+          color:T.ink, padding:"10px 14px", borderRadius:9, fontFamily:"var(--mono)", fontSize:12,
+          width:"100%", outline:"none", marginBottom:err?4:10 }}
+      />
+      {err && <div style={{ color:T.rose, fontSize:11, marginBottom:8, textAlign:"left" }}>{err}</div>}
+      <button onClick={save}
+        style={{ background:T.accent, color:"#fff", border:"none", borderRadius:8, padding:"9px 20px",
+          fontWeight:700, fontSize:13, cursor:"pointer", fontFamily:"var(--sans)", width:"100%" }}>
+        Guardar y continuar →
+      </button>
+    </div>
+  );
+}
+
 // ─── IMAGE RESIZE ─────────────────────────────────────────────────────────────
 function resizeImage(file) {
   return new Promise(resolve => {
@@ -185,6 +285,28 @@ function resizeImage(file) {
     };
     reader.readAsDataURL(file);
   });
+}
+
+// ─── THEME OVERRIDE CSS ───────────────────────────────────────────────────────
+function getThemeCSS(id) {
+  const t = THEMES[id];
+  if (id === "dark") return "";
+  const isLight = id === "zen" || id === "neutral";
+  return `
+    html,body { background:${t.bg} !important; }
+    ::selection { background:${t.accentBg}; color:${t.ink}; }
+    ::-webkit-scrollbar-thumb { background:${t.accent}66; }
+    ::-webkit-scrollbar-thumb:hover { background:${t.accent}99; }
+    .glass { background:${isLight?"rgba(255,255,255,0.72)":"rgba(1,46,58,0.72)"} !important; }
+    .grad-text { background:linear-gradient(135deg,${t.accent},${t.blue}) !important;
+      -webkit-background-clip:text !important; -webkit-text-fill-color:transparent !important; background-clip:text !important; }
+    .ai-glow { animation:none !important; border-color:${t.accent}55 !important; }
+    .orb-bg::before { background:radial-gradient(ellipse at 30% 20%,${t.accent}18 0%,transparent 60%) !important; }
+    .orb-bg::after  { background:radial-gradient(ellipse at 70% 80%,${t.blue}14 0%,transparent 60%) !important; }
+    .wcard { background:${isLight?"rgba(255,255,255,0.82)":"rgba(1,58,74,0.82)"} !important; border-color:${t.border} !important; }
+    .wcard:hover { box-shadow:0 4px 20px ${t.accent}22 !important; }
+    .toast { background:${isLight?"rgba(255,253,245,0.95)":"rgba(1,30,40,0.95)"} !important; }
+  `;
 }
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
@@ -361,6 +483,17 @@ export default function App() {
   const [boards, setBoards]           = useState([]);
   const [activeBoard, setActiveBoard] = useState(null);
   const [boardData, setBoardData]     = useState(null);
+  const [themeId, setThemeIdRaw]      = useState(() => getL("mindstorm-theme", "dark"));
+
+  const setThemeId = (id) => {
+    if (!THEMES[id]) return;
+    Object.assign(T, THEMES[id]);
+    setL("mindstorm-theme", id);
+    setThemeIdRaw(id);
+  };
+
+  // Apply theme on first load
+  useEffect(() => { Object.assign(T, THEMES[themeId]); }, []);
 
   const loadBoards = useCallback(async () => {
     const list = await dbGetBoards();
@@ -445,10 +578,31 @@ export default function App() {
     setBoardData(updated);
   }, [activeBoard]);
 
-  if (!user) return <JoinScreen onJoin={u => { setL(SK.user, u); setUser(u); }} />;
-  if (screen === "lobby") return <LobbyScreen user={user} boards={boards} myIds={getL(SK.myboards,[])} onOpen={openBoard} onCreate={createBoard} onDelete={deleteBoard} onImport={importBoard} onRefresh={loadBoards} onSignOut={() => { setL(SK.user,null); setUser(null); }} />;
-  if (screen === "board" && activeBoard && boardData) return <BoardScreen user={user} board={activeBoard} data={boardData} onSave={saveBoardData} onBack={() => { setScreen("lobby"); setActiveBoard(null); loadBoards(); }} />;
-  return null;
+  const themeCtxVal = { themeId, setThemeId };
+  return (
+    <ThemeCtx.Provider value={themeCtxVal}>
+      {!user && <JoinScreen onJoin={u => { setL(SK.user, u); setUser(u); }} />}
+      {user && screen === "lobby" && <LobbyScreen user={user} boards={boards} myIds={getL(SK.myboards,[])} onOpen={openBoard} onCreate={createBoard} onDelete={deleteBoard} onImport={importBoard} onRefresh={loadBoards} onSignOut={() => { setL(SK.user,null); setUser(null); }} />}
+      {user && screen === "board" && activeBoard && boardData && <BoardScreen user={user} board={activeBoard} data={boardData} onSave={saveBoardData} onBack={() => { setScreen("lobby"); setActiveBoard(null); loadBoards(); }} />}
+    </ThemeCtx.Provider>
+  );
+}
+
+// ─── THEME SWITCHER ──────────────────────────────────────────────────────────
+function ThemeSwitcher() {
+  const { themeId, setThemeId } = useTheme();
+  const swatches = { dark:"#9B6DFF", zen:"#4586BF", neutral:"#B8B68F", sumer:"#D9A441" };
+  return (
+    <div style={{ display:"flex", gap:6, alignItems:"center" }}>
+      {Object.entries(THEMES).map(([id, th]) => (
+        <button key={id} title={th.label} onClick={() => setThemeId(id)}
+          style={{ width:20, height:20, borderRadius:"50%", border:`2px solid ${themeId===id?"#fff":"transparent"}`,
+            background:swatches[id], cursor:"pointer", padding:0, flexShrink:0,
+            boxShadow:themeId===id?`0 0 0 1px ${swatches[id]}`:"none",
+            transition:"all .15s", outline:"none" }} />
+      ))}
+    </div>
+  );
 }
 
 // ─── MINDSTORM LOGO ──────────────────────────────────────────────────────────
@@ -516,9 +670,12 @@ function MindStormLogo({ size = "md" }) {
 // ─── JOIN ─────────────────────────────────────────────────────────────────────
 function JoinScreen({ onJoin }) {
   const [name, setName] = useState("");
+  const { themeId } = useTheme();
   return (
-    <div className="orb-bg" style={{ minHeight:"100vh", background:"#070712", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"var(--sans)", position:"relative" }}>
+    <div className="orb-bg" style={{ minHeight:"100vh", background:T.bg, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"var(--sans)", position:"relative" }}>
       <style>{GLOBAL_CSS}</style>
+      <style>{getThemeCSS(themeId)}</style>
+      <div style={{ position:"absolute", top:16, right:20, zIndex:10 }}><ThemeSwitcher /></div>
       {/* Extra orb */}
       <div style={{ position:"absolute", width:400, height:400, top:"50%", left:"50%", transform:"translate(-50%,-50%)",
         background:"radial-gradient(circle, rgba(155,109,255,0.08) 0%, transparent 70%)",
@@ -563,7 +720,7 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
   async function exportBoard(board) {
     setExporting(board.id);
     try {
-      const boardData = await getS(SK.board(board.id)) || { cards:[], comments:{}, connections:[], lastUpdated: nowTs() };
+      const boardData = await dbGetBoardData(board.id) || { cards:[], comments:{}, connections:[], lastUpdated: nowTs() };
       const pkg = {
         _mindstorm: true,
         _version: "1.0",
@@ -595,7 +752,7 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
     try {
       const allData = {};
       for (const board of allBoards) {
-        allData[board.id] = await getS(SK.board(board.id)) || { cards:[], comments:{}, connections:[], lastUpdated: nowTs() };
+        allData[board.id] = await dbGetBoardData(board.id) || { cards:[], comments:{}, connections:[], lastUpdated: nowTs() };
       }
       const pkg = {
         _mindstorm: true,
@@ -643,9 +800,11 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
     e.target.value = "";
   }
 
+  const { themeId } = useTheme();
   return (
-    <div className="orb-bg" style={{ minHeight:"100vh", background:"#070712", display:"flex", fontFamily:"var(--sans)", position:"relative" }}>
+    <div className="orb-bg" style={{ minHeight:"100vh", background:T.bg, display:"flex", fontFamily:"var(--sans)", position:"relative" }}>
       <style>{GLOBAL_CSS}</style>
+      <style>{getThemeCSS(themeId)}</style>
       {!isMobile && <Sidebar user={user} boards={allBoards} onOpen={handleOpen} onSignOut={onSignOut} />}
       <div style={{ flex:1, padding: isMobile ? "16px 14px" : "32px 36px", overflowY:"auto", position:"relative", zIndex:1 }}>
         {/* Mobile top bar */}
@@ -664,7 +823,9 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
               <h2 className="grad-text" style={{ fontWeight:900, fontSize:isMobile?22:26, marginBottom:3, letterSpacing:"-0.03em" }}>Proyectos</h2>
               <p style={{ color:T.ink4, fontSize:13, fontFamily:"var(--mono)" }}>{allBoards.length} proyecto{allBoards.length!==1?"s":""}</p>
             </div>
-            <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
+              <ThemeSwitcher />
+              <div style={{ width:1, height:18, background:T.border }} />
               {/* Import button */}
               <input ref={importRef} type="file" accept=".json,.mindstorm.json" onChange={handleImportFile} style={{ display:"none" }} />
               <button onClick={() => { setImportError(""); setImportSuccess(""); importRef.current?.click(); }}
@@ -1296,6 +1457,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
   const [viewMode, setViewMode]         = useState("kanban");
   const [wbPanel, setWbPanel]           = useState(false);
   const [toast, setToast]               = useState(null);
+  const [keyModal, setKeyModal]         = useState(false);
   const [filterQuery, setFilterQuery]   = useState("");
   const [filterType, setFilterType]     = useState("");
   const [filterAuthor, setFilterAuthor] = useState("");
@@ -1482,9 +1644,11 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
   });
   const hasFilter = filterQuery || filterType || filterAuthor;
 
+  const { themeId } = useTheme();
   return (
-    <div style={{ minHeight:"100vh", background:"#070712", display:"flex", flexDirection:"column", fontFamily:"var(--sans)" }}>
+    <div style={{ minHeight:"100vh", background:T.bg, display:"flex", flexDirection:"column", fontFamily:"var(--sans)" }}>
       <style>{GLOBAL_CSS}</style>
+      <style>{getThemeCSS(themeId)}</style>
 
       {/* Toast */}
       {toast && (
@@ -1587,6 +1751,14 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               display:"flex", alignItems:"center", gap:5 }}>
             ✦{!isMobile && " Análisis IA"}
           </button>
+          <button onClick={() => setKeyModal(true)} title="Configurar clave de API de Claude"
+            style={{ background: getAIKey() ? T.greenBg : T.bgPanel,
+              border:"1px solid "+(getAIKey() ? T.green+"44" : T.border),
+              color: getAIKey() ? T.green : T.ink4,
+              padding:"7px 9px", borderRadius:8, fontSize:13, cursor:"pointer",
+              fontFamily:"var(--sans)", transition:"all .2s" }}>
+            🔑
+          </button>
           {cat.worldbuilding && (
             <button onClick={() => setWbPanel(true)}
               style={{ background:T.amberBg, border:"1px solid "+T.amber+"55", color:T.amber, padding:"7px 10px", borderRadius:8, fontWeight:700, fontSize:13, cursor:"pointer", fontFamily:"var(--sans)", display:"flex", alignItems:"center", gap:5, transition:"all .2s" }}
@@ -1595,6 +1767,8 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               📖{!isMobile && " Mundo"}
             </button>
           )}
+          <div style={{ width:1, height:18, background:T.border }} />
+          <ThemeSwitcher />
           <div style={{ width:1, height:18, background:T.border }} />
           <button onClick={() => setViewMode(v => v==="kanban"?"canvas":"kanban")}
             style={{ background:viewMode==="canvas"?T.accent:T.bgPanel, border:"1px solid "+(viewMode==="canvas"?T.accent:T.border2), color:viewMode==="canvas"?"#fff":T.ink3, padding:"7px 10px", borderRadius:8, fontWeight:600, fontSize:12, cursor:"pointer", fontFamily:"var(--sans)", transition:"all .2s" }}>
@@ -2015,6 +2189,27 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
       {trashOpen && <TrashPanel cards={deletedCards} onRestore={restoreCard} onDelete={permanentDelete} onClose={() => setTrashOpen(false)} />}
       {docPanel && <DocPanel board={board} concept={concept} cards={activeCards} comments={comments} connections={connections} cat={cat} onClose={() => setDocPanel(false)} />}
       {wbPanel && <WorldbuildingPanel board={board} concept={concept} cards={activeCards} cat={cat} onClose={() => setWbPanel(false)} />}
+      {keyModal && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,5,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,backdropFilter:"blur(8px)"}}>
+          <div style={{background:T.bgPanel,border:"1px solid "+T.border2,borderRadius:16,padding:28,maxWidth:420,width:"100%",boxShadow:"0 30px 80px rgba(0,0,0,.6)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
+              <div style={{color:T.ink,fontWeight:800,fontSize:16}}>🔑 Clave de API de Claude</div>
+              <button onClick={()=>setKeyModal(false)} style={{background:"none",border:"none",color:T.ink4,cursor:"pointer",fontSize:20}}>&times;</button>
+            </div>
+            <AIKeySetup onSaved={() => { setKeyModal(false); showToast("✓ Clave guardada"); }} />
+            {getAIKey() && (
+              <div style={{marginTop:14,display:"flex",justifyContent:"space-between",alignItems:"center",
+                background:T.greenBg,border:"1px solid "+T.green+"44",borderRadius:8,padding:"10px 14px"}}>
+                <span style={{color:T.green,fontSize:12}}>✓ Clave configurada</span>
+                <button onClick={()=>{saveAIKey("");showToast("Clave eliminada");setKeyModal(false);}}
+                  style={{background:"none",border:"none",color:T.rose,cursor:"pointer",fontSize:12,fontFamily:"var(--sans)"}}>
+                  Eliminar
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2038,15 +2233,24 @@ function WorkCard({ card, commentCount, connCount, onEdit, onMove, onDragStart, 
         boxShadow:`0 0 6px ${tc}55` }} />
 
       {/* Tab header — always visible */}
-      <div
-        onClick={() => setExpanded(p => !p)}
-        style={{ padding:"9px 12px", cursor:"pointer", display:"flex", alignItems:"center", gap:7 }}
-      >
-        <span style={{ color:tc, fontSize:10, flexShrink:0 }}>{expanded ? "▼" : "▶"}</span>
-        <div style={{ color:T.ink, fontWeight:700, fontSize:13, lineHeight:1.3, flex:1,
-          overflow:"hidden", textOverflow:"ellipsis", whiteSpace: expanded?"normal":"nowrap" }}>
-          {card.title}
-        </div>
+      <div style={{ padding:"9px 12px", display:"flex", alignItems:"center", gap:7 }}>
+        <span
+          onClick={e => { e.stopPropagation(); setExpanded(p => !p); }}
+          title={expanded ? "Colapsar" : "Expandir"}
+          style={{ color:tc, fontSize:10, flexShrink:0, cursor:"pointer", padding:"2px 3px",
+            borderRadius:3, transition:"background .12s" }}
+          onMouseEnter={e => e.currentTarget.style.background = tc+"22"}
+          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+        >{expanded ? "▼" : "▶"}</span>
+        <div
+          onClick={e => { e.stopPropagation(); onEdit(); }}
+          title="Abrir tarjeta completa"
+          style={{ color:T.ink, fontWeight:700, fontSize:13, lineHeight:1.3, flex:1,
+            overflow:"hidden", textOverflow:"ellipsis", whiteSpace: expanded?"normal":"nowrap",
+            cursor:"pointer" }}
+          onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"}
+          onMouseLeave={e => e.currentTarget.style.textDecoration = "none"}
+        >{card.title}</div>
         <div style={{ display:"flex", gap:5, alignItems:"center", flexShrink:0 }}>
           {commentCount > 0 && <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>💬{commentCount}</span>}
           {connCount    > 0 && <span style={{ color:T.accent, fontFamily:"var(--mono)", fontSize:10 }}>🔗{connCount}</span>}
@@ -2531,7 +2735,7 @@ function TrashPanel({ cards, onRestore, onDelete, onClose }) {
   );
 }
 
-// ─── CONNECTIONS PANEL ────────────────────────────────────────────────────────
+// ─── CONNECTIONS PANEL ───────────────────────────────────────────────────────
 // Module-level constants (not inside any component)
 const CONN_TYPE_LABELS  = { complementa:"Complementa", secuencia:"Secuencia", contraste:"Contraste", refuerza:"Refuerza" };
 const CONN_TYPE_COLORS  = { complementa:T.accent, secuencia:T.green, contraste:T.orange, refuerza:T.blue };
@@ -2707,22 +2911,19 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
     const cardTexts = cards.map(c => `ID:${c.id} | [${c.col}][${c.type}] TÍTULO: "${c.title}"${c.body?" | DESC: "+c.body:""}`).join("\n");
     const prompt = `Eres un analista de ideas. Analiza las tarjetas del proyecto "${concept.title||"sin nombre"}" y detecta conexiones conceptuales reales entre pares.\n\nTARJETAS:\n${cardTexts}\n\nResponde SOLO con JSON válido:\n{"connections":[{"cardA":"id1","cardB":"id2","type":"complementa|secuencia|contraste|refuerza","reason":"Explicación breve (máx 120 caracteres)","strength":8}]}\n\nstrength de 1-10. Solo incluye conexiones con strength >= 6. Máximo 8.`;
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:800,
-          system:"Detectas conexiones conceptuales entre ideas. Respondes ÚNICAMENTE con JSON válido.",
-          messages:[{role:"user", content:prompt}] }),
-      });
-      const d = await res.json();
-      const txt = (d.content||[]).map(b=>b.text||"").join("").trim().replace(/```json|```/g,"").trim();
-      const parsed = JSON.parse(txt);
+      const txt = await callAI("Detectas conexiones conceptuales entre ideas. Respondes ÚNICAMENTE con JSON válido.", prompt, 800);
+      const clean = txt.trim().replace(/```json|```/g,"").trim();
+      const parsed = JSON.parse(clean);
       const findCard = (id) => cards.find(c => c.id===id);
       const newConns = (parsed.connections||[]).map(c => ({...c, id:genId(), status:"pending", createdAt:nowTs()})).filter(c => findCard(c.cardA) && findCard(c.cardB));
       const existingIds = new Set(connections.map(c=>c.cardA+"-"+c.cardB));
       const fresh = newConns.filter(c => !existingIds.has(c.cardA+"-"+c.cardB) && !existingIds.has(c.cardB+"-"+c.cardA));
       await onUpdate([...connections, ...fresh]);
       setStatus(fresh.length>0?"done":"none");
-    } catch { setStatus("error"); setError("Error al analizar. Intenta nuevamente."); }
+    } catch(e) {
+      if (e.code==="NO_KEY"||e.code==="INVALID_KEY") { setStatus("no_key"); }
+      else { setStatus("error"); setError("Error al analizar. Verifica tu clave de API."); }
+    }
   }
 
   function renderGroup(title, list, badge) {
@@ -2764,6 +2965,10 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
           <p style={{ color:T.ink3, fontSize:12, lineHeight:1.5 }}>Las conexiones se guardan permanentemente. Las aprobadas muestran 🔗 en las tarjetas.</p>
         </div>
         <div style={{ flex:1, overflow:"auto", padding:"16px 18px" }}>
+          {status==="no_key" ? (
+            <AIKeySetup onSaved={() => setStatus("idle")} />
+          ) : (
+          <>
           <OBtn full onClick={findConnections} disabled={status==="loading"}>
             {status==="loading" ? "🔍 Analizando…" : "🔍 Buscar nuevas conexiones con IA"}
           </OBtn>
@@ -2787,6 +2992,8 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
               <p style={{ marginBottom:8 }}>Aún no hay conexiones detectadas.</p>
               <p style={{ fontFamily:"var(--mono)", fontSize:11, lineHeight:1.6 }}>La IA analiza todas las tarjetas y encuentra pares con conexión conceptual real.</p>
             </div>
+          )}
+          </>
           )}
         </div>
       </div>
@@ -2827,14 +3034,15 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
     const cardText = cards.length ? cards.map(c => `- [${c.col}][${c.type}] ${c.title}${c.body?": "+c.body:""}`).join("\n") : "Sin tarjetas.";
     const prompt = `Analiza este proyecto con criterio profesional y honesto.\n\nPROYECTO: "${board.name}"\nCATEGORÍA: ${cat.label}${board.subcategories?.length?" > "+board.subcategories.join(", "):""}\n\nCONCEPTO BASE:\n${concept.title||"Sin definir"}\n${concept.desc||""}\n\nTARJETAS:\n${cardText}\n\nAnaliza: 1) Potencial real 2) Debilidades 3) Viabilidad 4) Oportunidad 5) Mejoras 6) Recomendación.\n\nTermina con:\n\`\`\`json\n{"potencial":7,"viabilidad":6,"diferenciacion":5,"madurez":4,"recomendacion":"seguir"}\n\`\`\``;
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:cat.expert,messages:[{role:"user",content:prompt}]}) });
-      const d = await res.json();
-      const txt = (d.content||[]).map(b=>b.text||"").join("");
+      const txt = await callAI(cat.expert, prompt, 1000);
       const jm = txt.match(/```json\s*([\s\S]*?)```/);
       if (jm) { try { setScores(JSON.parse(jm[1])); } catch {} }
       setResult(txt.replace(/```json[\s\S]*?```/g,"").trim());
       setStatus("done");
-    } catch { setStatus("error"); setResult("Error de conexión."); }
+    } catch(e) {
+      if (e.code === "NO_KEY" || e.code === "INVALID_KEY") { setStatus("no_key"); }
+      else { setStatus("error"); setResult("Error de conexión. Verifica tu clave y conexión."); }
+    }
   }
 
   return (
@@ -2855,6 +3063,7 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
           <OGhostBtn small onClick={onClose}>× Cerrar</OGhostBtn>
         </div>
         <div style={{ flex:1, overflow:"auto", padding:"18px" }}>
+          {status==="no_key" && <AIKeySetup onSaved={() => setStatus("idle")} />}
           {status==="idle" && (
             <div style={{ textAlign:"center", padding:"12px 0" }}>
               <div style={{ width:56, height:56, background:cat.colorBg, borderRadius:14, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", border:"1px solid "+T.border, fontSize:24 }}>{cat.label.split(" ")[0]}</div>
@@ -3014,23 +3223,13 @@ Escribe en español. Usa markdown con headers (##), bullets (-) y énfasis (**).
     setStatus("loading");
     setDocContent("");
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 2000,
-          system: cat.expert + " Redactas documentos claros, estructurados y de alto valor profesional.",
-          messages: [{ role: "user", content: buildPrompt() }],
-        }),
-      });
-      const d = await res.json();
-      const txt = (d.content || []).map(b => b.text || "").join("").trim();
-      setDocContent(txt);
+      const txt = await callAI(cat.expert + " Redactas documentos claros, estructurados y de alto valor profesional.", buildPrompt(), 2000);
+      setDocContent(txt.trim());
       setDocTitle(board.name + " — Documento Maestro");
       setStatus("done");
-    } catch {
-      setStatus("error");
+    } catch(e) {
+      if (e.code==="NO_KEY"||e.code==="INVALID_KEY") setStatus("no_key");
+      else setStatus("error");
     }
   }
 
@@ -3138,6 +3337,7 @@ Escribe en español. Usa markdown con headers (##), bullets (-) y énfasis (**).
 
         {/* Body */}
         <div style={{ flex:1, overflow:"auto", padding:"20px 22px" }}>
+          {status === "no_key" && <AIKeySetup onSaved={() => setStatus("idle")} />}
           {status === "idle" && (
             <div>
               {/* Summary of what will be compiled */}
@@ -3265,7 +3465,7 @@ function edgePt(cx, cy, tx, ty) {
 
 function layoutStack(cards) {
   const pos = {};
-  const GAP_X = 260, GAP_Y = 80, START_X = 60, START_Y = 60;
+  const GAP_X = 240, GAP_Y = 76, START_X = 40, START_Y = 50;
   COLUMNS.forEach((col, ci) => {
     const colCards = cards.filter(c => c.col === col.id);
     colCards.forEach((card, ri) => {
@@ -3358,10 +3558,14 @@ function layoutMicelio(cards, connections, W, H) {
       bfsQ.push({ id:cid, depth:depth+1, angle:a, spread:Math.max(step*0.75, 0.5) });
     });
   }
-  cards.filter(c => !placed.has(c.id)).forEach((card, i, arr) => {
-    const a = (i/Math.max(arr.length,1))*Math.PI*2;
-    const r = Math.min(W,H)*0.4;
-    pos[card.id] = { x:CX+r*Math.cos(a)-CARD_W/2+(Math.random()-0.5)*60, y:CY+r*Math.sin(a)-CARD_H/2+(Math.random()-0.5)*60, vx:0, vy:0 };
+  // Unconnected cards: golden-angle spiral for organic distribution
+  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+  let spiralIdx = 0;
+  cards.filter(c => !placed.has(c.id)).forEach((card) => {
+    const r = 140 + Math.sqrt(spiralIdx + 1) * 120;
+    const a = spiralIdx * goldenAngle;
+    pos[card.id] = { x: CX + r*Math.cos(a) - CARD_W/2, y: CY + r*Math.sin(a) - CARD_H/2, vx:0, vy:0 };
+    spiralIdx++;
   });
   // Force iterations
   const ITER=100, REP=14000, SPK=0.06, SPL=250, DAMP=0.7, GRAV=0.01;
@@ -3518,6 +3722,27 @@ function CanvasView({ cards, connections, comments, user, onEditCard, canvasPosi
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
+  const ZOOM_STEPS = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+  function zoomStep(dir) {
+    const cur = zoomRef.current;
+    const el  = containerRef.current;
+    const cx  = el ? el.clientWidth/2  : 500;
+    const cy  = el ? el.clientHeight/2 : 350;
+    // find the step just above current zoom
+    let idx = ZOOM_STEPS.findIndex(z => z > cur - 0.01);
+    if (idx === -1) idx = ZOOM_STEPS.length - 1;
+    const ni = dir > 0
+      ? Math.min(ZOOM_STEPS.length - 1, idx + 1)
+      : Math.max(0, idx - 1);
+    const nz = ZOOM_STEPS[ni];
+    const oz = zoomRef.current || 1;
+    const npx = cx - (cx - panRef.current.x) * (nz / oz);
+    const npy = cy - (cy - panRef.current.y) * (nz / oz);
+    panRef.current  = { x:npx, y:npy };
+    zoomRef.current = nz;
+    applyT(npx, npy, nz);
+    setZoomPct(Math.round(nz * 100));
+  }
   function zoomBy(factor) {
     const el = containerRef.current;
     const cx = el ? el.clientWidth/2  : 500;
@@ -3700,9 +3925,9 @@ function CanvasView({ cards, connections, comments, user, onEditCard, canvasPosi
           ))}
           {running && <span style={{color:T.ink4,fontFamily:"var(--mono)",fontSize:11}}>Organizando…</span>}
           <div style={{width:1,height:14,background:T.border}}/>
-          <button onClick={()=>zoomBy(0.83)} style={{background:"none",border:"none",color:T.ink3,cursor:"pointer",fontSize:17,fontWeight:700,padding:"0 3px",lineHeight:1}}>−</button>
+          <button onClick={()=>zoomStep(-1)} style={{background:"none",border:"none",color:T.ink3,cursor:"pointer",fontSize:17,fontWeight:700,padding:"0 3px",lineHeight:1}}>−</button>
           <span style={{color:T.ink3,fontFamily:"var(--mono)",fontSize:11,minWidth:36,textAlign:"center"}}>{zoomPct}%</span>
-          <button onClick={()=>zoomBy(1.2)} style={{background:"none",border:"none",color:T.ink3,cursor:"pointer",fontSize:17,fontWeight:700,padding:"0 3px",lineHeight:1}}>+</button>
+          <button onClick={()=>zoomStep(+1)} style={{background:"none",border:"none",color:T.ink3,cursor:"pointer",fontSize:17,fontWeight:700,padding:"0 3px",lineHeight:1}}>+</button>
           <button onClick={resetZoom} style={{background:"none",border:"none",color:T.ink4,cursor:"pointer",fontSize:10,padding:"0 2px",fontFamily:"var(--mono)"}}>↺</button>
         </div>
       </div>
@@ -3722,7 +3947,7 @@ function CanvasView({ cards, connections, comments, user, onEditCard, canvasPosi
 
       {/* Transform layer — DOM controlled only, NOT React state */}
       <div ref={transformRef} style={{position:"absolute",inset:0,transformOrigin:"0 0"}}
-        onMouseDown={e=>e.stopPropagation()}>
+        onMouseDown={e=>{ e.stopPropagation(); startPan(e); }}>
 
         {/* SVG: connections + sticker strings */}
         <svg style={{position:"absolute",left:"-3000px",top:"-3000px",width:"9000px",height:"9000px",pointerEvents:"none",zIndex:2}}>
@@ -3961,22 +4186,14 @@ Incluye TODOS los personajes mencionados, aunque sea brevemente. Infiere relacio
     };
 
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({
-          model:"claude-sonnet-4-20250514", max_tokens:2000,
-          system:"Eres un asistente experto en worldbuilding literario. Extraes información estructurada de textos creativos. Respondes ÚNICAMENTE con JSON válido, sin texto adicional, sin comentarios, sin markdown.",
-          messages:[{ role:"user", content: PROMPTS[tab] }]
-        })
-      });
-      const d = await res.json();
-      const txt = (d.content||[]).map(b=>b.text||"").join("").trim().replace(/```json|```/g,"").trim();
+      const raw = await callAI("Eres un asistente experto en worldbuilding literario. Extraes información estructurada de textos creativos. Respondes ÚNICAMENTE con JSON válido, sin texto adicional, sin comentarios, sin markdown.", PROMPTS[tab], 2000);
+      const txt = raw.trim().replace(/```json|```/g,"").trim();
       const parsed = JSON.parse(txt);
       setData(prev => ({ ...(prev||{}), [tab]: parsed }));
       setStatus("done");
     } catch(e) {
-      setStatus("error");
-      setError("Error al analizar. Intenta nuevamente.");
+      if (e.code==="NO_KEY"||e.code==="INVALID_KEY") { setStatus("no_key"); }
+      else { setStatus("error"); setError("Error al analizar. Verifica tu clave de API."); }
     }
   }
 
@@ -4017,6 +4234,7 @@ Incluye TODOS los personajes mencionados, aunque sea brevemente. Infiere relacio
 
         {/* Body */}
         <div style={{flex:1,overflow:"auto",padding:"18px 20px"}}>
+          {status==="no_key" && <AIKeySetup onSaved={() => setStatus("idle")} />}
           {/* Analyze button */}
           {(status==="idle"||status==="error") && (
             <div style={{marginBottom:18}}>
