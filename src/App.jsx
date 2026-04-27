@@ -205,35 +205,35 @@ async function dbSaveBoardData(boardId, data) {
   return { ...data, lastUpdated: now };
 }
 
-// ─── AI HELPER ────────────────────────────────────────────────────────────────
+// ─── AI HELPER — Google Gemini (gratis, sin tarjeta de crédito) ───────────────
+const GEMINI_MODEL = "gemini-2.0-flash";
 function getAIKey()     { return getL("mindstorm-apikey", ""); }
 function saveAIKey(k)   { setL("mindstorm-apikey", k.trim()); }
 
 async function callAI(system, userMessages, maxTokens = 1200) {
   const key = getAIKey();
   if (!key) throw Object.assign(new Error("NO_KEY"), { code:"NO_KEY" });
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const prompt = Array.isArray(userMessages)
+    ? (userMessages[userMessages.length - 1]?.content || "")
+    : userMessages;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`;
+  const res = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": key,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: maxTokens,
-      system,
-      messages: Array.isArray(userMessages) ? userMessages : [{ role:"user", content: userMessages }],
+      system_instruction: { parts: [{ text: system }] },
+      contents: [{ role:"user", parts:[{ text: prompt }] }],
+      generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 },
     }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    if (res.status === 401) throw Object.assign(new Error("INVALID_KEY"), { code:"INVALID_KEY" });
+    if (res.status === 400 || res.status === 403)
+      throw Object.assign(new Error("INVALID_KEY"), { code:"INVALID_KEY" });
     throw Object.assign(new Error("API_ERROR"), { code:"API_ERROR", detail: err?.error?.message || String(res.status) });
   }
   const d = await res.json();
-  return (d.content || []).map(b => b.text || "").join("");
+  return d.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("") || "";
 }
 
 // Small reusable key-setup widget rendered inside AI panels when no key exists
@@ -242,31 +242,34 @@ function AIKeySetup({ onSaved }) {
   const [err, setErr] = useState("");
   function save() {
     const k = val.trim();
-    if (!k.startsWith("sk-ant-")) { setErr("La clave debe comenzar con sk-ant-"); return; }
+    if (k.length < 20) { setErr("Clave inválida — debe tener más de 20 caracteres"); return; }
     saveAIKey(k); onSaved();
   }
   return (
-    <div style={{ background:T.amberBg, border:"1px solid "+T.amber+"44", borderRadius:12, padding:20, textAlign:"center" }}>
-      <div style={{ fontSize:28, marginBottom:10 }}>🔑</div>
-      <div style={{ color:T.ink, fontWeight:700, fontSize:14, marginBottom:6 }}>Configura tu clave de Claude</div>
-      <p style={{ color:T.ink3, fontSize:12, lineHeight:1.5, marginBottom:14 }}>
-        Para usar funciones de IA necesitas una clave de API de Anthropic.<br/>
-        Consíguela en <strong style={{color:T.amber}}>console.anthropic.com</strong> → API Keys.
+    <div style={{ background:T.greenBg, border:"1px solid "+T.green+"44", borderRadius:12, padding:20, textAlign:"center" }}>
+      <div style={{ fontSize:28, marginBottom:8 }}>✦</div>
+      <div style={{ color:T.ink, fontWeight:700, fontSize:14, marginBottom:6 }}>Conectar IA gratuita</div>
+      <p style={{ color:T.ink3, fontSize:12, lineHeight:1.6, marginBottom:14 }}>
+        Usa <strong style={{color:T.green}}>Google Gemini</strong> — 100% gratis, sin tarjeta de crédito.<br/>
+        1. Ve a <strong style={{color:T.green}}>aistudio.google.com/apikey</strong><br/>
+        2. Inicia sesión con tu cuenta Google<br/>
+        3. Clic en <em>"Create API Key"</em> → copia el código
       </p>
       <input
-        placeholder="sk-ant-api03-…"
+        placeholder="AIzaSy…"
         value={val}
         onChange={e => { setVal(e.target.value); setErr(""); }}
         onKeyDown={e => e.key==="Enter" && save()}
-        style={{ background:"rgba(255,255,255,0.06)", border:"1.5px solid "+(err?T.rose:T.border2),
+        autoFocus
+        style={{ background:"rgba(255,255,255,0.08)", border:"1.5px solid "+(err?T.rose:T.green+"66"),
           color:T.ink, padding:"10px 14px", borderRadius:9, fontFamily:"var(--mono)", fontSize:12,
-          width:"100%", outline:"none", marginBottom:err?4:10 }}
+          width:"100%", outline:"none", marginBottom:err?4:12, boxSizing:"border-box" }}
       />
       {err && <div style={{ color:T.rose, fontSize:11, marginBottom:8, textAlign:"left" }}>{err}</div>}
       <button onClick={save}
-        style={{ background:T.accent, color:"#fff", border:"none", borderRadius:8, padding:"9px 20px",
+        style={{ background:T.green, color:"#fff", border:"none", borderRadius:8, padding:"9px 20px",
           fontWeight:700, fontSize:13, cursor:"pointer", fontFamily:"var(--sans)", width:"100%" }}>
-        Guardar y continuar →
+        Guardar y activar IA →
       </button>
     </div>
   );
@@ -2265,7 +2268,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,5,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,backdropFilter:"blur(8px)"}}>
           <div style={{background:T.bgPanel,border:"1px solid "+T.border2,borderRadius:16,padding:28,maxWidth:420,width:"100%",boxShadow:"0 30px 80px rgba(0,0,0,.6)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
-              <div style={{color:T.ink,fontWeight:800,fontSize:16}}>🔑 Clave de API de Claude</div>
+              <div style={{color:T.ink,fontWeight:800,fontSize:16}}>✦ Conectar IA — Google Gemini</div>
               <button onClick={()=>setKeyModal(false)} style={{background:"none",border:"none",color:T.ink4,cursor:"pointer",fontSize:20}}>&times;</button>
             </div>
             <AIKeySetup onSaved={() => { setKeyModal(false); showToast("✓ Clave guardada"); }} />
