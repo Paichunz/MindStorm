@@ -555,7 +555,7 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
   const [exportAll, setExportAll]     = useState(false);
   const importRef = useRef();
   const isMobile = useIsMobile();
-  const allBoards = deduplicateBoards(boards);
+  const seen = new Set(); const allBoards = boards.filter(b => { if (seen.has(b.id)) return false; seen.add(b.id); return true; });
   function filtered(list) { if (!search) return list; const q = search.toLowerCase(); return list.filter(b => (b.name+" "+(b.conceptTitle||"")+" "+b.categoryId).toLowerCase().includes(q)); }
   async function handleOpen(board) { if (!board.password || myIds.includes(board.id)) { await onOpen(board, board.password); } else { setPwdModal(board); } }
 
