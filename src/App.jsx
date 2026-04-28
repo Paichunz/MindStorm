@@ -235,24 +235,54 @@ async function callAI(system, userMessages, maxTokens = 1200) {
   const prompt = Array.isArray(userMessages)
     ? (userMessages[userMessages.length - 1]?.content || "")
     : userMessages;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      system_instruction: { parts: [{ text: system }] },
-      contents: [{ role:"user", parts:[{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 },
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    if (res.status === 400 || res.status === 403)
+
+  // Try primary model, fall back to gemini-1.5-flash if unavailable
+  const models = [GEMINI_MODEL, "gemini-1.5-flash"];
+  let lastErr = null;
+
+  for (const model of models) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    let res;
+    try {
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: system }] },
+          contents: [{ role:"user", parts:[{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 },
+        }),
+      });
+    } catch (networkErr) {
+      // fetch() threw — real network/CORS failure
+      throw Object.assign(new Error("CONNECTION_ERROR"), { code:"API_ERROR",
+        detail: "Sin conexión a internet o error de red." });
+    }
+
+    if (res.ok) {
+      const d = await res.json();
+      return d.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("") || "";
+    }
+
+    const errBody = await res.json().catch(() => ({}));
+    const msg = errBody?.error?.message || "";
+
+    if (res.status === 403 || (res.status === 400 && /api.key|invalid.key/i.test(msg))) {
       throw Object.assign(new Error("INVALID_KEY"), { code:"INVALID_KEY" });
-    throw Object.assign(new Error("API_ERROR"), { code:"API_ERROR", detail: err?.error?.message || String(res.status) });
+    }
+    if (res.status === 429) {
+      throw Object.assign(new Error("RATE_LIMIT"), { code:"API_ERROR",
+        detail: "Límite de peticiones alcanzado. Espera un momento e intenta de nuevo." });
+    }
+    // 404 = model not found → try fallback
+    if (res.status === 404) { lastErr = msg; continue; }
+
+    throw Object.assign(new Error("API_ERROR"), { code:"API_ERROR",
+      detail: msg || `Error ${res.status}` });
   }
-  const d = await res.json();
-  return d.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("") || "";
+
+  throw Object.assign(new Error("API_ERROR"), { code:"API_ERROR",
+    detail: lastErr || "Modelo no disponible." });
 }
 
 // Small reusable key-setup widget rendered inside AI panels when no key exists
@@ -3376,7 +3406,7 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
       setStatus("done");
     } catch(e) {
       if (e.code === "NO_KEY" || e.code === "INVALID_KEY") { setStatus("no_key"); }
-      else { setStatus("error"); setResult("Error de conexión. Verifica tu clave y conexión."); }
+      else { setStatus("error"); setResult(e.detail || "Error al conectar con la IA. Intenta de nuevo."); }
     }
   }
 
@@ -3787,10 +3817,14 @@ Escribe en español. Usa markdown con headers (##), bullets (-) y énfasis (**).
 const CARD_W = 210, CARD_H = 60; // collapsed card dimensions
 const NODE_R  = 34; // skill-tree node radius (px)
 
-// Pastel colors for skill nodes (always light — stand out on any bg)
-const NODE_PASTEL_BG = { tarea:"#EEF2FF", idea:"#FFFBEB", pregunta:"#EFF6FF", referencia:"#F0FDF4", bloqueo:"#FFF1F2" };
-const NODE_PASTEL_BD = { tarea:"#818CF8", idea:"#FBBF24", pregunta:"#60A5FA", referencia:"#4ADE80", bloqueo:"#F87171" };
-const NODE_PASTEL_IC = { tarea:"#4338CA", idea:"#D97706", pregunta:"#2563EB", referencia:"#15803D", bloqueo:"#E11D48" };
+// Dark + amber/gold palette for micelio skill-tree nodes (War Legend style)
+const NODE_GOLD        = "#F59E0B";   // main amber
+const NODE_GOLD_BRIGHT = "#FDE68A";   // bright center glow
+const NODE_GOLD_DIM    = "#92400E";   // subtle border when idle
+// Per-type accent — subtle variation inside the gold family
+const NODE_PASTEL_BG = { tarea:"#0F0D1A", idea:"#12100A", pregunta:"#0A0F1A", referencia:"#0A130E", bloqueo:"#140A0E" };
+const NODE_PASTEL_BD = { tarea:"#A78BFA", idea:"#F59E0B", pregunta:"#60A5FA", referencia:"#34D399", bloqueo:"#F87171" };
+const NODE_PASTEL_IC = { tarea:"#C4B5FD", idea:"#FDE68A", pregunta:"#93C5FD", referencia:"#6EE7B7", bloqueo:"#FCA5A5" };
 const NODE_ICONS     = { tarea:"✦", idea:"💡", pregunta:"?", referencia:"◎", bloqueo:"⚡" };
 
 // Circle-edge connection endpoint
@@ -4249,12 +4283,12 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
   return (
     <div ref={containerRef}
       style={{position:"relative",flex:1,overflow:"hidden",cursor:"grab",touchAction:"none",
-        background: layoutMode==="micelio" ? "#F5F3FF" : T.bg,
+        background: layoutMode==="micelio" ? "#07080F" : T.bg,
         backgroundImage: layoutMode==="micelio"
-          ? "radial-gradient(#C4B5FD44 1px, transparent 1px), radial-gradient(#DDD6FE22 1px, transparent 1px)"
+          ? "radial-gradient(rgba(245,158,11,0.18) 1px, transparent 1px)"
           : `radial-gradient(${T.border2} 1px, transparent 1px)`,
-        backgroundSize: layoutMode==="micelio" ? "36px 36px, 18px 18px" : "28px 28px",
-        backgroundPosition: layoutMode==="micelio" ? "0 0, 18px 18px" : "0 0"}}
+        backgroundSize: layoutMode==="micelio" ? "32px 32px" : "28px 28px",
+        backgroundPosition: "0 0"}}
       onMouseDown={startPan}
       onTouchStart={onTouchStart}
     >
@@ -4289,16 +4323,23 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
 
       {/* Hint */}
       <div style={{position:"absolute",bottom:12,right:14,zIndex:20,fontFamily:"var(--mono)",fontSize:10,pointerEvents:"none",
-        color:"#64748B",background:"rgba(255,255,255,0.78)",padding:"4px 10px",borderRadius:8,
-        backdropFilter:"blur(6px)", boxShadow:"0 1px 4px rgba(0,0,0,0.06)"}}>
+        color: layoutMode==="micelio" ? NODE_GOLD+"99" : "#64748B",
+        background: layoutMode==="micelio" ? "rgba(7,8,15,0.75)" : "rgba(255,255,255,0.78)",
+        padding:"4px 10px",borderRadius:8,
+        border: layoutMode==="micelio" ? `1px solid ${NODE_GOLD}22` : "none",
+        backdropFilter:"blur(6px)", boxShadow:"0 1px 4px rgba(0,0,0,0.12)"}}>
         Arrastra = mover · Rueda = zoom · Click nodo = leer
       </div>
 
       {/* Empty state */}
       {cards.length===0 && (
-        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:12,color:T.ink4}}>
-          <div style={{fontSize:40,opacity:.2}}>◯</div>
-          <div style={{fontFamily:"var(--mono)",fontSize:13}}>Sin tarjetas — créalas en la vista Kanban</div>
+        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:12}}>
+          <div style={{fontSize:44, filter: layoutMode==="micelio" ? `drop-shadow(0 0 18px ${NODE_GOLD}66)` : "none",
+            opacity: layoutMode==="micelio" ? 0.6 : 0.2, color: layoutMode==="micelio" ? NODE_GOLD : T.ink4}}>◯</div>
+          <div style={{fontFamily:"var(--mono)",fontSize:13,
+            color: layoutMode==="micelio" ? NODE_GOLD+"77" : T.ink4}}>
+            Sin tarjetas — créalas en la vista Kanban
+          </div>
         </div>
       )}
 
@@ -4332,28 +4373,51 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
             const isMicelio = layoutMode==="micelio";
             return (
               <g key={conn.id}>
-                {/* Glow line underneath in micelio mode */}
-                {isMicelio && (
-                  <path d={`M${ep1.x} ${ep1.y} Q${bx} ${by} ${ep2.x} ${ep2.y}`}
-                    fill="none" stroke={color} strokeWidth="7" opacity="0.13"
-                    strokeLinecap="round"/>
+                {isMicelio ? (
+                  /* War Legend style — thick amber glow line */
+                  <>
+                    {/* Outer diffuse glow */}
+                    <path d={`M${ep1.x} ${ep1.y} Q${bx} ${by} ${ep2.x} ${ep2.y}`}
+                      fill="none" stroke={NODE_GOLD} strokeWidth="14" opacity="0.07"
+                      strokeLinecap="round"/>
+                    {/* Mid glow */}
+                    <path d={`M${ep1.x} ${ep1.y} Q${bx} ${by} ${ep2.x} ${ep2.y}`}
+                      fill="none" stroke={NODE_GOLD} strokeWidth="5" opacity="0.25"
+                      strokeLinecap="round"/>
+                    {/* Core line */}
+                    <path d={`M${ep1.x} ${ep1.y} Q${bx} ${by} ${ep2.x} ${ep2.y}`}
+                      fill="none" stroke={NODE_GOLD_BRIGHT} strokeWidth="2"
+                      opacity="0.85" strokeLinecap="round"
+                      strokeDasharray={conn.type==="contraste"?"8 5":undefined}
+                      markerEnd="url(#cv-arr)"/>
+                    {/* Floating label pill — dark */}
+                    <rect x={bx-26} y={by-10} width="52" height="19" rx="5"
+                      fill="#0A0810" fillOpacity="0.88"
+                      stroke={NODE_GOLD} strokeOpacity="0.35" strokeWidth="1"/>
+                    <text x={bx} y={by+3} textAnchor="middle" fontSize="8"
+                      fontWeight="700" fill={NODE_GOLD_BRIGHT} fontFamily="system-ui,sans-serif">
+                      {CONN_ICONS[conn.type]} {CONN_LABELS[conn.type]}
+                    </text>
+                  </>
+                ) : (
+                  /* Default style for stack/tree */
+                  <>
+                    <path d={`M${ep1.x} ${ep1.y} Q${bx} ${by} ${ep2.x} ${ep2.y}`}
+                      fill="none" stroke={color} strokeWidth="2" opacity="0.55"
+                      strokeDasharray={conn.type==="contraste"?"7 4":undefined}
+                      markerEnd="url(#cv-arr)"/>
+                    <rect x={bx-28} y={by-11} width="56" height="22" rx="5"
+                      fill="rgba(0,0,0,0.12)" stroke={color} strokeOpacity="0.45" strokeWidth="1"/>
+                    <text x={bx} y={by-1} textAnchor="middle" fontSize="8"
+                      fontWeight="700" fill={color} fontFamily="system-ui,sans-serif">
+                      {CONN_ICONS[conn.type]} {CONN_LABELS[conn.type]}
+                    </text>
+                    {Array.from({length:10}).map((_,i)=>(
+                      <circle key={i} cx={bx-18+i*4} cy={by+7} r="1.4"
+                        fill={color} fillOpacity={i<str?0.7:0.15}/>
+                    ))}
+                  </>
                 )}
-                <path d={`M${ep1.x} ${ep1.y} Q${bx} ${by} ${ep2.x} ${ep2.y}`}
-                  fill="none" stroke={color}
-                  strokeWidth={isMicelio ? "2.5" : "2"}
-                  opacity={isMicelio ? "0.75" : "0.55"}
-                  strokeDasharray={conn.type==="contraste"?"7 4":undefined}
-                  markerEnd="url(#cv-arr)"/>
-                <rect x={bx-28} y={by-11} width="56" height="22" rx="5"
-                  fill="#fff" fillOpacity={isMicelio?"0.92":"0.12"}
-                  stroke={color} strokeOpacity="0.45" strokeWidth="1"/>
-                <text x={bx} y={by-1} textAnchor="middle" fontSize="8" fontWeight="700" fill={color} fontFamily="system-ui,sans-serif">
-                  {CONN_ICONS[conn.type]} {CONN_LABELS[conn.type]}
-                </text>
-                {Array.from({length:10}).map((_,i)=>(
-                  <circle key={i} cx={bx-18+i*4} cy={by+7} r="1.4"
-                    fill={color} fillOpacity={i<str?0.7:0.15}/>
-                ))}
               </g>
             );
           })}
@@ -4474,61 +4538,75 @@ function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchSta
   const [hovered, setHovered] = useState(false);
   const cx  = p.x + CARD_W/2;
   const cy  = p.y + CARD_H/2;
-  const pbg = NODE_PASTEL_BG[card.type] || "#F1F5F9";
-  const pbd = NODE_PASTEL_BD[card.type] || "#94A3B8";
-  const pic = NODE_PASTEL_IC[card.type] || "#475569";
+  const pbd = NODE_PASTEL_BD[card.type] || NODE_GOLD;
+  const pic = NODE_PASTEL_IC[card.type] || NODE_GOLD_BRIGHT;
   const ico = NODE_ICONS[card.type]     || "◈";
-  const colClr = col?.color || "#94A3B8";
-  const title  = card.title.length > 14 ? card.title.substring(0,13)+"…" : card.title;
+  const title = card.title.length > 15 ? card.title.substring(0,14)+"…" : card.title;
 
   return (
-    <div style={{ position:"absolute", left:cx - NODE_R - 44, top:cy - NODE_R - 8,
-      width:(NODE_R+44)*2, zIndex:5, display:"flex", flexDirection:"column",
+    <div style={{ position:"absolute", left:cx - NODE_R - 52, top:cy - NODE_R - 10,
+      width:(NODE_R+52)*2, zIndex:5, display:"flex", flexDirection:"column",
       alignItems:"center", cursor:"grab", userSelect:"none" }}
       onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
 
-      {/* Outer ring — column status color */}
-      <div style={{ width:NODE_R*2+10, height:NODE_R*2+10, borderRadius:"50%",
-        background: colClr+"22", border:`2px solid ${colClr}55`,
+      {/* Ambient outer glow ring */}
+      <div style={{ width:NODE_R*2+22, height:NODE_R*2+22, borderRadius:"50%",
+        background: hovered
+          ? `radial-gradient(circle, ${pbd}22 0%, transparent 70%)`
+          : `radial-gradient(circle, ${pbd}10 0%, transparent 70%)`,
         display:"flex", alignItems:"center", justifyContent:"center",
-        transition:"transform .18s, box-shadow .18s",
-        transform: hovered ? "scale(1.1)" : "scale(1)",
-        boxShadow: hovered
-          ? `0 0 0 8px ${pbd}30, 0 8px 28px ${pbd}50`
-          : `0 2px 12px rgba(0,0,0,0.10)` }}>
+        transition:"transform .2s cubic-bezier(.34,1.56,.64,1), filter .2s",
+        transform: hovered ? "scale(1.12)" : "scale(1)",
+        filter: hovered ? `drop-shadow(0 0 12px ${pbd}88)` : "none" }}>
 
-        {/* Inner circle — type color */}
-        <div onClick={e => { e.stopPropagation(); onOpen(card); }}
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
-          style={{ width:NODE_R*2, height:NODE_R*2, borderRadius:"50%",
-            background:`radial-gradient(135deg at 35% 35%, #fff 0%, ${pbg} 100%)`,
-            border:`2.5px solid ${pbd}`,
-            display:"flex", alignItems:"center", justifyContent:"center",
-            cursor:"pointer", fontSize:NODE_R*0.7, color:pic,
-            fontWeight:800, fontFamily:"var(--sans)",
-            boxShadow:`inset 0 1px 3px rgba(255,255,255,0.8), 0 1px 4px ${pbd}40` }}>
-          {ico}
+        {/* Outer border ring */}
+        <div style={{ width:NODE_R*2+10, height:NODE_R*2+10, borderRadius:"50%",
+          border:`1.5px solid ${hovered ? pbd+"99" : pbd+"44"}`,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          transition:"border-color .2s" }}>
+
+          {/* Main node circle — dark with radial gold gradient */}
+          <div onClick={e => { e.stopPropagation(); onOpen(card); }}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            style={{ width:NODE_R*2, height:NODE_R*2, borderRadius:"50%",
+              background: hovered
+                ? `radial-gradient(circle at 38% 32%, ${pic}55 0%, ${pbd}22 45%, #07080F 100%)`
+                : `radial-gradient(circle at 38% 32%, ${pic}28 0%, ${pbd}10 50%, #07080F 100%)`,
+              border:`2px solid ${hovered ? pbd+"cc" : pbd+"66"}`,
+              display:"flex", alignItems:"center", justifyContent:"center",
+              cursor:"pointer",
+              fontSize: NODE_R * 0.65,
+              transition:"background .2s, border-color .2s, box-shadow .2s",
+              boxShadow: hovered
+                ? `0 0 18px ${pbd}66, 0 0 40px ${pbd}22, inset 0 0 14px ${pbd}18`
+                : `0 0 6px ${pbd}33, inset 0 0 6px ${pbd}08` }}>
+            <span style={{ filter: hovered ? `drop-shadow(0 0 5px ${pic})` : "none",
+              transition:"filter .2s", lineHeight:1 }}>{ico}</span>
+          </div>
         </div>
       </div>
 
-      {/* Title */}
-      <div style={{ marginTop:7, color:"#1E293B", fontSize:11, fontWeight:700,
-        fontFamily:"var(--sans)", textAlign:"center", lineHeight:1.3, maxWidth:110,
-        padding:"2px 6px", borderRadius:6,
-        background:"rgba(255,255,255,0.82)", backdropFilter:"blur(4px)",
-        boxShadow:"0 1px 4px rgba(0,0,0,0.07)" }}>
+      {/* Title pill — dark with gold text */}
+      <div style={{ marginTop:6, color: hovered ? NODE_GOLD_BRIGHT : NODE_GOLD,
+        fontSize:11, fontWeight:700, fontFamily:"var(--sans)", textAlign:"center",
+        lineHeight:1.3, maxWidth:120, padding:"3px 9px", borderRadius:6,
+        background:"rgba(7,8,15,0.88)",
+        border:`1px solid ${hovered ? pbd+"66" : pbd+"28"}`,
+        backdropFilter:"blur(8px)",
+        transition:"color .2s, border-color .2s",
+        boxShadow: hovered ? `0 0 8px ${pbd}33` : "none" }}>
         {title}
       </div>
 
       {/* Badges */}
       {(cc>0 || sc>0) && (
         <div style={{ display:"flex", gap:3, marginTop:4 }}>
-          {cc>0 && <span style={{ background:"rgba(255,255,255,0.9)", border:"1px solid #E2E8F0",
-            borderRadius:99, padding:"1px 5px", fontSize:9, color:"#64748B",
+          {cc>0 && <span style={{ background:"rgba(7,8,15,0.85)", border:`1px solid ${NODE_GOLD}44`,
+            borderRadius:99, padding:"1px 6px", fontSize:9, color:NODE_GOLD,
             fontFamily:"var(--mono)" }}>💬{cc}</span>}
-          {sc>0 && <span style={{ background:"rgba(255,255,255,0.9)", border:"1px solid #E2E8F0",
-            borderRadius:99, padding:"1px 5px", fontSize:9, color:"#64748B",
+          {sc>0 && <span style={{ background:"rgba(7,8,15,0.85)", border:`1px solid ${NODE_GOLD}44`,
+            borderRadius:99, padding:"1px 6px", fontSize:9, color:NODE_GOLD,
             fontFamily:"var(--mono)" }}>🗂{sc}</span>}
         </div>
       )}
