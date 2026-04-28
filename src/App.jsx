@@ -4582,121 +4582,134 @@ function CanvasCardNode({ card, p, tc, col, cc, sc, isOwner, onEditCard, onMouse
   );
 }
 
-// ── Skill-Tree circular node (Micelio view) ───────────────────────────────────
+// ── Skill-Tree circular node (Micelio view) — solid-fill sci-fi style ──────────
 function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchStart }) {
   const [hovered, setHovered] = useState(false);
   const cx  = p.x + CARD_W/2;
   const cy  = p.y + CARD_H/2;
-  const pbd = NODE_PASTEL_BD[card.type] || NODE_GOLD;
-  const pic = NODE_PASTEL_IC[card.type] || NODE_GOLD_BRIGHT;
+  const pbd = NODE_PASTEL_BD[card.type] || NODE_GOLD;   // base color
+  const pic = NODE_PASTEL_IC[card.type] || NODE_GOLD_BRIGHT; // bright variant
   const ico = NODE_ICONS[card.type]     || "◈";
   const title = card.title.length > 16 ? card.title.substring(0,15)+"…" : card.title;
   const colColor = col?.color || "#6B7280";
+  // Size slightly grows with activity (max +10px radius)
+  const R = NODE_R + Math.min((cc + sc) * 2, 10);
 
   return (
-    <div style={{ position:"absolute", left:cx - NODE_R - 60, top:cy - NODE_R - 20,
-      width:(NODE_R+60)*2, zIndex:5, display:"flex", flexDirection:"column",
+    <div style={{ position:"absolute", left:cx - R - 64, top:cy - R - 22,
+      width:(R+64)*2, zIndex:5, display:"flex", flexDirection:"column",
       alignItems:"center", cursor:"grab", userSelect:"none" }}
       onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
 
-      {/* ① Outermost ambient glow */}
+      {/* ① Ambient outer glow cloud */}
       <div style={{ position:"relative",
-        width:NODE_R*2+28, height:NODE_R*2+28, borderRadius:"50%",
+        width:R*2+34, height:R*2+34, borderRadius:"50%",
         background: hovered
-          ? `radial-gradient(circle, ${pbd}2a 0%, transparent 65%)`
-          : `radial-gradient(circle, ${pbd}0e 0%, transparent 65%)`,
+          ? `radial-gradient(circle, ${pbd}38 0%, transparent 62%)`
+          : `radial-gradient(circle, ${pbd}18 0%, transparent 62%)`,
         display:"flex", alignItems:"center", justifyContent:"center",
-        transition:"transform .28s cubic-bezier(.34,1.56,.64,1), filter .28s",
-        transform: hovered ? "scale(1.14)" : "scale(1)",
+        transition:"transform .3s cubic-bezier(.34,1.56,.64,1), filter .3s",
+        transform: hovered ? "scale(1.12)" : "scale(1)",
         filter: hovered
-          ? `drop-shadow(0 0 16px ${pbd}aa) drop-shadow(0 0 32px ${pbd}33)`
-          : `drop-shadow(0 0 6px ${pbd}44)` }}>
+          ? `drop-shadow(0 0 22px ${pbd}bb) drop-shadow(0 0 44px ${pbd}44)`
+          : `drop-shadow(0 0 10px ${pbd}66)` }}>
 
-        {/* ② Column-stage dot — top-right of outer ring */}
-        <div style={{ position:"absolute", top:5, right:7, zIndex:3,
-          width:9, height:9, borderRadius:"50%",
+        {/* ② Column indicator dot — top-right */}
+        <div style={{ position:"absolute", top:6, right:8, zIndex:3,
+          width:10, height:10, borderRadius:"50%",
           background:colColor,
-          border:"1.5px solid rgba(7,8,15,0.9)",
-          boxShadow:`0 0 8px ${colColor}dd, 0 0 14px ${colColor}55` }} />
+          border:"2px solid rgba(6,7,14,0.95)",
+          boxShadow:`0 0 8px ${colColor}ee, 0 0 18px ${colColor}55` }} />
 
-        {/* ③ Dashed scanner ring — rotates 45° on hover */}
-        <div style={{ width:NODE_R*2+16, height:NODE_R*2+16, borderRadius:"50%",
-          border:`1px dashed ${pbd}${hovered ? "66" : "2a"}`,
+        {/* ③ Dashed scanner ring — rotates on hover */}
+        <div style={{ width:R*2+20, height:R*2+20, borderRadius:"50%",
+          border:`1.5px dashed ${hovered ? pbd+"99" : pbd+"33"}`,
           display:"flex", alignItems:"center", justifyContent:"center",
-          transition:"border-color .25s, transform .5s cubic-bezier(.34,1.56,.64,1)",
-          transform: hovered ? "rotate(60deg)" : "rotate(0deg)" }}>
+          transition:"border-color .3s, transform .6s cubic-bezier(.34,1.56,.64,1)",
+          transform: hovered ? "rotate(65deg)" : "rotate(0deg)" }}>
 
           {/* ④ Solid outer ring */}
-          <div style={{ width:NODE_R*2+4, height:NODE_R*2+4, borderRadius:"50%",
-            border:`1.5px solid ${hovered ? pbd+"cc" : pbd+"55"}`,
+          <div style={{ width:R*2+6, height:R*2+6, borderRadius:"50%",
+            border:`2px solid ${hovered ? pic+"cc" : pbd+"66"}`,
+            boxShadow: hovered ? `0 0 0 1px ${pbd}33` : "none",
             display:"flex", alignItems:"center", justifyContent:"center",
-            transition:"border-color .2s" }}>
+            transition:"border-color .25s, box-shadow .25s" }}>
 
-            {/* ⑤ Main node circle */}
+            {/* ⑤ MAIN NODE — solid filled with type color */}
             <div onClick={e => { e.stopPropagation(); onOpen(card); }}
               onMouseEnter={() => setHovered(true)}
               onMouseLeave={() => setHovered(false)}
               style={{ position:"relative", overflow:"hidden",
-                width:NODE_R*2, height:NODE_R*2, borderRadius:"50%",
+                width:R*2, height:R*2, borderRadius:"50%",
                 background: hovered
-                  ? `radial-gradient(circle at 36% 30%, ${pic}66 0%, ${pbd}2e 40%, #07080F 100%)`
-                  : `radial-gradient(circle at 36% 30%, ${pic}30 0%, ${pbd}14 50%, #07080F 100%)`,
-                border:`2px solid ${hovered ? pbd+"dd" : pbd+"77"}`,
+                  ? `radial-gradient(circle at 34% 28%, ${pic} 0%, ${pbd} 52%, ${pbd}cc 100%)`
+                  : `radial-gradient(circle at 34% 28%, ${pic}ee 0%, ${pbd} 48%, ${pbd}bb 100%)`,
                 display:"flex", alignItems:"center", justifyContent:"center",
                 cursor:"pointer",
-                transition:"background .22s, border-color .22s, box-shadow .22s",
+                transition:"background .25s, box-shadow .25s",
                 boxShadow: hovered
-                  ? `0 0 22px ${pbd}77, 0 0 50px ${pbd}22, inset 0 0 18px ${pbd}22`
-                  : `0 0 8px ${pbd}33, inset 0 0 8px ${pbd}0a` }}>
+                  ? `0 0 32px ${pbd}99, 0 0 70px ${pbd}33, inset 0 3px 0 rgba(255,255,255,0.28)`
+                  : `0 0 16px ${pbd}66, inset 0 2px 0 rgba(255,255,255,0.2)` }}>
 
-              {/* ⑥ Sphere highlight — light reflection top-left */}
-              <div style={{ position:"absolute", top:"14%", left:"18%",
-                width:NODE_R*0.38, height:NODE_R*0.38, borderRadius:"50%",
-                background:`radial-gradient(circle, ${pic}99 0%, transparent 70%)`,
-                pointerEvents:"none", opacity: hovered ? 0.9 : 0.55,
-                transition:"opacity .2s" }} />
+              {/* ⑥ Sphere highlight — bright top-left reflection */}
+              <div style={{ position:"absolute", top:"11%", left:"15%",
+                width:R*0.44, height:R*0.44, borderRadius:"50%",
+                background:"radial-gradient(circle, rgba(255,255,255,0.65) 0%, transparent 72%)",
+                pointerEvents:"none", opacity: hovered ? 1 : 0.8,
+                transition:"opacity .25s" }} />
 
-              {/* ⑦ Icon */}
-              <span style={{ fontSize: NODE_R * 0.68, lineHeight:1, position:"relative", zIndex:1,
-                filter: hovered ? `drop-shadow(0 0 7px ${pic}) drop-shadow(0 0 2px ${pbd})` : `drop-shadow(0 0 3px ${pbd}88)`,
-                transition:"filter .2s, transform .2s",
-                transform: hovered ? "scale(1.12)" : "scale(1)",
+              {/* ⑦ Bottom rim glint */}
+              <div style={{ position:"absolute", bottom:"12%", right:"16%",
+                width:R*0.22, height:R*0.22, borderRadius:"50%",
+                background:"radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 70%)",
+                pointerEvents:"none" }} />
+
+              {/* ⑧ Icon — white on solid color */}
+              <span style={{ fontSize:R * 0.64, lineHeight:1, position:"relative", zIndex:1,
+                color:"rgba(255,255,255,0.95)",
+                filter: hovered
+                  ? "drop-shadow(0 0 5px rgba(255,255,255,0.9)) drop-shadow(0 1px 3px rgba(0,0,0,0.5))"
+                  : "drop-shadow(0 1px 3px rgba(0,0,0,0.6))",
+                transition:"filter .25s, transform .25s",
+                transform: hovered ? "scale(1.14)" : "scale(1)",
                 display:"block" }}>{ico}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ⑧ Title pill */}
-      <div style={{ marginTop:5,
-        color: hovered ? NODE_GOLD_BRIGHT : NODE_GOLD,
+      {/* ⑨ Title pill — white text, colored border */}
+      <div style={{ marginTop:6,
+        color: hovered ? "#FFFFFF" : "rgba(240,240,255,0.92)",
         fontSize:11, fontWeight:700, fontFamily:"var(--sans)", textAlign:"center",
-        lineHeight:1.3, maxWidth:130, padding:"4px 11px", borderRadius:7,
-        background:"linear-gradient(135deg,rgba(7,8,15,0.93),rgba(12,8,22,0.9))",
-        border:`1px solid ${hovered ? pbd+"77" : pbd+"2e"}`,
+        lineHeight:1.3, maxWidth:140, padding:"4px 12px", borderRadius:7,
+        background:"linear-gradient(135deg,rgba(6,7,14,0.94),rgba(12,8,24,0.92))",
+        border:`1px solid ${hovered ? pic+"99" : pbd+"44"}`,
         backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)",
         letterSpacing:"-0.01em",
         boxShadow: hovered
-          ? `0 0 14px ${pbd}44, inset 0 1px 0 rgba(255,255,255,0.07)`
-          : "inset 0 1px 0 rgba(255,255,255,0.04)",
-        transition:"color .2s, border-color .2s, box-shadow .2s" }}>
+          ? `0 0 18px ${pbd}55, 0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)`
+          : `0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)`,
+        transition:"color .25s, border-color .25s, box-shadow .25s" }}>
         {title}
       </div>
 
-      {/* ⑨ Badges */}
+      {/* ⑩ Badges */}
       {(cc>0 || sc>0) && (
         <div style={{ display:"flex", gap:4, marginTop:4 }}>
           {cc>0 && (
-            <span style={{ background:"rgba(6,7,14,0.92)", border:`1px solid ${NODE_GOLD}44`,
-              borderRadius:99, padding:"1px 7px", fontSize:9, color:NODE_GOLD,
-              fontFamily:"var(--mono)", letterSpacing:"0.02em",
-              boxShadow:`0 0 6px ${NODE_GOLD}22` }}>💬 {cc}</span>
+            <span style={{ background:"rgba(6,7,14,0.92)",
+              border:`1px solid ${pbd}55`, borderRadius:99,
+              padding:"1px 7px", fontSize:9,
+              color:pic, fontFamily:"var(--mono)", letterSpacing:"0.02em",
+              boxShadow:`0 0 8px ${pbd}33` }}>💬 {cc}</span>
           )}
           {sc>0 && (
-            <span style={{ background:"rgba(6,7,14,0.92)", border:`1px solid ${NODE_GOLD}44`,
-              borderRadius:99, padding:"1px 7px", fontSize:9, color:NODE_GOLD,
-              fontFamily:"var(--mono)", letterSpacing:"0.02em",
-              boxShadow:`0 0 6px ${NODE_GOLD}22` }}>◎ {sc}</span>
+            <span style={{ background:"rgba(6,7,14,0.92)",
+              border:`1px solid ${pbd}55`, borderRadius:99,
+              padding:"1px 7px", fontSize:9,
+              color:pic, fontFamily:"var(--mono)", letterSpacing:"0.02em",
+              boxShadow:`0 0 8px ${pbd}33` }}>◎ {sc}</span>
           )}
         </div>
       )}
