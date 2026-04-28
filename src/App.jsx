@@ -4590,73 +4590,114 @@ function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchSta
   const pbd = NODE_PASTEL_BD[card.type] || NODE_GOLD;
   const pic = NODE_PASTEL_IC[card.type] || NODE_GOLD_BRIGHT;
   const ico = NODE_ICONS[card.type]     || "◈";
-  const title = card.title.length > 15 ? card.title.substring(0,14)+"…" : card.title;
+  const title = card.title.length > 16 ? card.title.substring(0,15)+"…" : card.title;
+  const colColor = col?.color || "#6B7280";
 
   return (
-    <div style={{ position:"absolute", left:cx - NODE_R - 52, top:cy - NODE_R - 10,
-      width:(NODE_R+52)*2, zIndex:5, display:"flex", flexDirection:"column",
+    <div style={{ position:"absolute", left:cx - NODE_R - 60, top:cy - NODE_R - 20,
+      width:(NODE_R+60)*2, zIndex:5, display:"flex", flexDirection:"column",
       alignItems:"center", cursor:"grab", userSelect:"none" }}
       onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
 
-      {/* Ambient outer glow ring */}
-      <div style={{ width:NODE_R*2+22, height:NODE_R*2+22, borderRadius:"50%",
+      {/* ① Outermost ambient glow */}
+      <div style={{ position:"relative",
+        width:NODE_R*2+28, height:NODE_R*2+28, borderRadius:"50%",
         background: hovered
-          ? `radial-gradient(circle, ${pbd}22 0%, transparent 70%)`
-          : `radial-gradient(circle, ${pbd}10 0%, transparent 70%)`,
+          ? `radial-gradient(circle, ${pbd}2a 0%, transparent 65%)`
+          : `radial-gradient(circle, ${pbd}0e 0%, transparent 65%)`,
         display:"flex", alignItems:"center", justifyContent:"center",
-        transition:"transform .2s cubic-bezier(.34,1.56,.64,1), filter .2s",
-        transform: hovered ? "scale(1.12)" : "scale(1)",
-        filter: hovered ? `drop-shadow(0 0 12px ${pbd}88)` : "none" }}>
+        transition:"transform .28s cubic-bezier(.34,1.56,.64,1), filter .28s",
+        transform: hovered ? "scale(1.14)" : "scale(1)",
+        filter: hovered
+          ? `drop-shadow(0 0 16px ${pbd}aa) drop-shadow(0 0 32px ${pbd}33)`
+          : `drop-shadow(0 0 6px ${pbd}44)` }}>
 
-        {/* Outer border ring */}
-        <div style={{ width:NODE_R*2+10, height:NODE_R*2+10, borderRadius:"50%",
-          border:`1.5px solid ${hovered ? pbd+"99" : pbd+"44"}`,
+        {/* ② Column-stage dot — top-right of outer ring */}
+        <div style={{ position:"absolute", top:5, right:7, zIndex:3,
+          width:9, height:9, borderRadius:"50%",
+          background:colColor,
+          border:"1.5px solid rgba(7,8,15,0.9)",
+          boxShadow:`0 0 8px ${colColor}dd, 0 0 14px ${colColor}55` }} />
+
+        {/* ③ Dashed scanner ring — rotates 45° on hover */}
+        <div style={{ width:NODE_R*2+16, height:NODE_R*2+16, borderRadius:"50%",
+          border:`1px dashed ${pbd}${hovered ? "66" : "2a"}`,
           display:"flex", alignItems:"center", justifyContent:"center",
-          transition:"border-color .2s" }}>
+          transition:"border-color .25s, transform .5s cubic-bezier(.34,1.56,.64,1)",
+          transform: hovered ? "rotate(60deg)" : "rotate(0deg)" }}>
 
-          {/* Main node circle — dark with radial gold gradient */}
-          <div onClick={e => { e.stopPropagation(); onOpen(card); }}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            style={{ width:NODE_R*2, height:NODE_R*2, borderRadius:"50%",
-              background: hovered
-                ? `radial-gradient(circle at 38% 32%, ${pic}55 0%, ${pbd}22 45%, #07080F 100%)`
-                : `radial-gradient(circle at 38% 32%, ${pic}28 0%, ${pbd}10 50%, #07080F 100%)`,
-              border:`2px solid ${hovered ? pbd+"cc" : pbd+"66"}`,
-              display:"flex", alignItems:"center", justifyContent:"center",
-              cursor:"pointer",
-              fontSize: NODE_R * 0.65,
-              transition:"background .2s, border-color .2s, box-shadow .2s",
-              boxShadow: hovered
-                ? `0 0 18px ${pbd}66, 0 0 40px ${pbd}22, inset 0 0 14px ${pbd}18`
-                : `0 0 6px ${pbd}33, inset 0 0 6px ${pbd}08` }}>
-            <span style={{ filter: hovered ? `drop-shadow(0 0 5px ${pic})` : "none",
-              transition:"filter .2s", lineHeight:1 }}>{ico}</span>
+          {/* ④ Solid outer ring */}
+          <div style={{ width:NODE_R*2+4, height:NODE_R*2+4, borderRadius:"50%",
+            border:`1.5px solid ${hovered ? pbd+"cc" : pbd+"55"}`,
+            display:"flex", alignItems:"center", justifyContent:"center",
+            transition:"border-color .2s" }}>
+
+            {/* ⑤ Main node circle */}
+            <div onClick={e => { e.stopPropagation(); onOpen(card); }}
+              onMouseEnter={() => setHovered(true)}
+              onMouseLeave={() => setHovered(false)}
+              style={{ position:"relative", overflow:"hidden",
+                width:NODE_R*2, height:NODE_R*2, borderRadius:"50%",
+                background: hovered
+                  ? `radial-gradient(circle at 36% 30%, ${pic}66 0%, ${pbd}2e 40%, #07080F 100%)`
+                  : `radial-gradient(circle at 36% 30%, ${pic}30 0%, ${pbd}14 50%, #07080F 100%)`,
+                border:`2px solid ${hovered ? pbd+"dd" : pbd+"77"}`,
+                display:"flex", alignItems:"center", justifyContent:"center",
+                cursor:"pointer",
+                transition:"background .22s, border-color .22s, box-shadow .22s",
+                boxShadow: hovered
+                  ? `0 0 22px ${pbd}77, 0 0 50px ${pbd}22, inset 0 0 18px ${pbd}22`
+                  : `0 0 8px ${pbd}33, inset 0 0 8px ${pbd}0a` }}>
+
+              {/* ⑥ Sphere highlight — light reflection top-left */}
+              <div style={{ position:"absolute", top:"14%", left:"18%",
+                width:NODE_R*0.38, height:NODE_R*0.38, borderRadius:"50%",
+                background:`radial-gradient(circle, ${pic}99 0%, transparent 70%)`,
+                pointerEvents:"none", opacity: hovered ? 0.9 : 0.55,
+                transition:"opacity .2s" }} />
+
+              {/* ⑦ Icon */}
+              <span style={{ fontSize: NODE_R * 0.68, lineHeight:1, position:"relative", zIndex:1,
+                filter: hovered ? `drop-shadow(0 0 7px ${pic}) drop-shadow(0 0 2px ${pbd})` : `drop-shadow(0 0 3px ${pbd}88)`,
+                transition:"filter .2s, transform .2s",
+                transform: hovered ? "scale(1.12)" : "scale(1)",
+                display:"block" }}>{ico}</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Title pill — dark with gold text */}
-      <div style={{ marginTop:6, color: hovered ? NODE_GOLD_BRIGHT : NODE_GOLD,
+      {/* ⑧ Title pill */}
+      <div style={{ marginTop:5,
+        color: hovered ? NODE_GOLD_BRIGHT : NODE_GOLD,
         fontSize:11, fontWeight:700, fontFamily:"var(--sans)", textAlign:"center",
-        lineHeight:1.3, maxWidth:120, padding:"3px 9px", borderRadius:6,
-        background:"rgba(7,8,15,0.88)",
-        border:`1px solid ${hovered ? pbd+"66" : pbd+"28"}`,
-        backdropFilter:"blur(8px)",
-        transition:"color .2s, border-color .2s",
-        boxShadow: hovered ? `0 0 8px ${pbd}33` : "none" }}>
+        lineHeight:1.3, maxWidth:130, padding:"4px 11px", borderRadius:7,
+        background:"linear-gradient(135deg,rgba(7,8,15,0.93),rgba(12,8,22,0.9))",
+        border:`1px solid ${hovered ? pbd+"77" : pbd+"2e"}`,
+        backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)",
+        letterSpacing:"-0.01em",
+        boxShadow: hovered
+          ? `0 0 14px ${pbd}44, inset 0 1px 0 rgba(255,255,255,0.07)`
+          : "inset 0 1px 0 rgba(255,255,255,0.04)",
+        transition:"color .2s, border-color .2s, box-shadow .2s" }}>
         {title}
       </div>
 
-      {/* Badges */}
+      {/* ⑨ Badges */}
       {(cc>0 || sc>0) && (
-        <div style={{ display:"flex", gap:3, marginTop:4 }}>
-          {cc>0 && <span style={{ background:"rgba(7,8,15,0.85)", border:`1px solid ${NODE_GOLD}44`,
-            borderRadius:99, padding:"1px 6px", fontSize:9, color:NODE_GOLD,
-            fontFamily:"var(--mono)" }}>💬{cc}</span>}
-          {sc>0 && <span style={{ background:"rgba(7,8,15,0.85)", border:`1px solid ${NODE_GOLD}44`,
-            borderRadius:99, padding:"1px 6px", fontSize:9, color:NODE_GOLD,
-            fontFamily:"var(--mono)" }}>🗂{sc}</span>}
+        <div style={{ display:"flex", gap:4, marginTop:4 }}>
+          {cc>0 && (
+            <span style={{ background:"rgba(6,7,14,0.92)", border:`1px solid ${NODE_GOLD}44`,
+              borderRadius:99, padding:"1px 7px", fontSize:9, color:NODE_GOLD,
+              fontFamily:"var(--mono)", letterSpacing:"0.02em",
+              boxShadow:`0 0 6px ${NODE_GOLD}22` }}>💬 {cc}</span>
+          )}
+          {sc>0 && (
+            <span style={{ background:"rgba(6,7,14,0.92)", border:`1px solid ${NODE_GOLD}44`,
+              borderRadius:99, padding:"1px 7px", fontSize:9, color:NODE_GOLD,
+              fontFamily:"var(--mono)", letterSpacing:"0.02em",
+              boxShadow:`0 0 6px ${NODE_GOLD}22` }}>◎ {sc}</span>
+          )}
         </div>
       )}
     </div>
