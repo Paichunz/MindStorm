@@ -127,6 +127,17 @@ function fileIcon(name) {
   return "📎";
 }
 
+// ─── CRYPTO HELPERS ───────────────────────────────────────────────────────────
+// sha256: used to hash security-question answers before storing/comparing.
+// Board passwords are kept readable so owners can share them with collaborators.
+async function sha256(str) {
+  if (!str) return "";
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str.toLowerCase().trim()));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+// Detect whether a stored value is already a SHA-256 hex (64-char) hash.
+function isHashed(s) { return typeof s === "string" && /^[0-9a-f]{64}$/.test(s); }
+
 // ─── SUPABASE ─────────────────────────────────────────────────────────────────
 const SUPABASE_URL = "https://hpagoemelxgernhustlj.supabase.co";
 const SUPABASE_KEY = "sb_publishable_Z78iX8OB7WDNOPbQNaw3NQ_oRVwNVoM";
@@ -138,24 +149,32 @@ function setL(k, v)  { try { localStorage.setItem(k, JSON.stringify(v)); } catch
 
 // ─── DB HELPERS ───────────────────────────────────────────────────────────────
 function dbToBoard(r) {
+  const secQ1 = r.security_q1 || "", secA1 = r.security_a1 || "";
+  const secQ2 = r.security_q2 || "", secA2 = r.security_a2 || "";
   return {
     id: r.id, name: r.name, categoryId: r.category_id,
     subcategories: r.subcategories || [],
     conceptTitle: r.concept_title || "", conceptDesc: r.concept_desc || "",
     password: r.password || "",
-    secQ1: r.security_q1 || "", secA1: r.security_a1 || "",
-    secQ2: r.security_q2 || "", secA2: r.security_a2 || "",
+    secQ1, secA1, secQ2, secA2,
+    // Reconstruct nested security object so PasswordModal can access board.security.q1
+    security: (secQ1 || secQ2) ? { q1: secQ1, a1: secA1, q2: secQ2, a2: secA2 } : null,
     createdBy: r.created_by, createdAt: r.created_at,
   };
 }
 function boardToDb(b) {
+  // Support both flat (secQ1) and nested (security.q1) formats from CreateBoardModal
+  const secQ1 = b.security?.q1 || b.secQ1 || "";
+  const secA1 = b.security?.a1 || b.secA1 || "";
+  const secQ2 = b.security?.q2 || b.secQ2 || "";
+  const secA2 = b.security?.a2 || b.secA2 || "";
   return {
     id: b.id, name: b.name, category_id: b.categoryId,
     subcategories: b.subcategories || [],
     concept_title: b.conceptTitle || "", concept_desc: b.conceptDesc || "",
     password: b.password || "",
-    security_q1: b.secQ1 || "", security_a1: b.secA1 || "",
-    security_q2: b.secQ2 || "", security_a2: b.secA2 || "",
+    security_q1: secQ1, security_a1: secA1,
+    security_q2: secQ2, security_a2: secA2,
     created_by: b.createdBy, created_at: b.createdAt,
   };
 }
@@ -1071,39 +1090,15 @@ const MONKEY_STEPS = [
   {
     emoji: "🗑",
     title: (name) => `¿Eliminar "${name}"?`,
-    body:  "Esta acción borrará el proyecto y todas sus tarjetas, conexiones y comentarios.",
+    body:  "Esta acción borrará el proyecto y todas sus tarjetas, conexiones y comentarios. No hay vuelta atrás.",
     yes:   "Sí, eliminar",
     no:    "No, cancelar",
     color: T.rose,
   },
   {
-    emoji: "😐",
-    title: () => "Espera… ¿en serio?",
-    body:  "Todo. El. Trabajo. Desaparecerá. ¿De verdad quieres hacer esto?",
-    yes:   "Sí, de verdad",
-    no:    "No, me arrepentí",
-    color: T.orange,
-  },
-  {
-    emoji: "😳",
-    title: () => "¿ESTÁS COMPLETAMENTE SEGURO?",
-    body:  "No hay papelera de reciclaje. No hay vuelta atrás. No hay milagros. ¿Seguimos?",
-    yes:   "Sí. Lo juro.",
-    no:    "¡No! ¡Para!",
-    color: T.amber,
-  },
-  {
-    emoji: "🫠",
-    title: () => "Oye, te lo pregunto por última vez.",
-    body:  "Mira, no soy tu conciencia, pero... hay personas que trabajaron en esto. ¿Realmente, realmente, REALMENTE lo quieres borrar?",
-    yes:   "Sí. Definitivamente. Sin dudas.",
-    no:    "Noooo, lo siento",
-    color: T.accent,
-  },
-  {
     emoji: "💀",
-    title: () => "...Ok. Tú lo has pedido.",
-    body:  "Que conste en actas que se te advirtió no una, no dos, sino CUATRO veces. Ahora pulsa el botón y que la fuerza te acompañe.",
+    title: () => "Última oportunidad.",
+    body:  "Que conste en actas que se te advirtió. Ahora pulsa el botón y que la fuerza te acompañe.",
     yes:   "⚡ DESTRUIR PARA SIEMPRE",
     no:    "Me salvé por los pelos",
     color: T.rose,
@@ -1189,22 +1184,22 @@ function PasswordModal({ board, onClose, onSubmit }) {
     if (!ok) { setError(true); setPwd(""); }
   }
 
-  function checkAnswer1() {
-    if (ans1.trim().toLowerCase() === board.security.a1) {
-      setAnsError(false);
-      setRecStep(2);
-    } else {
-      setAnsError(true);
-    }
+  async function checkAnswer1() {
+    const stored = board.security?.a1 || "";
+    const match = isHashed(stored)
+      ? (await sha256(ans1)) === stored
+      : ans1.trim().toLowerCase() === stored;
+    if (match) { setAnsError(false); setRecStep(2); }
+    else        { setAnsError(true); }
   }
 
-  function checkAnswer2() {
-    if (ans2.trim().toLowerCase() === board.security.a2) {
-      setAnsError(false);
-      setRevealed(true);
-    } else {
-      setAnsError(true);
-    }
+  async function checkAnswer2() {
+    const stored = board.security?.a2 || "";
+    const match = isHashed(stored)
+      ? (await sha256(ans2)) === stored
+      : ans2.trim().toLowerCase() === stored;
+    if (match) { setAnsError(false); setRevealed(true); }
+    else        { setAnsError(true); }
   }
 
   return (
@@ -1352,12 +1347,12 @@ function CreateBoardModal({ onClose, onCreate }) {
   const canCreate = name.trim() && categoryId && conceptTitle.trim() &&
     (!needsSecurity || (secA1.trim() && secA2.trim()));
 
-  function handleCreate() {
+  async function handleCreate() {
     if (!canCreate) return;
     const security = needsSecurity
-      ? { q1:secQ1, a1:secA1.trim().toLowerCase(), q2:secQ2, a2:secA2.trim().toLowerCase() }
+      ? { q1:secQ1, a1:await sha256(secA1), q2:secQ2, a2:await sha256(secA2) }
       : null;
-    onCreate({ name, categoryId, subcategories, conceptTitle, conceptDesc, password, security });
+    onCreate({ name, categoryId, subcategories, conceptTitle, conceptDesc, password: password.trim(), security });
   }
 
   const selectStyle = {
@@ -1516,6 +1511,8 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
   const [viewMode, setViewMode]         = useState("kanban");
   const [wbPanel, setWbPanel]           = useState(false);
   const [toast, setToast]               = useState(null);
+  const [saveStatus, setSaveStatus]     = useState(""); // "" | "saving" | "saved" | "error"
+  const saveTimerRef                    = useRef(null);
   const [keyModal, setKeyModal]         = useState(false);
   const [readCard, setReadCard]         = useState(null);
   const [filterQuery, setFilterQuery]   = useState("");
@@ -1602,7 +1599,17 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
     const ncm = newComments !== undefined ? newComments : comments;
     const nco = newConns !== undefined ? newConns : connections;
     setCards(nc); setComments(ncm); setConnections(nco);
-    await onSave({ ...data, cards:nc, comments:ncm, connections:nco });
+    setSaveStatus("saving");
+    clearTimeout(saveTimerRef.current);
+    try {
+      await onSave({ ...data, cards:nc, comments:ncm, connections:nco });
+      setSaveStatus("saved");
+      saveTimerRef.current = setTimeout(() => setSaveStatus(""), 2200);
+    } catch(e) {
+      console.error("Save failed:", e);
+      setSaveStatus("error");
+      showToast("⚠️ Error al guardar — revisa tu conexión");
+    }
   }, [data, onSave, cards, comments, connections]);
 
   async function addCard(col, cardData) {
@@ -1761,6 +1768,23 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
         {showPwd && board.password && <span style={{ background:T.amberBg, color:T.amber, fontFamily:"var(--mono)", fontSize:12, padding:"4px 11px", borderRadius:7, userSelect:"all", border:`1px solid ${T.amber}33` }}>{board.password}</span>}
         <div style={{ flex:1 }} />
         <div style={{ display:"flex", gap: isMobile?6:8, alignItems:"center", flexWrap:"nowrap" }}>
+          {/* Save status indicator */}
+          {saveStatus === "saving" && (
+            <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:11, display:"flex", alignItems:"center", gap:4, opacity:0.7 }}>
+              <span className="spinner" style={{ display:"inline-block", width:10, height:10, border:"1.5px solid "+T.border, borderTop:"1.5px solid "+T.ink4, borderRadius:"50%" }} />
+              {!isMobile && "Guardando…"}
+            </span>
+          )}
+          {saveStatus === "saved" && (
+            <span style={{ color:T.green, fontFamily:"var(--mono)", fontSize:11, animation:"fadeIn .2s ease", display:"flex", alignItems:"center", gap:3 }}>
+              ✓{!isMobile && " Guardado"}
+            </span>
+          )}
+          {saveStatus === "error" && (
+            <span style={{ color:T.rose, fontFamily:"var(--mono)", fontSize:11, display:"flex", alignItems:"center", gap:3 }}>
+              ⚠{!isMobile && " Sin guardar"}
+            </span>
+          )}
           <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:12 }}>@{user.name}</span>
 
           {/* Share */}
@@ -1884,7 +1908,9 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               <span style={{ position:"absolute", right:8, top:"50%", transform:"translateY(-50%)",
                 color:T.ink4, fontSize:10, fontFamily:"var(--mono)", pointerEvents:"none",
                 background:"rgba(255,255,255,0.05)", padding:"1px 5px", borderRadius:4,
-                border:"1px solid rgba(255,255,255,0.08)" }}>⌘K</span>
+                border:"1px solid rgba(255,255,255,0.08)" }}>
+                {/Mac|iPhone|iPad/.test(navigator.userAgent) ? "⌘K" : "Ctrl+K"}
+              </span>
             )}
             {filterQuery && (
               <button onClick={() => setFilterQuery("")}
@@ -2372,7 +2398,7 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
           {/* Footer */}
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginTop:9, flexWrap:"wrap", gap:4 }}>
             <div style={{ display:"flex", gap:5, alignItems:"center" }}>
-              <OTag color={tc} bg={tbg} small>{card.type}</OTag>
+              <OTag color={tc} bg={tbg} small>{NODE_ICONS[card.type] || ""} {card.type}</OTag>
               <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>@{card.author}</span>
             </div>
             <div style={{ display:"flex", gap:3 }}>
@@ -2433,7 +2459,7 @@ function CardReaderModal({ card, cardComments, connections, allCards, user, onEd
           <div style={{ display:"flex", gap:8, alignItems:"center" }}>
             <span style={{ background:tbg, color:tc, fontFamily:"var(--mono)", fontSize:10,
               padding:"3px 10px", borderRadius:99, fontWeight:700, letterSpacing:"0.04em" }}>
-              {card.type}
+              {NODE_ICONS[card.type] || ""} {card.type}
             </span>
             {col && (
               <span style={{ color:T.ink4, fontSize:11, fontFamily:"var(--mono)",
