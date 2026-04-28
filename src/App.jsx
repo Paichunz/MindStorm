@@ -440,22 +440,30 @@ const GLOBAL_CSS = `
   @keyframes gradShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
   @keyframes shimmer   { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
   @keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+  @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
+  @keyframes popIn     { from{opacity:0;transform:scale(.88)} to{opacity:1;transform:scale(1)} }
 
   .tile {
-    transition: transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s, border-color .22s;
+    transition: transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s, border-color .22s, background .22s;
     cursor:pointer;
+    position: relative;
   }
   .tile:hover {
-    transform: translateY(-5px) scale(1.015);
-    box-shadow: 0 20px 48px rgba(0,0,0,.5), 0 0 0 1px rgba(155,109,255,.35) !important;
-    border-color: rgba(155,109,255,.35) !important;
+    transform: translateY(-6px) scale(1.018);
+    box-shadow: 0 24px 52px rgba(0,0,0,.55), 0 0 0 1px rgba(155,109,255,.4) !important;
+    border-color: rgba(155,109,255,.3) !important;
+    background: rgba(20,20,44,0.88) !important;
   }
-  .wcard { transition:transform .16s, box-shadow .16s; }
+  .wcard {
+    transition: transform .16s cubic-bezier(.34,1.56,.64,1), box-shadow .16s, border-color .16s;
+  }
   .wcard:hover {
-    transform:translateY(-2px);
-    box-shadow:0 10px 28px rgba(0,0,0,.35), 0 0 0 1px rgba(155,109,255,.2) !important;
+    transform:translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,.4), 0 0 0 1px rgba(155,109,255,.25) !important;
+    border-color: rgba(155,109,255,.22) !important;
   }
   .wcard:hover .edit-ico { color:#B0AADC !important; }
+  .wcard:active { transform:translateY(-1px) scale(.99); }
 
   .add-btn {
     background: rgba(255,255,255,0.03);
@@ -495,16 +503,17 @@ const GLOBAL_CSS = `
   }
 
   .glass {
-    background: rgba(17,17,38,0.7);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(10,10,26,0.82);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(155,109,255,0.12);
+    box-shadow: 0 8px 32px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,0.06);
   }
   .glass-light {
-    background: rgba(24,24,58,0.6);
+    background: rgba(16,16,38,0.72);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.08);
   }
 
   /* Gradient text */
@@ -792,9 +801,9 @@ function JoinScreen({ onJoin }) {
         <div style={{ display:"flex", justifyContent:"center", marginBottom:36 }}>
           <MindStormLogo size="md" />
         </div>
-        <div style={{ background:"rgba(14,14,32,0.8)", border:"1px solid rgba(155,109,255,0.2)",
-          borderRadius:20, padding:"32px 28px", backdropFilter:"blur(16px)",
-          boxShadow:"0 32px 80px rgba(0,0,0,.5), 0 0 0 1px rgba(155,109,255,0.08)" }}>
+        <div style={{ background:"rgba(9,9,22,0.88)", border:"1px solid rgba(155,109,255,0.22)",
+          borderRadius:22, padding:"34px 30px", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)",
+          boxShadow:"0 40px 100px rgba(0,0,0,.6), 0 0 0 1px rgba(155,109,255,0.1), inset 0 1px 0 rgba(255,255,255,0.07)" }}>
           <p style={{ color:T.ink3, fontSize:14, marginBottom:20, lineHeight:1.5 }}>
             Elige tu nombre para comenzar
           </p>
@@ -992,9 +1001,10 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
 
 function Sidebar({ user, boards, onOpen, onSignOut }) {
   return (
-    <div style={{ width:230, background:"rgba(10,10,26,0.9)", borderRight:"1px solid rgba(255,255,255,0.07)",
+    <div style={{ width:230, background:"rgba(7,7,18,0.94)", borderRight:"1px solid rgba(155,109,255,0.1)",
       padding:"20px 12px", display:"flex", flexDirection:"column", flexShrink:0,
-      backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}>
+      backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)",
+      boxShadow:"2px 0 20px rgba(0,0,0,.3)" }}>
       <div style={{ padding:"8px 8px 4px", marginBottom:18 }}>
         <MindStormLogo size="sm" />
       </div>
@@ -1049,21 +1059,25 @@ function BoardTile({ board, onOpen, onDeleteRequest, onExport, exporting }) {
   const cat = CATEGORIES.find(c => c.id===board.categoryId) || CATEGORIES[6];
   return (
     <div className="tile" onClick={() => onOpen(board)}
-      style={{ background:"rgba(17,17,38,0.75)", border:"1px solid rgba(255,255,255,0.07)",
-        borderRadius:14, padding:"18px", position:"relative", overflow:"hidden",
-        boxShadow:"0 4px 24px rgba(0,0,0,.3)",
-        backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
+      style={{ background:"rgba(13,13,30,0.82)", border:`1px solid ${cat.color}22`,
+        borderRadius:15, padding:"18px", position:"relative", overflow:"hidden",
+        boxShadow:`0 4px 24px rgba(0,0,0,.35), 0 0 0 1px ${cat.color}10`,
+        backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)" }}>
       {/* Top gradient strip */}
-      <div style={{ position:"absolute", top:0, left:0, right:0, height:3,
-        background:`linear-gradient(90deg, ${cat.color}, ${cat.color}88)`,
-        boxShadow:`0 0 12px ${cat.color}66` }} />
+      <div style={{ position:"absolute", top:0, left:0, right:0, height:4,
+        background:`linear-gradient(90deg, ${cat.color} 0%, ${cat.color}99 50%, ${cat.color}22 100%)`,
+        boxShadow:`0 0 18px ${cat.color}77` }} />
       {/* Faint color glow top-right */}
-      <div style={{ position:"absolute", top:-40, right:-40, width:120, height:120, borderRadius:"50%",
-        background:`radial-gradient(circle, ${cat.color}18 0%, transparent 70%)`, pointerEvents:"none" }} />
+      <div style={{ position:"absolute", top:-60, right:-60, width:160, height:160, borderRadius:"50%",
+        background:`radial-gradient(circle, ${cat.color}22 0%, transparent 70%)`, pointerEvents:"none" }} />
+      {/* Bottom glow strip */}
+      <div style={{ position:"absolute", bottom:0, left:0, right:0, height:60, pointerEvents:"none",
+        background:`linear-gradient(0deg, ${cat.color}08 0%, transparent 100%)` }} />
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:12, marginTop:4 }}>
-        <div style={{ width:40, height:40, background:`${cat.color}18`,
-          borderRadius:10, display:"flex", alignItems:"center", justifyContent:"center",
-          fontSize:20, border:`1px solid ${cat.color}33`, flexShrink:0 }}>
+        <div style={{ width:42, height:42, background:`linear-gradient(135deg,${cat.color}28,${cat.color}12)`,
+          borderRadius:11, display:"flex", alignItems:"center", justifyContent:"center",
+          fontSize:20, border:`1px solid ${cat.color}44`, flexShrink:0,
+          boxShadow:`0 0 14px ${cat.color}22, inset 0 1px 0 ${cat.color}33` }}>
           {cat.label.split(" ")[0]}
         </div>
         <div style={{ display:"flex", gap:6, alignItems:"center" }}>
@@ -1086,10 +1100,10 @@ function BoardTile({ board, onOpen, onDeleteRequest, onExport, exporting }) {
           >🗑</button>
         </div>
       </div>
-      <div style={{ color:T.ink, fontWeight:700, fontSize:14, marginBottom:5, lineHeight:1.3 }}>{board.name}</div>
-      <div style={{ color:T.ink3, fontSize:12, marginBottom:14, lineHeight:1.45,
+      <div style={{ color:T.ink, fontWeight:800, fontSize:15, marginBottom:5, lineHeight:1.3, letterSpacing:"-0.02em" }}>{board.name}</div>
+      <div style={{ color:T.ink3, fontSize:12, marginBottom:14, lineHeight:1.5,
         display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>
-        {board.conceptTitle || "Sin concepto base"}
+        {board.conceptTitle || <span style={{ fontStyle:"italic", opacity:0.6 }}>Sin concepto base</span>}
       </div>
       <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
         <OTag color={cat.color} bg={`${cat.color}18`}>{cat.label.replace(/^.{2}/,"").trim()}</OTag>
@@ -1105,11 +1119,15 @@ function BoardTile({ board, onOpen, onDeleteRequest, onExport, exporting }) {
 
 function SideItem({ icon, label, active }) {
   return (
-    <button style={{ background:active?"rgba(155,109,255,0.12)":"transparent",
-      border:active?"1px solid rgba(155,109,255,0.2)":"1px solid transparent",
-      textAlign:"left", padding:"8px 10px", borderRadius:8, cursor:"pointer",
-      color:active?T.accent:T.ink2, fontSize:13, display:"flex", alignItems:"center", gap:8,
-      fontWeight:active?600:400, width:"100%", transition:"all .15s" }}>
+    <button style={{
+      background: active
+        ? "linear-gradient(90deg,rgba(155,109,255,0.18),rgba(155,109,255,0.06))"
+        : "transparent",
+      border: active ? "1px solid rgba(155,109,255,0.25)" : "1px solid transparent",
+      textAlign:"left", padding:"9px 12px", borderRadius:9, cursor:"pointer",
+      color: active ? T.accent : T.ink2, fontSize:13, display:"flex", alignItems:"center", gap:9,
+      fontWeight: active ? 700 : 400, width:"100%", transition:"all .15s",
+      boxShadow: active ? "inset 2px 0 0 rgba(155,109,255,0.6)" : "none" }}>
       <span>{icon}</span><span>{label}</span>
     </button>
   );
@@ -1749,11 +1767,11 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
 
       {/* Toast */}
       {toast && (
-        <div className="toast" style={{ position:"fixed", bottom:24, left:"50%", transform:"translateX(-50%)",
-          background:"rgba(14,14,32,0.95)", color:T.ink, padding:"13px 20px", borderRadius:12, display:"flex",
+        <div className="toast" style={{ position:"fixed", bottom:28, left:"50%", transform:"translateX(-50%)",
+          background:"rgba(10,10,24,0.97)", color:T.ink, padding:"14px 22px", borderRadius:14, display:"flex",
           gap:14, alignItems:"center", zIndex:999,
-          boxShadow:"0 12px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(155,109,255,0.2)",
-          backdropFilter:"blur(12px)", border:"1px solid rgba(155,109,255,0.2)", fontSize:13 }}>
+          boxShadow:"0 16px 48px rgba(0,0,0,.6), 0 0 0 1px rgba(155,109,255,0.25), inset 0 1px 0 rgba(255,255,255,0.07)",
+          backdropFilter:"blur(14px)", border:"1px solid rgba(155,109,255,0.2)", fontSize:13 }}>
           <span>{toast.msg}</span>
           {toast.undoFn && (
             <button onClick={() => { toast.undoFn(); setToast(null); }}
@@ -1769,8 +1787,9 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
       {/* Top bar */}
       <div style={{ display:"flex", alignItems:"center", gap:isMobile?8:12,
         padding:isMobile?"9px 12px":"10px 20px",
-        background:"rgba(10,10,26,0.85)", borderBottom:"1px solid rgba(255,255,255,0.07)",
-        backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)",
+        background:"rgba(6,6,18,0.92)", borderBottom:"1px solid rgba(155,109,255,0.1)",
+        backdropFilter:"blur(14px)", WebkitBackdropFilter:"blur(14px)",
+        boxShadow:"0 2px 20px rgba(0,0,0,.3)",
         flexWrap:"wrap", position:"sticky", top:0, zIndex:50 }}>
         {!isMobile && <MindStormLogo size="sm" />}
         {!isMobile && <div style={{ width:1, height:18, background:"rgba(255,255,255,0.07)" }} />}
@@ -1895,11 +1914,11 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
 
       {/* Concept bar */}
       <div onClick={() => setEditConcept(true)}
-        style={{ background:"rgba(10,10,26,0.7)", borderBottom:"1px solid rgba(255,255,255,0.06)",
-          padding:"10px 22px", cursor:"pointer", transition:"background .15s",
+        style={{ background:"rgba(8,8,20,0.75)", borderBottom:"1px solid rgba(255,255,255,0.06)",
+          padding:"11px 22px", cursor:"pointer", transition:"all .15s",
           backdropFilter:"blur(8px)" }}
-        onMouseEnter={e=>e.currentTarget.style.background="rgba(18,18,40,0.85)"}
-        onMouseLeave={e=>e.currentTarget.style.background="rgba(10,10,26,0.7)"}>
+        onMouseEnter={e=>{ e.currentTarget.style.background="rgba(14,14,32,0.85)"; e.currentTarget.style.borderBottomColor=`${cat.color}28`; }}
+        onMouseLeave={e=>{ e.currentTarget.style.background="rgba(8,8,20,0.75)"; e.currentTarget.style.borderBottomColor="rgba(255,255,255,0.06)"; }}>
         <div style={{ display:"flex", gap:12, alignItems:"flex-start", maxWidth:860 }}>
           <div style={{ width:3, borderRadius:2, background:`linear-gradient(180deg,${cat.color},${cat.color}44)`,
             alignSelf:"stretch", flexShrink:0, boxShadow:`0 0 8px ${cat.color}66` }} />
@@ -2044,28 +2063,28 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 onDragLeave={() => setDragOver(null)}
                 onDrop={async e => { e.preventDefault(); if (dragCard) await moveCard(dragCard, col.id); setDragOver(null); setDragCard(null); }}
                 style={{ width:isMobile?"100%":268, flexShrink:0,
-                  background:isOver?"rgba(155,109,255,0.06)":"rgba(12,12,28,0.6)",
-                  borderRadius:14,
-                  border:`1px solid ${isOver?"rgba(155,109,255,0.35)":"rgba(255,255,255,0.06)"}`,
-                  boxShadow:isOver?"0 0 0 2px rgba(155,109,255,0.2)":"none",
+                  background:isOver?`rgba(155,109,255,0.07)`:"rgba(11,11,25,0.65)",
+                  borderRadius:15,
+                  border:`1px solid ${isOver?"rgba(155,109,255,0.4)":col.color+"18"}`,
+                  boxShadow:isOver?`0 0 0 2px rgba(155,109,255,0.25), 0 0 30px ${col.color}12`:`0 0 0 1px ${col.color}10`,
                   transition:"all .18s", padding:"14px 12px",
-                  backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
+                  backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)" }}>
                 {/* Column header */}
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center",
-                  paddingBottom:12, marginBottom:10,
-                  borderBottom:`1px solid ${col.color}22` }}>
+                  paddingBottom:12, marginBottom:12,
+                  borderBottom:`1px solid ${col.color}28` }}>
                   <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-                    <div style={{ width:8, height:8, borderRadius:"50%", background:col.color,
-                      boxShadow:`0 0 6px ${col.color}88`, flexShrink:0 }} />
+                    <div style={{ width:10, height:10, borderRadius:"50%", background:col.color,
+                      boxShadow:`0 0 8px ${col.color}cc, 0 0 16px ${col.color}44`, flexShrink:0 }} />
                     <div>
-                      <div style={{ color:T.ink, fontWeight:700, fontSize:13 }}>{col.label}</div>
+                      <div style={{ color:T.ink, fontWeight:700, fontSize:13, letterSpacing:"-0.01em" }}>{col.label}</div>
                       <div style={{ color:T.ink4, fontSize:10, fontFamily:"var(--mono)", marginTop:1 }}>{col.desc}</div>
                     </div>
                   </div>
                   <div style={{ display:"flex", gap:6, alignItems:"center" }}>
-                    <span style={{ background:`${col.color}18`, color:col.color,
-                      fontFamily:"var(--mono)", fontSize:11, padding:"2px 9px",
-                      borderRadius:99, border:`1px solid ${col.color}33` }}>{colCards.length}</span>
+                    <span style={{ background:`${col.color}20`, color:col.color,
+                      fontFamily:"var(--mono)", fontSize:11, padding:"3px 10px",
+                      borderRadius:99, border:`1px solid ${col.color}44`, fontWeight:700 }}>{colCards.length}</span>
                     {addingTo !== col.id && (
                       <button onClick={() => setAddingTo(col.id)} title="Añadir tarjeta"
                         style={{ background:`${col.color}18`, border:`1px solid ${col.color}44`,
@@ -2356,39 +2375,53 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
 
   return (
     <div className="wcard" draggable onDragStart={onDragStart}
-      style={{ background:"rgba(17,17,40,0.8)", border:"1px solid rgba(255,255,255,0.07)",
+      style={{ background:"rgba(14,14,34,0.88)", border:"1px solid rgba(255,255,255,0.09)",
         borderRadius:11, overflow:"hidden", cursor:"grab",
-        boxShadow:"0 2px 12px rgba(0,0,0,.3)",
-        backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
-      <div style={{ height:2, background:`linear-gradient(90deg,${tc},${tc}66)`,
-        boxShadow:`0 0 6px ${tc}55` }} />
+        boxShadow:`0 2px 14px rgba(0,0,0,.35), inset 3px 0 0 ${tc}55`,
+        backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)" }}>
+      <div style={{ height:3, background:`linear-gradient(90deg,${tc} 0%,${tc}55 60%,transparent 100%)`,
+        boxShadow:`0 0 10px ${tc}55` }} />
 
       {/* Tab header — always visible */}
-      <div style={{ padding:"9px 12px", display:"flex", alignItems:"center", gap:7 }}>
+      <div style={{ padding:"10px 12px 9px", display:"flex", alignItems:"center", gap:7 }}>
         <span
           onClick={e => { e.stopPropagation(); setExpanded(p => !p); }}
           title={expanded ? "Colapsar" : "Expandir"}
-          style={{ color:tc, fontSize:10, flexShrink:0, cursor:"pointer", padding:"2px 3px",
-            borderRadius:3, transition:"background .12s" }}
-          onMouseEnter={e => e.currentTarget.style.background = tc+"22"}
-          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+          style={{ color:tc, fontSize:9, flexShrink:0, cursor:"pointer", padding:"3px 4px",
+            borderRadius:4, transition:"all .12s", background:tc+"18", border:`1px solid ${tc}33` }}
+          onMouseEnter={e => e.currentTarget.style.background = tc+"33"}
+          onMouseLeave={e => e.currentTarget.style.background = tc+"18"}
         >{expanded ? "▼" : "▶"}</span>
         <div
           onClick={e => { e.stopPropagation(); onOpen(); }}
           title="Leer tarjeta completa"
-          style={{ color:T.ink, fontWeight:700, fontSize:13, lineHeight:1.3, flex:1,
+          style={{ color:T.ink, fontWeight:700, fontSize:13, lineHeight:1.35, flex:1,
             overflow:"hidden", textOverflow:"ellipsis", whiteSpace: expanded?"normal":"nowrap",
-            cursor:"pointer" }}
-          onMouseEnter={e => e.currentTarget.style.color = T.accent}
+            cursor:"pointer", letterSpacing:"-0.01em" }}
+          onMouseEnter={e => e.currentTarget.style.color = tc}
           onMouseLeave={e => e.currentTarget.style.color = T.ink}
         >{card.title}</div>
-        <div style={{ display:"flex", gap:5, alignItems:"center", flexShrink:0 }}>
-          {commentCount > 0 && <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>💬{commentCount}</span>}
-          {connCount    > 0 && <span style={{ color:T.accent, fontFamily:"var(--mono)", fontSize:10 }}>🔗{connCount}</span>}
-          {sc           > 0 && <span style={{ color:T.blue, fontFamily:"var(--mono)", fontSize:10 }}>🗂{sc}</span>}
+        <div style={{ display:"flex", gap:4, alignItems:"center", flexShrink:0 }}>
+          {commentCount > 0 && (
+            <span style={{ color:T.ink3, fontFamily:"var(--mono)", fontSize:9, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:5, padding:"1px 5px", display:"flex", alignItems:"center", gap:2 }}>
+              💬 {commentCount}
+            </span>
+          )}
+          {connCount > 0 && (
+            <span style={{ color:T.accent, fontFamily:"var(--mono)", fontSize:9, background:T.accentBg, border:`1px solid ${T.accent}33`, borderRadius:5, padding:"1px 5px", display:"flex", alignItems:"center", gap:2 }}>
+              ◈ {connCount}
+            </span>
+          )}
+          {sc > 0 && (
+            <span style={{ color:T.blue, fontFamily:"var(--mono)", fontSize:9, background:T.blueBg, border:`1px solid ${T.blue}33`, borderRadius:5, padding:"1px 5px" }}>
+              ◎ {sc}
+            </span>
+          )}
           <button onClick={e => { e.stopPropagation(); onEdit(); }} className="edit-ico"
             title={isOwner ? "Editar" : "Ver · Comentar · Sticker"}
-            style={{ background:"none", border:"none", color:T.ink4, cursor:"pointer", fontSize:13, padding:"0 2px", flexShrink:0 }}>
+            style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.09)", color:T.ink4, cursor:"pointer", fontSize:12, padding:"2px 5px", borderRadius:5, flexShrink:0, transition:"all .12s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = T.ink2; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = T.ink4; }}>
             {isOwner ? "✎" : "👁"}
           </button>
         </div>
@@ -3287,7 +3320,7 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
       setStatus(fresh.length>0?"done":"none");
     } catch(e) {
       if (e.code==="NO_KEY"||e.code==="INVALID_KEY") { setStatus("no_key"); }
-      else { setStatus("error"); setError("Error al analizar. Verifica tu clave de API."); }
+      else { setStatus("error"); setError(e.detail || "Error al analizar. Intenta de nuevo."); }
     }
   }
 
@@ -3436,7 +3469,15 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
               <OBtn full onClick={run}>Analizar proyecto →</OBtn>
             </div>
           )}
-          {status==="loading" && <div style={{ textAlign:"center", padding:"40px 0" }}><div className="spinner" style={{ width:28, height:28, border:"3px solid "+T.border, borderTop:"3px solid "+cat.color, borderRadius:"50%", margin:"0 auto 16px" }} /><p style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:12 }}>Analizando…</p></div>}
+          {status==="loading" && (
+            <div style={{ textAlign:"center", padding:"44px 0" }}>
+              <div style={{ position:"relative", width:48, height:48, margin:"0 auto 18px" }}>
+                <div className="spinner" style={{ width:48, height:48, border:`3px solid ${cat.color}22`, borderTop:`3px solid ${cat.color}`, borderRadius:"50%", position:"absolute", inset:0 }} />
+                <div style={{ width:16, height:16, background:cat.color+"33", borderRadius:"50%", position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)" }} />
+              </div>
+              <p style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:12, letterSpacing:"0.05em" }}>Analizando…</p>
+            </div>
+          )}
           {(status==="done"||status==="error") && (
             <div>
               {scores && (
@@ -3463,16 +3504,24 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
                   )}
                 </div>
               )}
-              <div style={{ color:T.ink2, fontSize:13, lineHeight:1.75 }}>
-                {result.split("\n").map((line,i) => {
-                  const isH = line.startsWith("##")||(line.startsWith("**")&&line.endsWith("**"));
-                  const clean = line.replace(/\*\*/g,"").replace(/^#+\s*/,"");
-                  if (isH) return <div key={i} style={{ color:T.ink, fontWeight:700, fontSize:14, marginTop:18, marginBottom:5, paddingTop:12, borderTop:"1px solid "+T.border }}>{clean}</div>;
-                  if (line.startsWith("- ")||line.startsWith("• ")) return <div key={i} style={{ paddingLeft:12, marginBottom:4, color:T.ink3, borderLeft:"2px solid "+T.border2, marginLeft:4 }}>{line.slice(2)}</div>;
-                  if (!line.trim()) return <div key={i} style={{ height:8 }} />;
-                  return <div key={i} style={{ marginBottom:3 }}>{line}</div>;
-                })}
-              </div>
+              {status === "error" ? (
+                <div style={{ background:"rgba(255,77,126,0.08)", border:"1px solid rgba(255,77,126,0.25)", borderRadius:12, padding:"20px", textAlign:"center" }}>
+                  <div style={{ fontSize:32, marginBottom:10 }}>⚠</div>
+                  <div style={{ color:T.rose, fontWeight:700, fontSize:14, marginBottom:6 }}>Error en el análisis</div>
+                  <div style={{ color:T.ink3, fontSize:13, lineHeight:1.55 }}>{result}</div>
+                </div>
+              ) : (
+                <div style={{ color:T.ink2, fontSize:13, lineHeight:1.75 }}>
+                  {result.split("\n").map((line,i) => {
+                    const isH = line.startsWith("##")||(line.startsWith("**")&&line.endsWith("**"));
+                    const clean = line.replace(/\*\*/g,"").replace(/^#+\s*/,"");
+                    if (isH) return <div key={i} style={{ color:T.ink, fontWeight:700, fontSize:14, marginTop:18, marginBottom:5, paddingTop:12, borderTop:"1px solid "+T.border }}>{clean}</div>;
+                    if (line.startsWith("- ")||line.startsWith("• ")) return <div key={i} style={{ paddingLeft:12, marginBottom:5, color:T.ink3, borderLeft:`2px solid ${T.accent}44`, marginLeft:4, background:T.accentBg, borderRadius:"0 5px 5px 0", paddingTop:3, paddingBottom:3 }}>{line.slice(2)}</div>;
+                    if (!line.trim()) return <div key={i} style={{ height:8 }} />;
+                    return <div key={i} style={{ marginBottom:3 }}>{line}</div>;
+                  })}
+                </div>
+              )}
               <div style={{ marginTop:18 }}><OGhostBtn full onClick={run}>↻ Nuevo análisis</OGhostBtn></div>
             </div>
           )}
@@ -4718,7 +4767,7 @@ Incluye TODOS los personajes mencionados, aunque sea brevemente. Infiere relacio
       setStatus("done");
     } catch(e) {
       if (e.code==="NO_KEY"||e.code==="INVALID_KEY") { setStatus("no_key"); }
-      else { setStatus("error"); setError("Error al analizar. Verifica tu clave de API."); }
+      else { setStatus("error"); setError(e.detail || "Error al analizar. Intenta de nuevo."); }
     }
   }
 
@@ -5000,11 +5049,12 @@ function FamilyTreeSVG({ personajes, relaciones }) {
 function OInput({ style, ...props }) {
   return (
     <input {...props}
-      style={{ background:"rgba(255,255,255,0.04)", border:"1.5px solid rgba(255,255,255,0.12)", color:T.ink,
+      style={{ background:"rgba(255,255,255,0.04)", border:"1.5px solid rgba(255,255,255,0.1)", color:T.ink,
         padding:"11px 14px", borderRadius:10, fontFamily:"var(--sans)", fontSize:14, width:"100%",
-        outline:"none", transition:"border-color .2s, box-shadow .2s", ...style }}
-      onFocus={e => { e.target.style.borderColor = T.accent; e.target.style.boxShadow = `0 0 0 3px rgba(155,109,255,0.18)`; }}
-      onBlur={e  => { e.target.style.borderColor = "rgba(255,255,255,0.12)"; e.target.style.boxShadow = "none"; }}
+        outline:"none", transition:"border-color .2s, box-shadow .2s",
+        boxShadow:"inset 0 2px 4px rgba(0,0,0,.2)", ...style }}
+      onFocus={e => { e.target.style.borderColor = T.accent; e.target.style.boxShadow = `0 0 0 3px rgba(155,109,255,0.2), inset 0 2px 4px rgba(0,0,0,.15)`; }}
+      onBlur={e  => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; e.target.style.boxShadow = "inset 0 2px 4px rgba(0,0,0,.2)"; }}
     />
   );
 }
@@ -5021,7 +5071,7 @@ function OTextarea({ style, ...props }) {
 }
 function OBtn({ children, full, small, disabled, onClick }) {
   const base = {
-    background: disabled ? "rgba(255,255,255,0.05)" : "linear-gradient(135deg,#9B6DFF 0%,#7C3AED 100%)",
+    background: disabled ? "rgba(255,255,255,0.05)" : "linear-gradient(135deg,#A67CFF 0%,#7C3AED 100%)",
     color: disabled ? T.ink4 : "#fff",
     border: "none",
     padding: small ? "7px 14px" : "11px 22px",
@@ -5030,6 +5080,7 @@ function OBtn({ children, full, small, disabled, onClick }) {
     fontWeight: 700,
     fontSize: small ? 12 : 14,
     cursor: disabled ? "default" : "pointer",
+    boxShadow: disabled ? "none" : "0 4px 20px rgba(124,58,237,0.35), inset 0 1px 0 rgba(255,255,255,0.15)",
     width: full ? "100%" : "auto",
     transition: "opacity .15s, box-shadow .2s, transform .15s",
     boxShadow: disabled ? "none" : "0 4px 16px rgba(155,109,255,0.3)",
@@ -5037,8 +5088,8 @@ function OBtn({ children, full, small, disabled, onClick }) {
   };
   return (
     <button onClick={onClick} disabled={disabled} style={base}
-      onMouseEnter={e => { if (!disabled) { e.currentTarget.style.opacity="0.88"; e.currentTarget.style.boxShadow="0 6px 24px rgba(155,109,255,0.45)"; e.currentTarget.style.transform="translateY(-1px)"; }}}
-      onMouseLeave={e => { e.currentTarget.style.opacity="1"; e.currentTarget.style.boxShadow=disabled?"none":"0 4px 16px rgba(155,109,255,0.3)"; e.currentTarget.style.transform="translateY(0)"; }}>
+      onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background="linear-gradient(135deg,#B590FF 0%,#8B46F0 100%)"; e.currentTarget.style.boxShadow="0 8px 28px rgba(124,58,237,0.55), inset 0 1px 0 rgba(255,255,255,0.2)"; e.currentTarget.style.transform="translateY(-2px)"; }}}
+      onMouseLeave={e => { e.currentTarget.style.background=disabled?"rgba(255,255,255,0.05)":"linear-gradient(135deg,#A67CFF 0%,#7C3AED 100%)"; e.currentTarget.style.boxShadow=disabled?"none":"0 4px 20px rgba(124,58,237,0.35), inset 0 1px 0 rgba(255,255,255,0.15)"; e.currentTarget.style.transform="translateY(0)"; }}>
       {children}
     </button>
   );
@@ -5046,11 +5097,12 @@ function OBtn({ children, full, small, disabled, onClick }) {
 function OGhostBtn({ children, small, full, onClick }) {
   return (
     <button onClick={onClick}
-      style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.12)", color:T.ink3,
+      style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.13)", color:T.ink3,
         padding:small?"6px 12px":"9px 18px", borderRadius:10, fontFamily:"var(--sans)",
-        fontSize:small?12:13, cursor:"pointer", width:full?"100%":"auto", transition:"all .15s" }}
-      onMouseEnter={e => { e.currentTarget.style.background="rgba(255,255,255,0.08)"; e.currentTarget.style.color=T.ink; e.currentTarget.style.borderColor="rgba(255,255,255,0.22)"; }}
-      onMouseLeave={e => { e.currentTarget.style.background="rgba(255,255,255,0.04)"; e.currentTarget.style.color=T.ink3; e.currentTarget.style.borderColor="rgba(255,255,255,0.12)"; }}>
+        fontSize:small?12:13, cursor:"pointer", width:full?"100%":"auto", transition:"all .15s",
+        fontWeight:500 }}
+      onMouseEnter={e => { e.currentTarget.style.background="rgba(255,255,255,0.09)"; e.currentTarget.style.color=T.ink; e.currentTarget.style.borderColor="rgba(255,255,255,0.25)"; e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,.2)"; }}
+      onMouseLeave={e => { e.currentTarget.style.background="rgba(255,255,255,0.04)"; e.currentTarget.style.color=T.ink3; e.currentTarget.style.borderColor="rgba(255,255,255,0.13)"; e.currentTarget.style.boxShadow="none"; }}>
       {children}
     </button>
   );
@@ -5071,12 +5123,12 @@ function OOverlay({ children, onClose }) {
 }
 function OModalBox({ children, wide }) {
   return (
-    <div style={{ background:"rgba(14,14,32,0.92)", border:"1px solid rgba(255,255,255,0.1)",
-      borderRadius:16, padding:"28px", width:"100%", maxWidth:wide?510:430,
+    <div style={{ background:"rgba(10,10,24,0.95)", border:"1px solid rgba(155,109,255,0.15)",
+      borderRadius:18, padding:"28px", width:"100%", maxWidth:wide?510:430,
       maxHeight:"90vh", overflowY:"auto",
-      boxShadow:"0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(155,109,255,0.1)",
-      backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)",
-      animation:"scaleIn .22s ease" }}>
+      boxShadow:"0 40px 100px rgba(0,0,0,.7), 0 0 0 1px rgba(155,109,255,0.12), inset 0 1px 0 rgba(255,255,255,0.06)",
+      backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)",
+      animation:"scaleIn .22s cubic-bezier(.34,1.56,.64,1)" }}>
       {children}
     </div>
   );
