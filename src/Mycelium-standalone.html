@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2" />
+<title>Mycelium · canvas</title>
+<style>
+/* ── DESIGN TOKENS ──────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  --bg-0: #0b1014;
+  --bg-1: #0f161c;
+  --bg-2: #131c24;
+  --bg-3: #1a2530;
+  --line: rgba(123, 215, 232, 0.18);
+  --line-strong: rgba(123, 215, 232, 0.42);
+  --line-soft: rgba(255, 255, 255, 0.06);
+  --ink-0: #e8f4f7;
+  --ink-1: #b8c8d0;
+  --ink-2: #7d8e99;
+  --ink-3: #4a5662;
+  --cyan: #7BD7E8;
+  --cyan-glow: rgba(123, 215, 232, 0.5);
+  --amber: #E8B45C;
+  --green: #8CD17C;
+  --red: #E86A5C;
+  --font-display: 'Rajdhani', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { height: 100%; width: 100%; }
+body {
+  background: var(--bg-0);
+  color: var(--ink-0);
+  font-family: var(--font-display);
+  font-size: 14px;
+  overflow: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(var(--line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+button {
+  font-family: var(--font-display);
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-1);
+  padding: 6px 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 11px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+button:hover { border-color: var(--cyan); color: var(--cyan); box-shadow: inset 0 0 12px rgba(123, 215, 232, 0.08); }
+
+/* ── HUD CORNERS HELPER ─────────────────────────────────────────────────── */
+.hud-corners { position: relative; }
+.hud-corners::before, .hud-corners::after {
+  content: '';
+  position: absolute;
+  width: 10px; height: 10px;
+  border: 1px solid var(--cyan);
+  pointer-events: none;
+}
+.hud-corners::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+.hud-corners::after  { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+/* ── MICELIO CANVAS ─────────────────────────────────────────────────────── */
+.canvas-wrap {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(123, 215, 232, 0.04), transparent 60%),
+    var(--bg-0);
+  cursor: grab;
+}
+.canvas-wrap.panning { cursor: grabbing; }
+.canvas-stage {
+  position: absolute;
+  top: 0; left: 0;
+  transform-origin: 0 0;
+  width: 4000px; height: 3000px;
+}
+.canvas-svg {
+  position: absolute;
+  top: 0; left: 0;
+}
+
+/* CARDS */
+.mcard {
+  position: absolute;
+  width: 240px;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  font-family: var(--font-display);
+  user-select: none;
+  z-index: 5;
+}
+.mcard:hover { border-color: var(--cyan); }
+.mcard[data-expanded="true"] {
+  width: 320px; z-index: 8;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--cyan);
+}
+.mcard-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  cursor: grab;
+  border-bottom: 1px dashed var(--line);
+}
+.mcard-head:active { cursor: grabbing; }
+.cardtab-glyph { width: 14px; flex: none; color: var(--cyan); font-family: var(--font-mono); font-size: 11px; }
+.mcard-title {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.author-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.mcard-body { display: none; padding: 10px; }
+.mcard[data-expanded="true"] .mcard-body { display: block; }
+.mcard-body p { font-size: 12px; line-height: 1.5; color: var(--ink-1); margin-bottom: 8px; }
+.cardtab-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.tag-pill {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.muted { color: var(--ink-3); font-family: var(--font-mono); letter-spacing: 0.08em; }
+.cardtab-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.cardtab-actions button { padding: 4px 8px; font-size: 9px; }
+
+/* STICKERS */
+.sticker {
+  position: absolute;
+  width: 180px;
+  background: rgba(232, 180, 92, 0.08);
+  border: 1px solid var(--amber);
+  border-left: 3px solid var(--amber);
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--ink-1);
+  user-select: none;
+  cursor: grab;
+  z-index: 6;
+}
+.sticker[data-state="approved"] { border-color: var(--green); border-left-color: var(--green); background: rgba(140, 209, 124, 0.08); }
+.sticker[data-state="rejected"] { opacity: 0.4; border-style: dashed; }
+.sticker:active { cursor: grabbing; }
+.sticker-head {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--amber);
+  letter-spacing: 0.15em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.sticker[data-state="approved"] .sticker-head { color: var(--green); }
+.sticker-actions { display: flex; gap: 4px; margin-top: 6px; }
+.sticker-actions button { padding: 2px 6px; font-size: 9px; }
+
+.avatar-mini {
+  width: 14px; height: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 9px;
+  background: var(--cyan); color: var(--bg-0);
+}
+
+/* TOOLBARS */
+.canvas-toolbar {
+  position: absolute;
+  top: 16px; left: 16px;
+  display: flex; gap: 6px;
+  z-index: 50;
+}
+.canvas-toolbar button {
+  background: rgba(15, 22, 28, 0.9);
+  backdrop-filter: blur(8px);
+}
+.canvas-zoom {
+  position: absolute;
+  bottom: 16px; right: 16px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--ink-3);
+  background: rgba(15, 22, 28, 0.9);
+  backdrop-filter: blur(8px);
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  z-index: 50;
+  text-align: right;
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel">
+// ── DEMO DATA ───────────────────────────────────────────────────────────
+// Reemplaza con tus propios datos. La forma de cada tipo está documentada abajo.
+
+const USERS = [
+  { id: "ita",    name: "Ita",    color: "#7BD7E8", initial: "I" },
+  { id: "pichum", name: "Pichum", color: "#E8B45C", initial: "P" },
+];
+
+// Card  → { id, author, title, body, tags?, time?, x, y, base? (true = highlight) }
+const INITIAL_CARDS = [
+  { id: "c1", author: "ita", title: "Concepto base", body: "El núcleo del proyecto. Esta tarjeta queda fijada como ancla del micelio.",
+    tags: ["núcleo"], time: "Hace 2 días", x: 700, y: 500, base: true },
+  { id: "c2", author: "pichum", title: "Regla de los espíritus invisibles", body: "Los espíritus nunca aparecen en el texto. Viven exclusivamente en las ilustraciones.",
+    tags: ["regla"], time: "Hace 1 día", x: 360, y: 320 },
+  { id: "c3", author: "ita", title: "Audiencia & posicionamiento", body: "9-12 años primario. Padres millennials/Gen X como compradores reales.",
+    tags: ["mercado"], time: "Hace 18h", x: 1080, y: 320 },
+  { id: "c4", author: "pichum", title: "Personaje · Lili", body: "Niña urbana, 10-12 años. Brillante, irritable, adicta a la pantalla.",
+    tags: ["personaje"], time: "Hace 6h", x: 320, y: 700 },
+  { id: "c5", author: "ita", title: "Personaje · La Abuela", body: "Fue ejecutiva urbana. Junto al abuelo tuvieron una epifanía y dejaron todo.",
+    tags: ["personaje"], time: "Hace 5h", x: 1080, y: 700 },
+];
+
+// Sticker → { id, cardId, author, body, state, x, y }
+//           state: "open" | "approved" | "rejected"
+const INITIAL_STICKERS = [
+  { id: "s1", cardId: "c4", author: "pichum",
+    body: "¿Y si su talento de dibujo se revela solo cuando dibuja plantas?",
+    state: "open", x: 80, y: 880 },
+  { id: "s2", cardId: "c5", author: "ita",
+    body: "Sumar: la abuela tiene un cuaderno propio que Lili nunca abre.",
+    state: "approved", x: 1320, y: 880 },
+];
+
+// Connection → { id, from, to, label, kind, state }
+//              kind: "family" | "spatial" | "thematic" (define color)
+//              state: "approved" | "suggested"
+const INITIAL_CONNECTIONS = [
+  { id: "x1", from: "c4", to: "c5", label: "Vínculo familiar", kind: "family", state: "approved" },
+  { id: "x2", from: "c2", to: "c1", label: "Define la regla del concepto base", kind: "thematic", state: "suggested" },
+  { id: "x3", from: "c3", to: "c1", label: "El concepto se piensa para esta audiencia", kind: "thematic", state: "approved" },
+];
+
+// ── AVATAR MINI ─────────────────────────────────────────────────────────
+const Avatar = ({ user, size = 14 }) => (
+  <div className="avatar-mini" style={{ width: size, height: size, fontSize: size * 0.6, background: user?.color }}>
+    {user?.initial}
+  </div>
+);
+
+// ── EDGE-POINT (intersección recta-rectángulo) ──────────────────────────
+function edgePoint(box, tx, ty) {
+  const cx = box.x + box.w / 2;
+  const cy = box.y + box.h / 2;
+  const dx = tx - cx;
+  const dy = ty - cy;
+  if (dx === 0 && dy === 0) return { x: cx, y: cy };
+  const hw = box.w / 2;
+  const hh = box.h / 2;
+  const sx = dx === 0 ? Infinity : hw / Math.abs(dx);
+  const sy = dy === 0 ? Infinity : hh / Math.abs(dy);
+  const s = Math.min(sx, sy);
+  return { x: cx + dx * s, y: cy + dy * s };
+}
+
+// ── MYCELIUM CANVAS ─────────────────────────────────────────────────────
+const Mycelium = ({ cards, stickers, connections, users, currentUser,
+                    onCardMove, onStickerMove, onCardAction, onConnAction,
+                    onArrange, showConnections = true }) => {
+  const [transform, setTransform] = React.useState({ x: 60, y: 40, k: 0.8 });
+  const [expandedCards, setExpandedCards] = React.useState(new Set([cards[0]?.id]));
+  const wrapRef = React.useRef(null);
+  const stageRef = React.useRef(null);
+  const drag = React.useRef(null);
+
+  const userById = (id) => users.find(u => u.id === id);
+  const cardById = (id) => cards.find(c => c.id === id);
+
+  const isExp = (id) => expandedCards.has(id);
+  const toggleCard = (id) => {
+    setExpandedCards(prev => {
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
+  };
+
+  // Pan/zoom centrado en cursor
+  const onWheel = (e) => {
+    e.preventDefault();
+    const rect = wrapRef.current.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
+    const newK = Math.max(0.3, Math.min(2.5, transform.k * factor));
+    const wx = (mx - transform.x) / transform.k;
+    const wy = (my - transform.y) / transform.k;
+    setTransform({ k: newK, x: mx - wx * newK, y: my - wy * newK });
+  };
+
+  const onMouseDown = (e) => {
+    if (e.target !== wrapRef.current && !e.target.classList.contains('canvas-stage') && !e.target.classList.contains('canvas-svg')) return;
+    drag.current = { type: "pan", startX: e.clientX, startY: e.clientY, ox: transform.x, oy: transform.y };
+    wrapRef.current.classList.add("panning");
+  };
+
+  const onMouseMove = (e) => {
+    if (!drag.current) return;
+    const d = drag.current;
+    if (d.type === "pan") {
+      setTransform(t => ({ ...t, x: d.ox + (e.clientX - d.startX), y: d.oy + (e.clientY - d.startY) }));
+    } else if (d.type === "card") {
+      const dx = (e.clientX - d.startX) / transform.k;
+      const dy = (e.clientY - d.startY) / transform.k;
+      onCardMove(d.id, d.ox + dx, d.oy + dy);
+    } else if (d.type === "sticker") {
+      const dx = (e.clientX - d.startX) / transform.k;
+      const dy = (e.clientY - d.startY) / transform.k;
+      onStickerMove(d.id, d.ox + dx, d.oy + dy);
+    }
+  };
+
+  const onMouseUp = () => {
+    drag.current = null;
+    wrapRef.current?.classList.remove("panning");
+  };
+
+  React.useEffect(() => {
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  });
+
+  // Touch: pan single, pinch dos dedos
+  const touchState = React.useRef(null);
+  const onTouchStart = (e) => {
+    if (e.touches.length === 2) {
+      const [a, b] = e.touches;
+      touchState.current = {
+        type: "pinch",
+        d0: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY),
+        cx: (a.clientX + b.clientX) / 2,
+        cy: (a.clientY + b.clientY) / 2,
+        t0: { ...transform },
+      };
+    } else if (e.touches.length === 1 && (e.target === wrapRef.current || e.target.classList.contains('canvas-stage'))) {
+      touchState.current = { type: "pan", x: e.touches[0].clientX, y: e.touches[0].clientY, t0: { ...transform } };
+    }
+  };
+  const onTouchMove = (e) => {
+    const ts = touchState.current;
+    if (!ts) return;
+    if (ts.type === "pinch" && e.touches.length === 2) {
+      e.preventDefault();
+      const [a, b] = e.touches;
+      const d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+      const factor = d / ts.d0;
+      const newK = Math.max(0.3, Math.min(2.5, ts.t0.k * factor));
+      const rect = wrapRef.current.getBoundingClientRect();
+      const mx = ts.cx - rect.left;
+      const my = ts.cy - rect.top;
+      const wx = (mx - ts.t0.x) / ts.t0.k;
+      const wy = (my - ts.t0.y) / ts.t0.k;
+      setTransform({ k: newK, x: mx - wx * newK, y: my - wy * newK });
+    } else if (ts.type === "pan" && e.touches.length === 1) {
+      setTransform(t => ({ ...t, x: ts.t0.x + (e.touches[0].clientX - ts.x), y: ts.t0.y + (e.touches[0].clientY - ts.y) }));
+    }
+  };
+  const onTouchEnd = () => { touchState.current = null; };
+
+  const startCardDrag = (e, card) => {
+    e.stopPropagation();
+    drag.current = { type: "card", id: card.id, startX: e.clientX, startY: e.clientY, ox: card.x, oy: card.y };
+  };
+  const startStickerDrag = (e, st) => {
+    e.stopPropagation();
+    drag.current = { type: "sticker", id: st.id, startX: e.clientX, startY: e.clientY, ox: st.x, oy: st.y };
+  };
+
+  const cardBox = (c) => ({ x: c.x, y: c.y, w: isExp(c.id) ? 320 : 240, h: isExp(c.id) ? 140 : 38 });
+  const stickerBox = (s) => ({ x: s.x, y: s.y, w: 180, h: 80 });
+
+  return (
+    <div className="canvas-wrap" ref={wrapRef}
+         onWheel={onWheel}
+         onMouseDown={onMouseDown}
+         onTouchStart={onTouchStart}
+         onTouchMove={onTouchMove}
+         onTouchEnd={onTouchEnd}>
+
+      <div className="canvas-toolbar">
+        <button onClick={onArrange}>◉ Organizar micelio</button>
+        <button onClick={() => setTransform({ x: 60, y: 40, k: 0.8 })}>⊕ Centrar</button>
+        <button onClick={() => setExpandedCards(new Set(cards.map(c => c.id)))}>▼ Expandir todo</button>
+        <button onClick={() => setExpandedCards(new Set())}>▲ Colapsar</button>
+      </div>
+
+      <div className="canvas-zoom">
+        <div>ZOOM · {Math.round(transform.k * 100)}%</div>
+        <div>DRAG · WHEEL · PINCH</div>
+      </div>
+
+      <div className="canvas-stage" ref={stageRef}
+           style={{ transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.k})` }}>
+
+        {showConnections && (
+          <svg className="canvas-svg" style={{ width: 4000, height: 3000, pointerEvents: "none" }}>
+            {/* Conexiones tarjeta-tarjeta */}
+            {connections.map(conn => {
+              const a = cardById(conn.from);
+              const b = cardById(conn.to);
+              if (!a || !b) return null;
+              const ba = cardBox(a);
+              const bb = cardBox(b);
+              const ca = { x: ba.x + ba.w / 2, y: ba.y + ba.h / 2 };
+              const cb = { x: bb.x + bb.w / 2, y: bb.y + bb.h / 2 };
+              const pa = edgePoint(ba, cb.x, cb.y);
+              const pb = edgePoint(bb, ca.x, ca.y);
+              const dashed = conn.state !== "approved";
+              const color = conn.kind === "family" ? "var(--amber)" :
+                            conn.kind === "spatial" ? "var(--green)" : "var(--cyan)";
+              const mid = { x: (pa.x + pb.x) / 2, y: (pa.y + pb.y) / 2 };
+              return (
+                <g key={conn.id}>
+                  <line x1={pa.x} y1={pa.y} x2={pb.x} y2={pb.y}
+                        stroke={color} strokeWidth="1.5"
+                        strokeDasharray={dashed ? "4 4" : "0"}
+                        opacity={conn.state === "approved" ? 0.85 : 0.5} />
+                  <circle cx={pa.x} cy={pa.y} r="3" fill={color} />
+                  <circle cx={pb.x} cy={pb.y} r="3" fill={color} />
+                  <text x={mid.x} y={mid.y - 6} fill={color} fontSize="10" fontFamily="JetBrains Mono"
+                        textAnchor="middle" opacity="0.8">
+                    {conn.label.length > 38 ? conn.label.slice(0, 36) + "…" : conn.label}
+                  </text>
+                </g>
+              );
+            })}
+            {/* Cuerdas curvas a stickers */}
+            {stickers.map(st => {
+              const c = cardById(st.cardId);
+              if (!c) return null;
+              const cb = cardBox(c);
+              const sb = stickerBox(st);
+              const ccen = { x: cb.x + cb.w / 2, y: cb.y + cb.h / 2 };
+              const scen = { x: sb.x + sb.w / 2, y: sb.y + sb.h / 2 };
+              const p1 = edgePoint(cb, scen.x, scen.y);
+              const p2 = edgePoint(sb, ccen.x, ccen.y);
+              const dx = p2.x - p1.x, dy = p2.y - p1.y;
+              const sag = Math.min(40, Math.hypot(dx, dy) * 0.15);
+              const cmid = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 + sag };
+              const color = st.state === "approved" ? "var(--green)" : "var(--amber)";
+              return (
+                <g key={st.id} opacity={st.state === "rejected" ? 0.3 : 0.85}>
+                  <path d={`M ${p1.x} ${p1.y} Q ${cmid.x} ${cmid.y} ${p2.x} ${p2.y}`}
+                        fill="none" stroke={color} strokeWidth="1" strokeDasharray="2 3" />
+                  <circle cx={p1.x} cy={p1.y} r="3" fill={color} />
+                  <circle cx={p2.x} cy={p2.y} r="2" fill={color} />
+                </g>
+              );
+            })}
+          </svg>
+        )}
+
+        {/* Cards */}
+        {cards.map(card => {
+          const user = userById(card.author);
+          const exp = isExp(card.id);
+          return (
+            <div key={card.id}
+                 className="mcard hud-corners"
+                 data-expanded={exp}
+                 style={{ left: card.x, top: card.y, borderLeft: card.base ? "3px solid var(--amber)" : undefined }}>
+              <div className="mcard-head"
+                   onMouseDown={e => startCardDrag(e, card)}
+                   onTouchStart={e => {
+                     if (e.touches.length === 1) {
+                       e.stopPropagation();
+                       drag.current = { type: "card", id: card.id, startX: e.touches[0].clientX, startY: e.touches[0].clientY, ox: card.x, oy: card.y };
+                     }
+                   }}
+                   onClick={() => toggleCard(card.id)}>
+                <span className="cardtab-glyph">{exp ? "◢" : "▸"}</span>
+                <span className="mcard-title">{card.title}</span>
+                {user && <span className="author-dot" style={{ background: user.color }} />}
+              </div>
+              {exp && (
+                <div className="mcard-body">
+                  <p>{card.body}</p>
+                  {card.tags?.length > 0 && (
+                    <div className="cardtab-tags">
+                      {card.tags.map(t => <span key={t} className="tag-pill">{t}</span>)}
+                    </div>
+                  )}
+                  <div className="muted" style={{ fontSize: 10, marginBottom: 8 }}>{user?.name} · {card.time}</div>
+                  <div className="cardtab-actions">
+                    <button onClick={e => { e.stopPropagation(); onCardAction("sticker", card); }}>＋ Sticker</button>
+                    <button onClick={e => { e.stopPropagation(); onCardAction("edit", card); }}>✎ Editar</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Stickers */}
+        {stickers.map(st => {
+          const u = userById(st.author);
+          return (
+            <div key={st.id}
+                 className="sticker hud-corners"
+                 data-state={st.state}
+                 style={{ left: st.x, top: st.y }}
+                 onMouseDown={e => startStickerDrag(e, st)}
+                 onTouchStart={e => {
+                   if (e.touches.length === 1) {
+                     e.stopPropagation();
+                     drag.current = { type: "sticker", id: st.id, startX: e.touches[0].clientX, startY: e.touches[0].clientY, ox: st.x, oy: st.y };
+                   }
+                 }}>
+              <div className="sticker-head">
+                <Avatar user={u} size={14} />
+                <span>{u?.name} · {st.state === "approved" ? "APROBADO" : st.state === "rejected" ? "DESCARTADO" : "STICKER"}</span>
+              </div>
+              <div>{st.body}</div>
+              {st.state === "open" && (
+                <div className="sticker-actions">
+                  <button onClick={e => { e.stopPropagation(); onCardAction("sticker-state", { id: st.id, state: "approved" }); }}>✓</button>
+                  <button onClick={e => { e.stopPropagation(); onCardAction("sticker-state", { id: st.id, state: "rejected" }); }}>✕</button>
+                </div>
+              )}
+              {st.state !== "open" && (
+                <div className="sticker-actions">
+                  <button onClick={e => { e.stopPropagation(); onCardAction("sticker-state", { id: st.id, state: "open" }); }}>↺ Reabrir</button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ── HOST APP ────────────────────────────────────────────────────────────
+const App = () => {
+  const [cards, setCards] = React.useState(INITIAL_CARDS);
+  const [stickers, setStickers] = React.useState(INITIAL_STICKERS);
+  const [connections, setConnections] = React.useState(INITIAL_CONNECTIONS);
+
+  const moveCard = (id, x, y) => setCards(cs => cs.map(c => c.id === id ? { ...c, x, y } : c));
+  const moveSticker = (id, x, y) => setStickers(ss => ss.map(s => s.id === id ? { ...s, x, y } : s));
+
+  const handleCardAction = (action, payload) => {
+    if (action === "sticker-state") {
+      setStickers(ss => ss.map(s => s.id === payload.id ? { ...s, state: payload.state } : s));
+    } else if (action === "edit") {
+      const newTitle = prompt("Editar título", payload.title);
+      if (newTitle != null) setCards(cs => cs.map(c => c.id === payload.id ? { ...c, title: newTitle } : c));
+    } else if (action === "sticker") {
+      const body = prompt("Nuevo sticker para: " + payload.title);
+      if (body) {
+        setStickers(ss => [...ss, {
+          id: "s" + Date.now(),
+          cardId: payload.id, author: USERS[0].id, body, state: "open",
+          x: payload.x + 280, y: payload.y + 60,
+        }]);
+      }
+    }
+  };
+
+  // Layout radial: una tarjeta "base" en el centro, las demás en anillos
+  const arrange = () => {
+    const base = cards.find(c => c.base) || cards[0];
+    const cx = 700, cy = 500;
+    setCards(cs => {
+      const peers = cs.filter(c => c.id !== base.id);
+      return cs.map(c => {
+        if (c.id === base.id) return { ...c, x: cx, y: cy };
+        const i = peers.findIndex(p => p.id === c.id);
+        const ringSize = 6;
+        const ring = Math.floor(i / ringSize) + 1;
+        const inRing = peers.filter((_, j) => Math.floor(j / ringSize) + 1 === ring);
+        const idxInRing = inRing.findIndex(p => p.id === c.id);
+        const total = inRing.length;
+        const angle = (idxInRing / total) * Math.PI * 2 + ring * 0.4;
+        const radius = 240 + ring * 180;
+        return { ...c, x: cx + Math.cos(angle) * radius - 120, y: cy + Math.sin(angle) * radius - 20 };
+      });
+    });
+    setStickers(ss => ss.map(s => {
+      const c = cards.find(x => x.id === s.cardId);
+      if (!c) return s;
+      const a = Math.random() * Math.PI * 2;
+      return { ...s, x: c.x + Math.cos(a) * 220 - 90, y: c.y + Math.sin(a) * 180 + 60 };
+    }));
+  };
+
+  return (
+    <Mycelium
+      cards={cards}
+      stickers={stickers}
+      connections={connections}
+      users={USERS}
+      currentUser={USERS[0]}
+      onCardMove={moveCard}
+      onStickerMove={moveSticker}
+      onCardAction={handleCardAction}
+      onConnAction={(id, state) => setConnections(cs => cs.map(c => c.id === id ? { ...c, state } : c))}
+      onArrange={arrange}
+      showConnections={true}
+    />
+  );
+};
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
