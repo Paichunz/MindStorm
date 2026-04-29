@@ -411,7 +411,38 @@ function getThemeCSS(id) {
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const GLOBAL_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  :root { --raj: 'Rajdhani', system-ui, sans-serif; --mc: #7BD7E8; --ma: #E8B45C; --mg: #8CD17C; --mr: #E86A5C; --mb0: #0b1014; --mb1: #0f161c; --mb2: #131c24; --ink0: #e8f4f7; --ink1: #b8c8d0; --ink2: #7d8e99; --ink3: #4a5662; }
+
+  /* ── Mycelium card ── */
+  .mcard { position:absolute; width:240px; background:var(--mb1); border:1px solid rgba(123,215,232,0.18); font-family:var(--raj); user-select:none; z-index:5; transition:border-color .15s, box-shadow .15s, width .18s; cursor:grab; }
+  .mcard:hover { border-color:rgba(123,215,232,0.55); box-shadow:0 4px 20px rgba(0,0,0,.5); }
+  .mcard-exp { width:300px !important; z-index:8 !important; box-shadow:0 8px 32px rgba(0,0,0,.55), 0 0 0 1px rgba(123,215,232,0.7) !important; }
+  .mcard-head { display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px dashed rgba(123,215,232,0.13); }
+  .mcard-glyph { flex:none; color:var(--mc); font-family:var(--mono); font-size:11px; width:14px; }
+  .mcard-title { flex:1; font-size:13px; font-weight:500; letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink0); }
+  .mcard-dot { width:8px; height:8px; border-radius:50%; flex:none; }
+  .mcard-body { padding:10px; font-size:12px; line-height:1.5; color:var(--ink1); }
+  .mcard-body p { margin-bottom:8px; }
+  .mcard-tags { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px; }
+  .mtag { font-family:var(--mono); font-size:9px; padding:2px 6px; border:1px solid rgba(123,215,232,0.18); color:var(--ink2); text-transform:uppercase; letter-spacing:.1em; }
+  .mmuted { color:var(--ink3); font-family:var(--mono); font-size:9px; letter-spacing:.08em; margin-bottom:8px; }
+  .mcard-btns { display:flex; gap:6px; flex-wrap:wrap; }
+  .mcard-btns button { font-family:var(--raj); background:transparent; border:1px solid rgba(123,215,232,0.22); color:var(--ink1); padding:4px 9px; text-transform:uppercase; letter-spacing:.1em; font-size:10px; cursor:pointer; transition:.13s; }
+  .mcard-btns button:hover { border-color:var(--mc); color:var(--mc); }
+
+  /* ── HUD corner brackets ── */
+  .hud-c { position:relative; }
+  .hud-c::before, .hud-c::after { content:''; position:absolute; width:10px; height:10px; border:1px solid var(--mc); pointer-events:none; z-index:1; opacity:.45; transition:opacity .15s; }
+  .hud-c::before { top:-1px; left:-1px; border-right:none; border-bottom:none; }
+  .hud-c::after  { bottom:-1px; right:-1px; border-left:none; border-top:none; }
+  .mcard:hover .hud-c::before, .mcard:hover .hud-c::after,
+  .mcard-exp .hud-c::before, .mcard-exp .hud-c::after { opacity:1; }
+
+  /* ── Mycelium HUD toolbar buttons ── */
+  .hud-btn { font-family:var(--raj); background:rgba(15,22,28,0.92); border:1px solid rgba(123,215,232,0.22); color:var(--ink1); padding:6px 13px; text-transform:uppercase; letter-spacing:.12em; font-size:11px; cursor:pointer; transition:.14s; backdrop-filter:blur(8px); }
+  .hud-btn:hover { border-color:var(--mc); color:var(--mc); box-shadow:inset 0 0 12px rgba(123,215,232,0.07); }
+  .hud-btn-active { border-color:var(--mc) !important; color:var(--mc) !important; background:rgba(123,215,232,0.08) !important; }
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
   :root { --sans:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',monospace; }
   html, body { background:#070712; min-height:100vh; }
@@ -4329,55 +4360,54 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
 
   function stickerRot(id) { return (id.split("").reduce((a,c)=>a+c.charCodeAt(0),0) % 12) - 5; }
 
+  const isMicelioMode = layoutMode === "micelio";
+
   return (
     <div ref={containerRef}
       style={{position:"relative",flex:1,overflow:"hidden",cursor:"grab",touchAction:"none",
-        background: layoutMode==="micelio" ? "#07080F" : T.bg,
-        backgroundImage: layoutMode==="micelio"
-          ? "radial-gradient(rgba(245,158,11,0.18) 1px, transparent 1px)"
+        background: isMicelioMode
+          ? "radial-gradient(circle at 50% 50%, rgba(123,215,232,0.04), transparent 65%), #0b1014"
+          : T.bg,
+        backgroundImage: isMicelioMode
+          ? "linear-gradient(rgba(255,255,255,0.055) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.055) 1px,transparent 1px)"
           : `radial-gradient(${T.border2} 1px, transparent 1px)`,
-        backgroundSize: layoutMode==="micelio" ? "32px 32px" : "28px 28px",
+        backgroundSize: isMicelioMode ? "32px 32px" : "28px 28px",
         backgroundPosition: "0 0"}}
       onMouseDown={startPan}
       onTouchStart={onTouchStart}
     >
-      {/* Toolbar — fixed above transform layer */}
-      <div style={{position:"absolute",top:12,left:"50%",transform:"translateX(-50%)",zIndex:20,pointerEvents:"none"}}>
-        <div style={{background:"rgba(255,255,255,0.94)",border:"1px solid rgba(0,0,0,0.09)",borderRadius:14,padding:"8px 16px",
-          display:"flex",gap:10,alignItems:"center",boxShadow:"0 4px 24px rgba(0,0,0,.10), 0 1px 4px rgba(0,0,0,.06)",pointerEvents:"auto",flexWrap:"wrap",
-          backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)"}}>
-          <span style={{color:"#64748B",fontFamily:"var(--mono)",fontSize:11}}>
-            {cards.length} nodos · {allStickers.length} stickers
+      {/* ── HUD Toolbar top-left ── */}
+      <div style={{position:"absolute",top:14,left:14,zIndex:20,display:"flex",gap:6,flexWrap:"wrap"}}>
+        {[["stack","▦ Stack"],["tree","⊤ Árbol"],["micelio","◉ Red"]].map(([m,label])=>(
+          <button key={m} className={`hud-btn${layoutMode===m?" hud-btn-active":""}`}
+            onClick={()=>{setLayoutMode(m);runLayout(m);}} disabled={running}>
+            {label}
+          </button>
+        ))}
+        {running && (
+          <span style={{fontFamily:"var(--mono)",fontSize:10,letterSpacing:".1em",
+            color:"#7BD7E8",padding:"6px 0",textTransform:"uppercase",opacity:0.7}}>
+            Organizando…
           </span>
-          <div style={{width:1,height:14,background:"rgba(0,0,0,0.1)"}}/>
-          {/* Layout buttons */}
-          {[["stack","▦ Stack"],["tree","⊤ Árbol"],["micelio","✦ Red"]].map(([m,label])=>(
-            <button key={m} onClick={()=>{setLayoutMode(m);runLayout(m);}} disabled={running}
-              style={{background:layoutMode===m ? T.accent : "rgba(0,0,0,0.04)",
-                color:layoutMode===m?"#fff":"#475569",
-                border:"1px solid "+(layoutMode===m ? T.accent : "rgba(0,0,0,0.10)"),
-                padding:"4px 11px",borderRadius:7,
-                cursor:"pointer",fontSize:11,fontFamily:"var(--sans)",fontWeight:600,transition:"all .18s"}}>
-              {label}
-            </button>
-          ))}
-          {running && <span style={{color:"#94A3B8",fontFamily:"var(--mono)",fontSize:11}}>Organizando…</span>}
-          <div style={{width:1,height:14,background:"rgba(0,0,0,0.1)"}}/>
-          <button onClick={()=>zoomStep(-1)} style={{background:"none",border:"none",color:"#64748B",cursor:"pointer",fontSize:17,fontWeight:700,padding:"0 3px",lineHeight:1}}>−</button>
-          <span style={{color:"#475569",fontFamily:"var(--mono)",fontSize:11,minWidth:36,textAlign:"center"}}>{zoomPct}%</span>
-          <button onClick={()=>zoomStep(+1)} style={{background:"none",border:"none",color:"#64748B",cursor:"pointer",fontSize:17,fontWeight:700,padding:"0 3px",lineHeight:1}}>+</button>
-          <button onClick={resetZoom} style={{background:"none",border:"none",color:"#94A3B8",cursor:"pointer",fontSize:10,padding:"0 2px",fontFamily:"var(--mono)"}}>↺</button>
-        </div>
+        )}
       </div>
 
-      {/* Hint */}
-      <div style={{position:"absolute",bottom:12,right:14,zIndex:20,fontFamily:"var(--mono)",fontSize:10,pointerEvents:"none",
-        color: layoutMode==="micelio" ? NODE_GOLD+"99" : "#64748B",
-        background: layoutMode==="micelio" ? "rgba(7,8,15,0.75)" : "rgba(255,255,255,0.78)",
-        padding:"4px 10px",borderRadius:8,
-        border: layoutMode==="micelio" ? `1px solid ${NODE_GOLD}22` : "none",
-        backdropFilter:"blur(6px)", boxShadow:"0 1px 4px rgba(0,0,0,0.12)"}}>
-        Arrastra = mover · Rueda = zoom · Click nodo = leer
+      {/* ── HUD zoom + hint bottom-right ── */}
+      <div style={{position:"absolute",bottom:14,right:14,zIndex:20,
+        fontFamily:"var(--mono)",fontSize:10,letterSpacing:".13em",
+        color: isMicelioMode ? "#7d8e99" : "#64748B",
+        background: isMicelioMode ? "rgba(15,22,28,0.92)" : "rgba(255,255,255,0.82)",
+        border: isMicelioMode ? "1px solid rgba(123,215,232,0.18)" : "1px solid rgba(0,0,0,0.1)",
+        backdropFilter:"blur(8px)",padding:"8px 12px",lineHeight:1.7,pointerEvents:"none"}}>
+        <div style={{color: isMicelioMode ? "#7BD7E8" : T.accent,fontWeight:700}}>
+          ZOOM · {zoomPct}%
+        </div>
+        <div>DRAG · WHEEL · CLICK</div>
+        <div style={{display:"flex",gap:5,marginTop:4,pointerEvents:"auto"}}>
+          <button onClick={()=>zoomStep(-1)} className="hud-btn" style={{padding:"2px 8px",fontSize:12,letterSpacing:0}}>−</button>
+          <button onClick={resetZoom} className="hud-btn" style={{padding:"2px 8px",fontSize:10}}>↺</button>
+          <button onClick={()=>zoomStep(+1)} className="hud-btn" style={{padding:"2px 8px",fontSize:12,letterSpacing:0}}>+</button>
+        </div>
       </div>
 
       {/* Empty state */}
@@ -4407,45 +4437,35 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
             const pa=pos.cards[conn.cardA], pb=pos.cards[conn.cardB];
             const acx=pa.x+CARD_W/2+3000, acy=pa.y+CARD_H/2+3000;
             const bcx=pb.x+CARD_W/2+3000, bcy=pb.y+CARD_H/2+3000;
-            // Use circular edge points in micelio mode, rectangular in others
-            const ep1 = layoutMode==="micelio"
-              ? circleEdgePt(acx,acy,bcx,bcy,NODE_R+6)
-              : edgePt(acx,acy,bcx,bcy);
-            const ep2 = layoutMode==="micelio"
-              ? circleEdgePt(bcx,bcy,acx,acy,NODE_R+6)
-              : edgePt(bcx,bcy,acx,acy);
+            // Both modes use rectangular edge points (micelio nodes are now mcard rectangles)
+            const ep1 = edgePt(acx,acy,bcx,bcy);
+            const ep2 = edgePt(bcx,bcy,acx,acy);
             const mx=(ep1.x+ep2.x)/2, my=(ep1.y+ep2.y)/2;
             const ox=-(ep2.y-ep1.y)*0.18, oy=(ep2.x-ep1.x)*0.18;
             const color=CONN_COLORS[conn.type]||T.accent;
             const str=conn.strength||7;
             const bx=mx+ox, by=my+oy;
+            // Mycelium connection colors
+            const mcColor = conn.type==="contraste" ? "#E8B45C"
+              : conn.type==="refuerza" ? "#8CD17C"
+              : conn.type==="secuencia" ? "#E8B45C"
+              : "#7BD7E8"; // complementa + default = cyan
             const isMicelio = layoutMode==="micelio";
             return (
               <g key={conn.id}>
                 {isMicelio ? (
-                  /* War Legend style — thick amber glow line */
+                  /* Mycelium style — clean line + endpoint dots + label */
                   <>
-                    {/* Outer diffuse glow */}
-                    <path d={`M${ep1.x} ${ep1.y} Q${bx} ${by} ${ep2.x} ${ep2.y}`}
-                      fill="none" stroke={NODE_GOLD} strokeWidth="14" opacity="0.07"
-                      strokeLinecap="round"/>
-                    {/* Mid glow */}
-                    <path d={`M${ep1.x} ${ep1.y} Q${bx} ${by} ${ep2.x} ${ep2.y}`}
-                      fill="none" stroke={NODE_GOLD} strokeWidth="5" opacity="0.25"
-                      strokeLinecap="round"/>
-                    {/* Core line */}
-                    <path d={`M${ep1.x} ${ep1.y} Q${bx} ${by} ${ep2.x} ${ep2.y}`}
-                      fill="none" stroke={NODE_GOLD_BRIGHT} strokeWidth="2"
-                      opacity="0.85" strokeLinecap="round"
-                      strokeDasharray={conn.type==="contraste"?"8 5":undefined}
-                      markerEnd="url(#cv-arr)"/>
-                    {/* Floating label pill — dark */}
-                    <rect x={bx-26} y={by-10} width="52" height="19" rx="5"
-                      fill="#0A0810" fillOpacity="0.88"
-                      stroke={NODE_GOLD} strokeOpacity="0.35" strokeWidth="1"/>
-                    <text x={bx} y={by+3} textAnchor="middle" fontSize="8"
-                      fontWeight="700" fill={NODE_GOLD_BRIGHT} fontFamily="system-ui,sans-serif">
-                      {CONN_ICONS[conn.type]} {CONN_LABELS[conn.type]}
+                    <line x1={ep1.x} y1={ep1.y} x2={ep2.x} y2={ep2.y}
+                      stroke={mcColor} strokeWidth="1.5"
+                      strokeDasharray={conn.type==="contraste" ? "6 4" : "0"}
+                      opacity="0.75"/>
+                    <circle cx={ep1.x} cy={ep1.y} r="3.5" fill={mcColor} opacity="0.9"/>
+                    <circle cx={ep2.x} cy={ep2.y} r="3.5" fill={mcColor} opacity="0.9"/>
+                    <text x={mx+ox} y={my+oy-7} textAnchor="middle" fontSize="9"
+                      fontFamily="'JetBrains Mono',monospace" fontWeight="500"
+                      fill={mcColor} opacity="0.85">
+                      {CONN_LABELS[conn.type]}
                     </text>
                   </>
                 ) : (
@@ -4582,134 +4602,69 @@ function CanvasCardNode({ card, p, tc, col, cc, sc, isOwner, onEditCard, onMouse
   );
 }
 
-// ── Skill-Tree circular node (Micelio view) — solid-fill sci-fi style ──────────
+// ── Micelio card node — Mycelium rectangular sci-fi style ─────────────────────
 function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchStart }) {
-  const [hovered, setHovered] = useState(false);
-  const cx  = p.x + CARD_W/2;
-  const cy  = p.y + CARD_H/2;
-  const pbd = NODE_PASTEL_BD[card.type] || NODE_GOLD;   // base color
-  const pic = NODE_PASTEL_IC[card.type] || NODE_GOLD_BRIGHT; // bright variant
-  const ico = NODE_ICONS[card.type]     || "◈";
-  const title = card.title.length > 16 ? card.title.substring(0,15)+"…" : card.title;
+  const [expanded, setExpanded] = useState(false);
+  const pbd = NODE_PASTEL_BD[card.type] || "#7BD7E8";
+  const ico = NODE_ICONS[card.type] || "◈";
   const colColor = col?.color || "#6B7280";
-  // Size slightly grows with activity (max +10px radius)
-  const R = NODE_R + Math.min((cc + sc) * 2, 10);
+  const isBase = card.col === "listo"; // visually highlight finished cards
 
   return (
-    <div style={{ position:"absolute", left:cx - R - 64, top:cy - R - 22,
-      width:(R+64)*2, zIndex:5, display:"flex", flexDirection:"column",
-      alignItems:"center", cursor:"grab", userSelect:"none" }}
+    <div className={`mcard hud-c${expanded ? " mcard-exp" : ""}`}
+      style={{ left:p.x, top:p.y,
+        borderLeft:`3px solid ${pbd}`,
+        cursor:"grab", userSelect:"none" }}
       onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
 
-      {/* ① Ambient outer glow cloud */}
-      <div style={{ position:"relative",
-        width:R*2+34, height:R*2+34, borderRadius:"50%",
-        background: hovered
-          ? `radial-gradient(circle, ${pbd}38 0%, transparent 62%)`
-          : `radial-gradient(circle, ${pbd}18 0%, transparent 62%)`,
-        display:"flex", alignItems:"center", justifyContent:"center",
-        transition:"transform .3s cubic-bezier(.34,1.56,.64,1), filter .3s",
-        transform: hovered ? "scale(1.12)" : "scale(1)",
-        filter: hovered
-          ? `drop-shadow(0 0 22px ${pbd}bb) drop-shadow(0 0 44px ${pbd}44)`
-          : `drop-shadow(0 0 10px ${pbd}66)` }}>
+      {/* Header row — click to expand/collapse */}
+      <div className="mcard-head"
+        onClick={e => { e.stopPropagation(); setExpanded(v => !v); }}>
+        <span className="mcard-glyph">{expanded ? "◢" : "▸"}</span>
+        <span className="mcard-title">{card.title}</span>
+        <span className="mcard-dot" style={{ background:colColor,
+          boxShadow:`0 0 6px ${colColor}bb` }} />
+      </div>
 
-        {/* ② Column indicator dot — top-right */}
-        <div style={{ position:"absolute", top:6, right:8, zIndex:3,
-          width:10, height:10, borderRadius:"50%",
-          background:colColor,
-          border:"2px solid rgba(6,7,14,0.95)",
-          boxShadow:`0 0 8px ${colColor}ee, 0 0 18px ${colColor}55` }} />
-
-        {/* ③ Dashed scanner ring — rotates on hover */}
-        <div style={{ width:R*2+20, height:R*2+20, borderRadius:"50%",
-          border:`1.5px dashed ${hovered ? pbd+"99" : pbd+"33"}`,
-          display:"flex", alignItems:"center", justifyContent:"center",
-          transition:"border-color .3s, transform .6s cubic-bezier(.34,1.56,.64,1)",
-          transform: hovered ? "rotate(65deg)" : "rotate(0deg)" }}>
-
-          {/* ④ Solid outer ring */}
-          <div style={{ width:R*2+6, height:R*2+6, borderRadius:"50%",
-            border:`2px solid ${hovered ? pic+"cc" : pbd+"66"}`,
-            boxShadow: hovered ? `0 0 0 1px ${pbd}33` : "none",
-            display:"flex", alignItems:"center", justifyContent:"center",
-            transition:"border-color .25s, box-shadow .25s" }}>
-
-            {/* ⑤ MAIN NODE — solid filled with type color */}
-            <div onClick={e => { e.stopPropagation(); onOpen(card); }}
-              onMouseEnter={() => setHovered(true)}
-              onMouseLeave={() => setHovered(false)}
-              style={{ position:"relative", overflow:"hidden",
-                width:R*2, height:R*2, borderRadius:"50%",
-                background: hovered
-                  ? `radial-gradient(circle at 34% 28%, ${pic} 0%, ${pbd} 52%, ${pbd}cc 100%)`
-                  : `radial-gradient(circle at 34% 28%, ${pic}ee 0%, ${pbd} 48%, ${pbd}bb 100%)`,
-                display:"flex", alignItems:"center", justifyContent:"center",
-                cursor:"pointer",
-                transition:"background .25s, box-shadow .25s",
-                boxShadow: hovered
-                  ? `0 0 32px ${pbd}99, 0 0 70px ${pbd}33, inset 0 3px 0 rgba(255,255,255,0.28)`
-                  : `0 0 16px ${pbd}66, inset 0 2px 0 rgba(255,255,255,0.2)` }}>
-
-              {/* ⑥ Sphere highlight — bright top-left reflection */}
-              <div style={{ position:"absolute", top:"11%", left:"15%",
-                width:R*0.44, height:R*0.44, borderRadius:"50%",
-                background:"radial-gradient(circle, rgba(255,255,255,0.65) 0%, transparent 72%)",
-                pointerEvents:"none", opacity: hovered ? 1 : 0.8,
-                transition:"opacity .25s" }} />
-
-              {/* ⑦ Bottom rim glint */}
-              <div style={{ position:"absolute", bottom:"12%", right:"16%",
-                width:R*0.22, height:R*0.22, borderRadius:"50%",
-                background:"radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 70%)",
-                pointerEvents:"none" }} />
-
-              {/* ⑧ Icon — white on solid color */}
-              <span style={{ fontSize:R * 0.64, lineHeight:1, position:"relative", zIndex:1,
-                color:"rgba(255,255,255,0.95)",
-                filter: hovered
-                  ? "drop-shadow(0 0 5px rgba(255,255,255,0.9)) drop-shadow(0 1px 3px rgba(0,0,0,0.5))"
-                  : "drop-shadow(0 1px 3px rgba(0,0,0,0.6))",
-                transition:"filter .25s, transform .25s",
-                transform: hovered ? "scale(1.14)" : "scale(1)",
-                display:"block" }}>{ico}</span>
-            </div>
+      {/* Expanded body */}
+      {expanded && (
+        <div className="mcard-body">
+          {card.body && <p>{card.body}</p>}
+          <div className="mcard-tags">
+            <span className="mtag" style={{ borderColor:`${pbd}55`, color:pbd }}>
+              {ico} {card.type}
+            </span>
+            {col && (
+              <span className="mtag" style={{ borderColor:`${colColor}55`, color:colColor }}>
+                {col.label}
+              </span>
+            )}
+          </div>
+          <div className="mmuted">
+            @{card.author || "—"}
+            {cc > 0 && ` · 💬 ${cc}`}
+            {sc > 0 && ` · ◎ ${sc}`}
+          </div>
+          <div className="mcard-btns">
+            <button className="hud-btn"
+              onClick={e => { e.stopPropagation(); onOpen(card); }}>
+              ◎ Leer
+            </button>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* ⑨ Title pill — white text, colored border */}
-      <div style={{ marginTop:6,
-        color: hovered ? "#FFFFFF" : "rgba(240,240,255,0.92)",
-        fontSize:11, fontWeight:700, fontFamily:"var(--sans)", textAlign:"center",
-        lineHeight:1.3, maxWidth:140, padding:"4px 12px", borderRadius:7,
-        background:"linear-gradient(135deg,rgba(6,7,14,0.94),rgba(12,8,24,0.92))",
-        border:`1px solid ${hovered ? pic+"99" : pbd+"44"}`,
-        backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)",
-        letterSpacing:"-0.01em",
-        boxShadow: hovered
-          ? `0 0 18px ${pbd}55, 0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)`
-          : `0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)`,
-        transition:"color .25s, border-color .25s, box-shadow .25s" }}>
-        {title}
-      </div>
-
-      {/* ⑩ Badges */}
-      {(cc>0 || sc>0) && (
-        <div style={{ display:"flex", gap:4, marginTop:4 }}>
-          {cc>0 && (
-            <span style={{ background:"rgba(6,7,14,0.92)",
-              border:`1px solid ${pbd}55`, borderRadius:99,
-              padding:"1px 7px", fontSize:9,
-              color:pic, fontFamily:"var(--mono)", letterSpacing:"0.02em",
-              boxShadow:`0 0 8px ${pbd}33` }}>💬 {cc}</span>
+      {/* Collapsed badge row */}
+      {!expanded && (cc > 0 || sc > 0) && (
+        <div style={{ display:"flex", gap:4, padding:"3px 10px 5px",
+          borderTop:"1px dashed rgba(123,215,232,0.08)" }}>
+          {cc > 0 && (
+            <span style={{ fontFamily:"var(--mono)", fontSize:9,
+              color:"var(--ink3)", letterSpacing:".06em" }}>💬 {cc}</span>
           )}
-          {sc>0 && (
-            <span style={{ background:"rgba(6,7,14,0.92)",
-              border:`1px solid ${pbd}55`, borderRadius:99,
-              padding:"1px 7px", fontSize:9,
-              color:pic, fontFamily:"var(--mono)", letterSpacing:"0.02em",
-              boxShadow:`0 0 8px ${pbd}33` }}>◎ {sc}</span>
+          {sc > 0 && (
+            <span style={{ fontFamily:"var(--mono)", fontSize:9,
+              color:"var(--ink3)", letterSpacing:".06em" }}>◎ {sc}</span>
           )}
         </div>
       )}
