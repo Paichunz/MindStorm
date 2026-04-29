@@ -270,10 +270,8 @@ async function callAI(system, userMessages, maxTokens = 1200) {
     if (res.status === 403 || (res.status === 400 && /api.key|invalid.key/i.test(msg))) {
       throw Object.assign(new Error("INVALID_KEY"), { code:"INVALID_KEY" });
     }
-    if (res.status === 429) {
-      throw Object.assign(new Error("RATE_LIMIT"), { code:"API_ERROR",
-        detail: "Límite de peticiones alcanzado. Espera un momento e intenta de nuevo." });
-    }
+    // 429 = rate limited → try fallback model before giving up
+    if (res.status === 429) { lastErr = "rate_limit"; continue; }
     // 404 = model not found → try fallback
     if (res.status === 404) { lastErr = msg; continue; }
 
@@ -281,8 +279,10 @@ async function callAI(system, userMessages, maxTokens = 1200) {
       detail: msg || `Error ${res.status}` });
   }
 
-  throw Object.assign(new Error("API_ERROR"), { code:"API_ERROR",
-    detail: lastErr || "Modelo no disponible." });
+  const detail = lastErr === "rate_limit"
+    ? "Límite de peticiones alcanzado en todos los modelos. Espera 1 minuto e intenta de nuevo."
+    : lastErr || "Modelo no disponible.";
+  throw Object.assign(new Error("API_ERROR"), { code:"API_ERROR", detail });
 }
 
 // Small reusable key-setup widget rendered inside AI panels when no key exists
