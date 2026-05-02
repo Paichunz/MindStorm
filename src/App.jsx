@@ -2561,9 +2561,9 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
 
   return (
     <div className="wcard" draggable onDragStart={onDragStart}
-      style={{ background:"rgba(14,14,34,0.88)", border:"1px solid rgba(255,255,255,0.09)",
+      style={{ background:T.bgCard, border:`1px solid rgba(200,170,100,0.22)`,
         borderRadius:11, overflow:"hidden", cursor:"grab",
-        boxShadow:`0 2px 14px rgba(0,0,0,.35), inset 3px 0 0 ${tc}55`,
+        boxShadow:`0 2px 14px rgba(0,0,0,.35), inset 3px 0 0 ${tc}66`,
         backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)" }}>
       <div style={{ height:3, background:`linear-gradient(90deg,${tc} 0%,${tc}55 60%,transparent 100%)`,
         boxShadow:`0 0 10px ${tc}55` }} />
@@ -3481,16 +3481,30 @@ function ConnCard({ conn, cards, connections, onUpdate, onAddAsTask }) {
 }
 
 function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept, onAddAsTask }) {
-  const [status, setStatus] = useState("idle");
-  const [error, setError]   = useState("");
+  const [status, setStatus]       = useState("idle");
+  const [error, setError]         = useState("");
+  const [countdown, setCountdown] = useState(0);
+  const countdownRef              = useRef(null);
   const pending   = connections.filter(c => c.status==="pending");
   const approved  = connections.filter(c => c.status==="approved");
   const inReview  = connections.filter(c => c.status==="review");
   const discarded = connections.filter(c => c.status==="discarded");
 
+  // Auto-retry countdown when rate-limited
+  useEffect(() => {
+    if (countdown <= 0) { clearInterval(countdownRef.current); return; }
+    countdownRef.current = setInterval(() => {
+      setCountdown(n => {
+        if (n <= 1) { clearInterval(countdownRef.current); findConnections(); return 0; }
+        return n - 1;
+      });
+    }, 1000);
+    return () => clearInterval(countdownRef.current);
+  }, [countdown > 0 && status === "rate_limit"]);
+
   async function findConnections() {
     if (cards.length < 2) { setError("Necesitas al menos 2 tarjetas."); return; }
-    setStatus("loading"); setError("");
+    setStatus("loading"); setError(""); setCountdown(0);
     const cardTexts = cards.map(c => `ID:${c.id} | [${c.col}][${c.type}] TÍTULO: "${c.title}"${c.body?" | DESC: "+c.body:""}`).join("\n");
     const prompt = `Eres un analista de ideas. Analiza las tarjetas del proyecto "${concept.title||"sin nombre"}" y detecta conexiones conceptuales reales entre pares.\n\nTARJETAS:\n${cardTexts}\n\nResponde SOLO con JSON válido:\n{"connections":[{"cardA":"id1","cardB":"id2","type":"complementa|secuencia|contraste|refuerza","reason":"Explicación breve (máx 120 caracteres)","strength":8}]}\n\nstrength de 1-10. Solo incluye conexiones con strength >= 6. Máximo 8.`;
     try {
@@ -3505,6 +3519,7 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
       setStatus(fresh.length>0?"done":"none");
     } catch(e) {
       if (e.code==="NO_KEY"||e.code==="INVALID_KEY") { setStatus("no_key"); }
+      else if (e.code==="RATE_LIMIT") { setStatus("rate_limit"); setError(e.detail||""); setCountdown(65); }
       else { setStatus("error"); setError(e.detail || "Error al analizar. Intenta de nuevo."); }
     }
   }
@@ -3563,7 +3578,16 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
             </div>
           )}
           {status==="none" && <div style={{ background:T.amberBg, border:"1px solid "+T.amber+"44", borderRadius:8, padding:"12px", color:T.amber, fontSize:13, marginBottom:14 }}>No se encontraron conexiones nuevas significativas.</div>}
-          {error && <div style={{ background:T.roseBg, border:"1px solid "+T.rose+"44", borderRadius:8, padding:"12px", color:T.rose, fontSize:13, marginBottom:14 }}>{error}</div>}
+          {status==="rate_limit" && (
+            <div style={{ background:"rgba(196,150,60,0.08)", border:"1px solid rgba(196,150,60,0.30)", borderRadius:8, padding:"12px 14px", marginBottom:14, display:"flex", alignItems:"center", gap:10 }}>
+              <div style={{ flex:1 }}>
+                <div style={{ color:T.amber, fontSize:13, fontWeight:600, marginBottom:3 }}>⏳ Límite de solicitudes alcanzado</div>
+                <div style={{ color:T.ink3, fontFamily:"var(--mono)", fontSize:11 }}>{error || "Reintentando automáticamente…"}</div>
+              </div>
+              <div style={{ color:T.accent, fontFamily:"var(--mono)", fontSize:18, fontWeight:700, flexShrink:0, minWidth:32, textAlign:"center" }}>{countdown}</div>
+            </div>
+          )}
+          {status==="error" && error && <div style={{ background:T.roseBg, border:"1px solid "+T.rose+"44", borderRadius:8, padding:"12px", color:T.rose, fontSize:13, marginBottom:14 }}>{error}</div>}
           {status==="done" && <div style={{ background:T.greenBg, border:"1px solid "+T.green+"44", borderRadius:8, padding:"12px", color:T.green, fontSize:13, marginBottom:14 }}>✓ Nuevas conexiones encontradas.</div>}
           {renderGroup("PENDIENTES DE REVISIÓN", pending, true)}
           {renderGroup("EN REVISIÓN", inReview, false)}
@@ -3608,12 +3632,25 @@ function EditConceptModal({ concept, onSave, onClose, cat }) {
 
 // ─── AI PANEL ─────────────────────────────────────────────────────────────────
 function AIPanel({ board, concept, cards, cat, onClose }) {
-  const [status, setStatus] = useState("idle");
-  const [result, setResult] = useState("");
-  const [scores, setScores] = useState(null);
+  const [status, setStatus]       = useState("idle");
+  const [result, setResult]       = useState("");
+  const [scores, setScores]       = useState(null);
+  const [countdown, setCountdown] = useState(0);
+  const countdownRef              = useRef(null);
+
+  useEffect(() => {
+    if (countdown <= 0) { clearInterval(countdownRef.current); return; }
+    countdownRef.current = setInterval(() => {
+      setCountdown(n => {
+        if (n <= 1) { clearInterval(countdownRef.current); run(); return 0; }
+        return n - 1;
+      });
+    }, 1000);
+    return () => clearInterval(countdownRef.current);
+  }, [countdown > 0 && status === "rate_limit"]);
 
   async function run() {
-    setStatus("loading"); setResult(""); setScores(null);
+    setStatus("loading"); setResult(""); setScores(null); setCountdown(0);
     const cardText = cards.length ? cards.map(c => `- [${c.col}][${c.type}] ${c.title}${c.body?": "+c.body:""}`).join("\n") : "Sin tarjetas.";
     const prompt = `Analiza este proyecto con criterio profesional y honesto.\n\nPROYECTO: "${board.name}"\nCATEGORÍA: ${cat.label}${board.subcategories?.length?" > "+board.subcategories.join(", "):""}\n\nCONCEPTO BASE:\n${concept.title||"Sin definir"}\n${concept.desc||""}\n\nTARJETAS:\n${cardText}\n\nAnaliza: 1) Potencial real 2) Debilidades 3) Viabilidad 4) Oportunidad 5) Mejoras 6) Recomendación.\n\nTermina con:\n\`\`\`json\n{"potencial":7,"viabilidad":6,"diferenciacion":5,"madurez":4,"recomendacion":"seguir"}\n\`\`\``;
     try {
@@ -3624,6 +3661,7 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
       setStatus("done");
     } catch(e) {
       if (e.code === "NO_KEY" || e.code === "INVALID_KEY") { setStatus("no_key"); }
+      else if (e.code === "RATE_LIMIT") { setStatus("rate_limit"); setResult(e.detail||""); setCountdown(65); }
       else { setStatus("error"); setResult(e.detail || "Error al conectar con la IA. Intenta de nuevo."); }
     }
   }
@@ -3661,6 +3699,14 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
                 <div style={{ width:16, height:16, background:cat.color+"33", borderRadius:"50%", position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)" }} />
               </div>
               <p style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:12, letterSpacing:"0.05em" }}>Analizando…</p>
+            </div>
+          )}
+          {status==="rate_limit" && (
+            <div style={{ background:"rgba(196,150,60,0.08)", border:"1px solid rgba(196,150,60,0.30)", borderRadius:12, padding:"20px", textAlign:"center", marginBottom:14 }}>
+              <div style={{ color:T.accent, fontWeight:700, fontSize:14, marginBottom:6 }}>⏳ Límite de solicitudes</div>
+              <div style={{ color:T.ink3, fontSize:12, lineHeight:1.55, marginBottom:16 }}>{result || "Cupo del minuto agotado. Reintentando automáticamente…"}</div>
+              <div style={{ color:T.accent, fontFamily:"var(--mono)", fontSize:28, fontWeight:900, marginBottom:4 }}>{countdown}</div>
+              <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>segundos para reintentar</div>
             </div>
           )}
           {(status==="done"||status==="error") && (
