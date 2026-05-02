@@ -278,16 +278,23 @@ async function callAI(system, userMessages, maxTokens = 1200) {
       throw Object.assign(new Error("INVALID_KEY"), { code:"INVALID_KEY" });
     }
     if (res.status === 429) {
-      lastErr = "rate_limit";
-      continue; // try next model immediately
+      // Gemini returns RESOURCE_EXHAUSTED for both RPM and daily quota.
+      // Daily quota messages typically mention "quota" or "GenerateContent".
+      const isDailyQuota = /quota|day|daily/i.test(msg);
+      lastErr = isDailyQuota ? "daily_quota" : "rate_limit";
+      continue; // try next model
     }
     // Any other error (404, 500…): try next model
     lastErr = msg || `error_${res.status}`;
   }
 
+  if (lastErr === "daily_quota") {
+    throw Object.assign(new Error("DAILY_QUOTA"), { code:"DAILY_QUOTA",
+      detail: "Cupo diario gratuito agotado. Se reinicia a medianoche (UTC). Puedes continuar mañana o verificar tu cuota en aistudio.google.com." });
+  }
   if (lastErr === "rate_limit") {
     throw Object.assign(new Error("RATE_LIMIT"), { code:"RATE_LIMIT",
-      detail: "Límite de solicitudes alcanzado. El contador te avisará cuando puedas reintentar." });
+      detail: "Límite por minuto alcanzado. Espera el contador e intenta de nuevo." });
   }
   throw Object.assign(new Error("API_ERROR"), { code:"API_ERROR",
     detail: lastErr || "Modelo no disponible." });
@@ -3495,17 +3502,17 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
   const inReview  = connections.filter(c => c.status==="review");
   const discarded = connections.filter(c => c.status==="discarded");
 
-  // Countdown when rate-limited — resets to idle when done so user can retry
+  // Countdown timer — tick every second, reset to idle at 0
   useEffect(() => {
-    if (countdown <= 0) { clearInterval(countdownRef.current); return; }
-    countdownRef.current = setInterval(() => {
-      setCountdown(n => {
-        if (n <= 1) { clearInterval(countdownRef.current); setStatus("idle"); return 0; }
-        return n - 1;
-      });
-    }, 1000);
-    return () => clearInterval(countdownRef.current);
-  }, [countdown > 0 && status === "rate_limit"]);
+    if (countdown <= 0) return;
+    const id = setInterval(() => setCountdown(n => Math.max(0, n - 1)), 1000);
+    return () => clearInterval(id);
+  }, [countdown > 0]);
+
+  // When countdown reaches 0 during rate_limit, re-enable button
+  useEffect(() => {
+    if (countdown === 0 && status === "rate_limit") setStatus("idle");
+  }, [countdown]);
 
   async function findConnections() {
     if (cards.length < 2) { setError("Necesitas al menos 2 tarjetas."); return; }
@@ -3524,7 +3531,8 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
       setStatus(fresh.length>0?"done":"none");
     } catch(e) {
       if (e.code==="NO_KEY"||e.code==="INVALID_KEY") { setStatus("no_key"); }
-      else if (e.code==="RATE_LIMIT") { setStatus("rate_limit"); setError(e.detail||""); setCountdown(65); }
+      else if (e.code==="RATE_LIMIT")   { setStatus("rate_limit"); setError(e.detail||""); setCountdown(65); }
+      else if (e.code==="DAILY_QUOTA") { setStatus("daily_quota"); setError(e.detail||""); }
       else { setStatus("error"); setError(e.detail || "Error al analizar. Intenta de nuevo."); }
     }
   }
@@ -3572,8 +3580,8 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
             <AIKeySetup onSaved={() => setStatus("idle")} />
           ) : (
           <>
-          <OBtn full onClick={findConnections} disabled={status==="loading" || status==="rate_limit"}>
-            {status==="loading" ? "🔍 Analizando…" : status==="rate_limit" ? `⏳ Esperando ${countdown}s…` : "🔍 Buscar nuevas conexiones con IA"}
+          <OBtn full onClick={findConnections} disabled={status==="loading" || status==="rate_limit" || status==="daily_quota"}>
+            {status==="loading" ? "🔍 Analizando…" : status==="rate_limit" ? `⏳ Disponible en ${countdown}s` : "🔍 Buscar nuevas conexiones con IA"}
           </OBtn>
           <div style={{ height:12 }}/>
           {status==="loading" && (
@@ -3586,10 +3594,20 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
           {status==="rate_limit" && (
             <div style={{ background:"rgba(196,150,60,0.08)", border:"1px solid rgba(196,150,60,0.30)", borderRadius:8, padding:"12px 14px", marginBottom:14, display:"flex", alignItems:"center", gap:10 }}>
               <div style={{ flex:1 }}>
-                <div style={{ color:T.amber, fontSize:13, fontWeight:600, marginBottom:3 }}>⏳ Límite de solicitudes alcanzado</div>
-                <div style={{ color:T.ink3, fontFamily:"var(--mono)", fontSize:11 }}>{error || "Reintentando automáticamente…"}</div>
+                <div style={{ color:T.amber, fontSize:13, fontWeight:600, marginBottom:3 }}>⏳ Límite por minuto alcanzado</div>
+                <div style={{ color:T.ink3, fontFamily:"var(--mono)", fontSize:11 }}>El botón se reactiva automáticamente en {countdown}s.</div>
               </div>
-              <div style={{ color:T.accent, fontFamily:"var(--mono)", fontSize:18, fontWeight:700, flexShrink:0, minWidth:32, textAlign:"center" }}>{countdown}</div>
+              <div style={{ color:T.accent, fontFamily:"var(--mono)", fontSize:22, fontWeight:700, flexShrink:0, minWidth:36, textAlign:"center" }}>{countdown}</div>
+            </div>
+          )}
+          {status==="daily_quota" && (
+            <div style={{ background:T.roseBg, border:"1px solid "+T.rose+"44", borderRadius:8, padding:"12px 14px", marginBottom:14 }}>
+              <div style={{ color:T.rose, fontSize:13, fontWeight:600, marginBottom:4 }}>📊 Cupo diario agotado</div>
+              <div style={{ color:T.ink3, fontFamily:"var(--mono)", fontSize:11, lineHeight:1.6 }}>
+                {error}<br/>
+                <span style={{ color:T.amber }}>→ aistudio.google.com/apikey</span> para revisar tu cuota.
+              </div>
+              <button onClick={() => setStatus("idle")} style={{ marginTop:8, background:"none", border:"1px solid "+T.rose+"44", color:T.rose, padding:"4px 10px", borderRadius:5, cursor:"pointer", fontSize:11, fontFamily:"var(--mono)" }}>Reintentar de todos modos</button>
             </div>
           )}
           {status==="error" && error && <div style={{ background:T.roseBg, border:"1px solid "+T.rose+"44", borderRadius:8, padding:"12px", color:T.rose, fontSize:13, marginBottom:14 }}>{error}</div>}
@@ -3644,15 +3662,14 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
   const countdownRef              = useRef(null);
 
   useEffect(() => {
-    if (countdown <= 0) { clearInterval(countdownRef.current); return; }
-    countdownRef.current = setInterval(() => {
-      setCountdown(n => {
-        if (n <= 1) { clearInterval(countdownRef.current); setStatus("idle"); return 0; }
-        return n - 1;
-      });
-    }, 1000);
-    return () => clearInterval(countdownRef.current);
-  }, [countdown > 0 && status === "rate_limit"]);
+    if (countdown <= 0) return;
+    const id = setInterval(() => setCountdown(n => Math.max(0, n - 1)), 1000);
+    return () => clearInterval(id);
+  }, [countdown > 0]);
+
+  useEffect(() => {
+    if (countdown === 0 && status === "rate_limit") setStatus("idle");
+  }, [countdown]);
 
   async function run() {
     setStatus("loading"); setResult(""); setScores(null); setCountdown(0);
@@ -3666,7 +3683,8 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
       setStatus("done");
     } catch(e) {
       if (e.code === "NO_KEY" || e.code === "INVALID_KEY") { setStatus("no_key"); }
-      else if (e.code === "RATE_LIMIT") { setStatus("rate_limit"); setResult(e.detail||""); setCountdown(65); }
+      else if (e.code === "RATE_LIMIT")   { setStatus("rate_limit"); setResult(e.detail||""); setCountdown(65); }
+      else if (e.code === "DAILY_QUOTA") { setStatus("daily_quota"); setResult(e.detail||""); }
       else { setStatus("error"); setResult(e.detail || "Error al conectar con la IA. Intenta de nuevo."); }
     }
   }
@@ -3710,10 +3728,19 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
           )}
           {status==="rate_limit" && (
             <div style={{ background:"rgba(196,150,60,0.08)", border:"1px solid rgba(196,150,60,0.30)", borderRadius:12, padding:"20px", textAlign:"center", marginBottom:14 }}>
-              <div style={{ color:T.accent, fontWeight:700, fontSize:14, marginBottom:6 }}>⏳ Límite de solicitudes</div>
-              <div style={{ color:T.ink3, fontSize:12, lineHeight:1.55, marginBottom:16 }}>{result || "Cupo del minuto agotado. Reintentando automáticamente…"}</div>
+              <div style={{ color:T.accent, fontWeight:700, fontSize:14, marginBottom:6 }}>⏳ Límite por minuto</div>
+              <div style={{ color:T.ink3, fontSize:12, lineHeight:1.55, marginBottom:16 }}>El botón se reactiva automáticamente.</div>
               <div style={{ color:T.accent, fontFamily:"var(--mono)", fontSize:28, fontWeight:900, marginBottom:4 }}>{countdown}</div>
-              <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>segundos para reintentar</div>
+              <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>segundos</div>
+            </div>
+          )}
+          {status==="daily_quota" && (
+            <div style={{ background:T.roseBg, border:"1px solid "+T.rose+"44", borderRadius:12, padding:"20px", textAlign:"center", marginBottom:14 }}>
+              <div style={{ fontSize:28, marginBottom:8 }}>📊</div>
+              <div style={{ color:T.rose, fontWeight:700, fontSize:14, marginBottom:8 }}>Cupo diario agotado</div>
+              <div style={{ color:T.ink3, fontSize:12, lineHeight:1.6, marginBottom:14 }}>{result || "El cupo gratuito se reinicia a medianoche (UTC)."}</div>
+              <div style={{ color:T.amber, fontFamily:"var(--mono)", fontSize:11 }}>aistudio.google.com/apikey</div>
+              <button onClick={() => setStatus("idle")} style={{ marginTop:12, background:"none", border:"1px solid "+T.rose+"44", color:T.rose, padding:"5px 12px", borderRadius:6, cursor:"pointer", fontSize:11, fontFamily:"var(--mono)" }}>Reintentar de todos modos</button>
             </div>
           )}
           {(status==="done"||status==="error") && (
