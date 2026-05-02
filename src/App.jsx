@@ -5,16 +5,16 @@ import { createClient } from "@supabase/supabase-js";
 const THEMES = {
   estudio: {
     id:"estudio", label:"Estudio", icon:"◆",
-    // Editorial studio — warm canvas + deep orange, creative workspace
-    bg:"#ECEAE5", bgReal:"#ECEAE5", bgPanel:"#F5F3EF", bgCard:"#FFFFFF", bgHover:"#E5E2DC",
-    border:"rgba(50,40,30,0.09)", border2:"rgba(50,40,30,0.18)",
-    ink:"#18140F", ink2:"#4A4238", ink3:"#7A6E64", ink4:"#AEA49A",
-    accent:"#E85200", accentBg:"rgba(232,82,0,0.09)", accentHover:"#CC4800",
+    // Cardiology tone — warm canvas, white cards, charcoal structure, no color noise
+    bg:"#EAE8E3", bgReal:"#EAE8E3", bgPanel:"#F4F2EE", bgCard:"#FFFFFF", bgHover:"#E2DFD9",
+    border:"rgba(0,0,0,0.07)", border2:"rgba(0,0,0,0.12)",
+    ink:"#1A1816", ink2:"#5A5450", ink3:"#8A8480", ink4:"#B4B0AC",
+    accent:"#2C2826", accentBg:"rgba(44,40,38,0.06)", accentHover:"#3E3A38",
     green:"#2A9960",  greenBg:"rgba(42,153,96,0.10)",
     amber:"#B07830",  amberBg:"rgba(176,120,48,0.10)",
     rose:"#C03858",   roseBg:"rgba(192,56,88,0.10)",
     blue:"#3868B8",   blueBg:"rgba(56,104,184,0.10)",
-    orange:"#E85200", orangeBg:"rgba(232,82,0,0.10)",
+    orange:"#CC5500", orangeBg:"rgba(204,85,0,0.10)",
     cyan:"#1888A8",   cyanBg:"rgba(24,136,168,0.10)",
   },
   dark: {
@@ -467,6 +467,19 @@ function getThemeCSS(id) {
     }
     /* Add-btn in light themes */
     .add-btn { border-color:${t.accent}33 !important; }
+    ${id === "estudio" ? `
+    /* Cardiology mode — structural elements neutral, color only in data */
+    .tile:hover { background:#FFFFFF !important; box-shadow:0 20px 48px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,0.08) !important; border-color:rgba(0,0,0,0.10) !important; }
+    .board-area { background-image: radial-gradient(circle, rgba(0,0,0,0.10) 1px, transparent 1px) !important; }
+    .hud-btn { background:#FFFFFF !important; border-color:rgba(0,0,0,0.10) !important; color:#5A5450 !important; border-radius:99px !important; text-transform:none !important; letter-spacing:0 !important; font-family:var(--sans) !important; }
+    .hud-btn:hover { background:#F0EEEA !important; border-color:rgba(0,0,0,0.18) !important; color:#1A1816 !important; box-shadow:none !important; }
+    .hud-btn-active { background:#1A1816 !important; border-color:#1A1816 !important; color:#FFFFFF !important; box-shadow:none !important; }
+    .add-btn { background:rgba(0,0,0,0.02) !important; border-color:rgba(0,0,0,0.14) !important; color:rgba(0,0,0,0.30) !important; }
+    .add-btn:hover { background:rgba(0,0,0,0.04) !important; border-color:rgba(0,0,0,0.28) !important; color:rgba(0,0,0,0.55) !important; }
+    .ai-glow { box-shadow:0 0 0 1px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.10) !important; }
+    .ai-glow::after { box-shadow:none !important; animation:none !important; }
+    .orb-bg::before, .orb-bg::after { opacity:0 !important; }
+    ` : ""}
   `;
 }
 
@@ -527,9 +540,9 @@ const GLOBAL_CSS = `
   .mcard-exp .hud-c::before, .mcard-exp .hud-c::after { opacity:1; }
 
   /* ── Mycelium HUD toolbar buttons ── */
-  .hud-btn { font-family:var(--raj); background:rgba(10,9,8,0.92); border:1px solid rgba(232,82,0,0.22); color:var(--ink1); padding:6px 14px; text-transform:uppercase; letter-spacing:.16em; font-size:11px; font-weight:600; cursor:pointer; transition:.14s; backdrop-filter:blur(8px); }
-  .hud-btn:hover { border-color:var(--mc); color:var(--mc); box-shadow:0 0 12px rgba(232,82,0,0.15), inset 0 0 8px rgba(232,82,0,0.06); }
-  .hud-btn-active { border-color:var(--mc) !important; color:var(--mc) !important; background:rgba(232,82,0,0.10) !important; box-shadow:0 0 10px rgba(232,82,0,0.12) !important; }
+  .hud-btn { font-family:var(--sans); background:var(--mb2); border:1px solid rgba(0,0,0,0.10); color:var(--ink1); padding:5px 12px; text-transform:none; letter-spacing:0; font-size:12px; font-weight:500; cursor:pointer; transition:.14s; border-radius:99px; }
+  .hud-btn:hover { border-color:rgba(0,0,0,0.22); color:var(--ink0); background:var(--mb1); }
+  .hud-btn-active { border-color:rgba(0,0,0,0.30) !important; color:var(--ink0) !important; background:var(--mb0) !important; }
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
   :root { --sans:'Outfit',sans-serif; --mono:'JetBrains Mono',monospace; }
   html, body { background:#141210; min-height:100vh; }
@@ -539,19 +552,19 @@ const GLOBAL_CSS = `
     content: '';
     position: fixed; inset: 0;
     background: radial-gradient(ellipse 120% 120% at 50% 50%,
-      transparent 55%, rgba(0,0,0,0.22) 100%);
+      transparent 70%, rgba(0,0,0,0.06) 100%);
     pointer-events: none;
     z-index: 9998;
   }
 
   /* ── Board canvas — dot grid (workspace signal, ref: Project Collaboration Space) ── */
   .board-area {
-    background-image: radial-gradient(circle, rgba(232,82,0,0.12) 1px, transparent 1px);
+    background-image: radial-gradient(circle, rgba(0,0,0,0.10) 1px, transparent 1px);
     background-size: 28px 28px;
   }
 
   /* Dark-theme base — overridden per-theme by getThemeCSS() */
-  :root { --accent-sel: rgba(232,82,0,0.25); --accent-sel-fg: #FFFFFF; --sb-thumb: rgba(232,82,0,0.20); --sb-thumb-h: rgba(232,82,0,0.40); }
+  :root { --accent-sel: rgba(232,82,0,0.25); --accent-sel-fg: #FFFFFF; --sb-thumb: rgba(0,0,0,0.15); --sb-thumb-h: rgba(0,0,0,0.28); }
   ::selection { background:var(--accent-sel); color:var(--accent-sel-fg); }
   ::-webkit-scrollbar { width:4px; height:4px; }
   ::-webkit-scrollbar-track { background:transparent; }
@@ -561,14 +574,14 @@ const GLOBAL_CSS = `
   /* ── Focus visible — keyboard navigation ── */
   :focus { outline:none; }
   :focus-visible {
-    outline: 2px solid rgba(232,82,0,0.8);
+    outline: 2px solid rgba(44,40,38,0.7);
     outline-offset: 2px;
     border-radius: 4px;
   }
   button:focus-visible, [role="button"]:focus-visible {
-    outline: 2px solid rgba(232,82,0,0.8);
+    outline: 2px solid rgba(44,40,38,0.7);
     outline-offset: 3px;
-    box-shadow: 0 0 0 4px rgba(232,82,0,0.15);
+    box-shadow: 0 0 0 4px rgba(44,40,38,0.10);
   }
   input:focus-visible, textarea:focus-visible, select:focus-visible {
     outline: none; /* Box-shadow focus handled inline */
@@ -610,28 +623,27 @@ const GLOBAL_CSS = `
     position: relative;
   }
   .tile:hover {
-    transform: translateY(-5px) scale(1.014);
-    box-shadow: 0 24px 52px rgba(0,0,0,.55), 0 0 0 1px rgba(232,82,0,.45),
-                0 0 30px rgba(232,82,0,.10) !important;
-    border-color: rgba(232,82,0,.35) !important;
-    background: rgba(28,26,24,0.97) !important;
+    transform: translateY(-4px) scale(1.012);
+    box-shadow: 0 20px 48px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.08) !important;
+    border-color: rgba(0,0,0,.10) !important;
+    background: #FFFFFF !important;
   }
   .wcard {
     transition: transform .16s cubic-bezier(.25,.46,.45,.94), box-shadow .16s, border-color .16s;
   }
   .wcard:hover {
     transform:translateY(-1px);
-    box-shadow: 0 4px 16px rgba(0,0,0,.3), 0 0 0 1px rgba(232,82,0,.30) !important;
-    border-left-color: rgba(232,82,0,.7) !important;
-    background: rgba(36,34,32,0.97) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,.10), 0 0 0 1px rgba(0,0,0,.08) !important;
+    border-left-color: inherit !important;
+    background: #FFFFFF !important;
   }
   .wcard:hover .edit-ico { color:#9A9080 !important; }
   .wcard:active { transform:translateY(-1px) scale(.99); }
 
   .add-btn {
-    background: rgba(232,82,0,0.03);
-    border: 1.5px dashed rgba(232,82,0,0.18);
-    color: rgba(232,82,0,0.45);
+    background: rgba(0,0,0,0.02);
+    border: 1.5px dashed rgba(0,0,0,0.14);
+    color: rgba(0,0,0,0.30);
     padding: 9px;
     border-radius: 10px;
     font-family: var(--sans);
@@ -641,13 +653,13 @@ const GLOBAL_CSS = `
     width: 100%;
     transition: all .2s;
   }
-  .add-btn:hover { border-color:rgba(232,82,0,.5); color:#E85200; background:rgba(232,82,0,.08); }
+  .add-btn:hover { border-color:rgba(0,0,0,0.28); color:rgba(0,0,0,0.55); background:rgba(0,0,0,0.04); }
   .att-btn:hover { border-color:rgba(232,82,0,.45) !important; color:#E85200 !important; background:rgba(232,82,0,.08) !important; }
   .mv-btn:hover  { background:rgba(255,255,255,.07) !important; color:#EDE8DC !important; }
   .ai-trigger:hover { background:rgba(232,82,0,.15) !important; }
   /* ai-glow: use a pseudo-element with box-shadow + opacity animation (compositor-only, no repaint) */
-  .ai-glow { position:relative; box-shadow:0 0 20px rgba(232,82,0,.22), 0 0 50px rgba(232,82,0,.08); }
-  .ai-glow::after { content:''; position:absolute; inset:-1px; border-radius:inherit; box-shadow:0 0 24px rgba(232,82,0,.45), 0 0 60px rgba(232,82,0,.14); animation:glowPulse 3s ease-in-out infinite; pointer-events:none; }
+  .ai-glow { position:relative; box-shadow:0 0 0 1px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.12); }
+  .ai-glow::after { content:''; position:absolute; inset:-1px; border-radius:inherit; box-shadow:0 0 0 1px rgba(0,0,0,0.12); animation:none; pointer-events:none; }
 
   .spinner { animation:spin .7s linear infinite; }
   .toast   { animation:slideIn .32s cubic-bezier(.16,1,.3,1); }
@@ -658,21 +670,21 @@ const GLOBAL_CSS = `
   .orb-bg::before, .orb-bg::after, .orb-bg .orb3 { content:''; position:absolute; border-radius:50%; pointer-events:none; }
   .orb-bg::before {
     width:700px; height:700px; top:-120px; left:-180px;
-    background: radial-gradient(circle, rgba(232,82,0,0.08) 0%, transparent 65%);
+    background: radial-gradient(circle, rgba(0,0,0,0.02) 0%, transparent 65%);
     animation: orb1 22s ease-in-out infinite;
   }
   .orb-bg::after {
     width:500px; height:500px; bottom:-80px; right:-100px;
-    background: radial-gradient(circle, rgba(192,80,96,0.06) 0%, transparent 65%);
+    background: radial-gradient(circle, rgba(0,0,0,0.02) 0%, transparent 65%);
     animation: orb2 26s ease-in-out infinite;
   }
 
   .glass {
-    background: rgba(10,9,8,0.84);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(232,82,0,0.10);
-    box-shadow: 0 8px 32px rgba(0,0,0,.4), inset 0 1px 0 rgba(232,82,0,0.04);
+    background: rgba(255,255,255,0.90);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 4px 24px rgba(0,0,0,.08);
   }
   .glass-light {
     background: rgba(12,10,14,0.72);
@@ -907,7 +919,7 @@ function ThemeSwitcher() {
 }
 
 // ─── MINDSTORM LOGO ──────────────────────────────────────────────────────────
-function MindStormLogo({ size = "md" }) {
+function MindStormLogo({ size = "md", light = false }) {
   // size: sm (sidebar), md (join screen), lg (future)
   const configs = {
     sm: { iconW:36, iconH:36, fontSize:17, tagSize:0,  gap:8  },
@@ -937,16 +949,16 @@ function MindStormLogo({ size = "md" }) {
           <line key={i}
             x1={nodes[a].x} y1={nodes[a].y}
             x2={nodes[b].x} y2={nodes[b].y}
-            stroke="rgba(232,82,0,0.55)" strokeWidth={sw} strokeLinecap="round"/>
+            stroke={light ? "rgba(44,40,38,0.40)" : "rgba(255,255,255,0.40)"} strokeWidth={sw} strokeLinecap="round"/>
         ))}
         {/* Node rings */}
         {nodes.map((n,i) => (
           <circle key={i} cx={n.x} cy={n.y} r={nr}
-            fill={T.bgCard} stroke={T.accent} strokeWidth={sw*0.8}/>
+            fill={light ? T.bgCard : T.bgCard} stroke={light ? T.ink2 : "rgba(255,255,255,0.50)"} strokeWidth={sw*0.8}/>
         ))}
         {/* Node inner dots */}
         {nodes.map((n,i) => (
-          <circle key={i} cx={n.x} cy={n.y} r={nr * 0.42} fill={T.accent} opacity="0.9"/>
+          <circle key={i} cx={n.x} cy={n.y} r={nr * 0.42} fill={light ? T.ink2 : "rgba(255,255,255,0.70)"} opacity="0.9"/>
         ))}
       </svg>
 
@@ -955,13 +967,13 @@ function MindStormLogo({ size = "md" }) {
         <div>
           <div style={{ lineHeight:1, display:"flex", alignItems:"baseline", gap:0 }}>
             <span style={{ fontFamily:"var(--raj)", fontWeight:400, fontSize:c.fontSize,
-              color:"rgba(232,82,0,0.60)", letterSpacing:"0.12em", textTransform:"uppercase" }}>MIND</span>
+              color: light ? "rgba(44,40,38,0.45)" : "rgba(255,255,255,0.40)", letterSpacing:"0.12em", textTransform:"uppercase" }}>MIND</span>
             <span style={{ fontFamily:"var(--raj)", fontWeight:700, fontSize:c.fontSize,
-              color:"var(--ink0)", letterSpacing:"0.06em", textTransform:"uppercase",
-              textShadow:"0 0 18px rgba(232,82,0,0.20)" }}>STORM</span>
+              color: light ? T.ink : "var(--ink0)", letterSpacing:"0.06em", textTransform:"uppercase",
+              textShadow: light ? "none" : "none" }}>STORM</span>
           </div>
           {c.tagSize > 0 && (
-            <div style={{ fontFamily:"var(--mono)", fontSize:c.tagSize, color:"rgba(232,82,0,0.40)", letterSpacing:"0.28em", marginTop:3, textTransform:"uppercase" }}>
+            <div style={{ fontFamily:"var(--mono)", fontSize:c.tagSize, color: light ? "rgba(44,40,38,0.35)" : "rgba(255,255,255,0.25)", letterSpacing:"0.28em", marginTop:3, textTransform:"uppercase" }}>
               THINK TOGETHER
             </div>
           )}
@@ -979,18 +991,17 @@ function JoinScreen({ onJoin }) {
     <div className="orb-bg" style={{ minHeight:"100vh", background:T.bg, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"var(--sans)", position:"relative" }}>
       <style>{GLOBAL_CSS}</style>
       <style>{getThemeCSS(themeId)}</style>
-      <div style={{ position:"absolute", top:16, right:20, zIndex:10 }}><ThemeSwitcher /></div>
       {/* Extra orb */}
       <div style={{ position:"absolute", width:400, height:400, top:"50%", left:"50%", transform:"translate(-50%,-50%)",
-        background:"radial-gradient(circle, rgba(232,82,0,0.07) 0%, transparent 70%)",
+        background:"radial-gradient(circle, rgba(0,0,0,0.03) 0%, transparent 70%)",
         borderRadius:"50%", pointerEvents:"none", animation:"orb3 15s ease-in-out infinite" }} />
       <div style={{ textAlign:"center", maxWidth:400, width:"100%", padding:"0 24px", position:"relative", zIndex:1 }}>
         <div style={{ display:"flex", justifyContent:"center", marginBottom:36 }}>
           <MindStormLogo size="md" />
         </div>
-        <div style={{ background:"rgba(20,18,16,0.92)", border:"1px solid rgba(232,82,0,0.18)",
+        <div style={{ background:"rgba(20,18,16,0.94)", border:`1px solid rgba(255,255,255,0.08)`,
           borderRadius:22, padding:"34px 30px", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)",
-          boxShadow:"0 40px 100px rgba(0,0,0,.55), 0 0 0 1px rgba(232,82,0,0.07), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
+          boxShadow:"0 40px 100px rgba(0,0,0,.50), 0 0 0 1px rgba(255,255,255,0.05)" }}>
           <p style={{ color:T.ink3, fontSize:14, marginBottom:20, lineHeight:1.5 }}>
             Elige tu nombre para comenzar
           </p>
@@ -1115,7 +1126,7 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
         {/* Mobile top bar */}
         {isMobile && (
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16, paddingBottom:14, borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
-            <MindStormLogo size="sm" />
+            <MindStormLogo size="sm" light />
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>@{user.name}</span>
               <button onClick={onSignOut} style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", color:T.ink4, fontSize:11, cursor:"pointer", padding:"5px 10px", borderRadius:7, fontFamily:"var(--sans)", transition:"all .15s" }}>Salir</button>
@@ -1129,8 +1140,6 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
               <p style={{ color:T.ink4, fontSize:13, fontFamily:"var(--mono)" }}>{allBoards.length} proyecto{allBoards.length!==1?"s":""}</p>
             </div>
             <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
-              <ThemeSwitcher />
-              <div style={{ width:1, height:18, background:T.border }} />
               {/* Import button */}
               <input ref={importRef} type="file" accept=".json,.mindstorm.json" onChange={handleImportFile} style={{ display:"none" }} />
               <button onClick={() => { setImportError(""); setImportSuccess(""); importRef.current?.click(); }}
@@ -1189,7 +1198,7 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
 
 function Sidebar({ user, boards, onOpen, onSignOut }) {
   return (
-    <div style={{ width:230, background:"rgba(20,18,16,0.97)", borderRight:"1px solid rgba(232,82,0,0.12)",
+    <div style={{ width:230, background:"#1C1A18", borderRight:"1px solid rgba(255,255,255,0.06)",
       padding:"20px 12px", display:"flex", flexDirection:"column", flexShrink:0,
       backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)",
       boxShadow:"2px 0 24px rgba(0,0,0,.35)" }}>
@@ -1197,8 +1206,8 @@ function Sidebar({ user, boards, onOpen, onSignOut }) {
         <MindStormLogo size="sm" />
       </div>
       <SideItem icon="🏠" label="Inicio" active />
-      <div style={{ height:1, background:"rgba(232,82,0,0.10)", margin:"10px 0" }} />
-      <div style={{ color:"rgba(232,82,0,0.40)", fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.18em", padding:"4px 10px", marginBottom:4, textTransform:"uppercase" }}>// Proyectos</div>
+      <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"10px 0" }} />
+      <div style={{ color:"rgba(255,255,255,0.25)", fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.18em", padding:"4px 10px", marginBottom:4, textTransform:"uppercase" }}>// Proyectos</div>
       {boards.slice(0,10).map(b => {
         const cat = CATEGORIES.find(c => c.id===b.categoryId) || CATEGORIES[6];
         return (
@@ -1216,11 +1225,11 @@ function Sidebar({ user, boards, onOpen, onSignOut }) {
         );
       })}
       <div style={{ flex:1 }} />
-      <div style={{ borderTop:"1px solid rgba(232,82,0,0.10)", paddingTop:12 }}>
+      <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", paddingTop:12 }}>
         <div style={{ display:"flex", alignItems:"center", gap:9, padding:"4px 10px 10px" }}>
           <div style={{ width:26, height:26, borderRadius:4,
-            background:`linear-gradient(135deg,rgba(232,82,0,0.22),rgba(232,82,0,0.08))`,
-            border:"1px solid rgba(232,82,0,0.30)",
+            background:`rgba(255,255,255,0.08)`,
+            border:"1px solid rgba(255,255,255,0.14)",
             display:"flex", alignItems:"center", justifyContent:"center",
             fontFamily:"var(--raj)", fontSize:13, fontWeight:700, color:"var(--mc)", flexShrink:0 }}>
             {user.name[0].toUpperCase()}
@@ -1321,15 +1330,15 @@ function SideItem({ icon, label, active }) {
   return (
     <button style={{
       background: active
-        ? "linear-gradient(90deg,rgba(232,82,0,0.12),transparent)"
+        ? "rgba(255,255,255,0.10)"
         : "transparent",
-      border: active ? "1px solid rgba(232,82,0,0.20)" : "1px solid transparent",
+      border: active ? "1px solid rgba(255,255,255,0.14)" : "1px solid transparent",
       textAlign:"left", padding:"8px 12px", borderRadius:6, cursor:"pointer",
-      color: active ? "var(--mc)" : "var(--ink2)", fontFamily:"var(--raj)",
+      color: active ? "var(--ink0)" : "var(--ink2)", fontFamily:"var(--raj)",
       fontSize:13, fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase",
       display:"flex", alignItems:"center", gap:10, width:"100%", transition:"all .15s",
-      boxShadow: active ? "inset 3px 0 0 var(--mc)" : "none" }}
-      onMouseEnter={e => { if(!active){ e.currentTarget.style.background="rgba(232,82,0,0.07)"; e.currentTarget.style.color="var(--ink0)"; } }}
+      boxShadow: active ? "inset 3px 0 0 rgba(255,255,255,0.35)" : "none" }}
+      onMouseEnter={e => { if(!active){ e.currentTarget.style.background="rgba(255,255,255,0.07)"; e.currentTarget.style.color="var(--ink0)"; } }}
       onMouseLeave={e => { if(!active){ e.currentTarget.style.background="transparent"; e.currentTarget.style.color="var(--ink2)"; } }}>
       <span style={{ fontFamily:"var(--mono)", fontSize:11, opacity:.7, width:14, textAlign:"center" }}>{icon}</span>
       <span>{label}</span>
@@ -1991,7 +2000,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
       {/* ── NEW TOP BAR (simplified) ── */}
       <div style={{ display:"flex", alignItems:"center", gap:isMobile?8:12,
         padding:isMobile?"9px 12px":"10px 20px",
-        background:"rgba(10,9,8,0.95)", borderBottom:"1px solid rgba(200,170,100,0.10)",
+        background:"rgba(10,9,8,0.95)", borderBottom:"1px solid rgba(255,255,255,0.07)",
         backdropFilter:"blur(14px)", WebkitBackdropFilter:"blur(14px)",
         boxShadow:"0 2px 20px rgba(0,0,0,.3)",
         position:"sticky", top:0, zIndex:50, flexShrink:0 }}>
@@ -2012,7 +2021,6 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
         <div style={{ flex:1 }} />
         <div style={{ display:"flex", gap:8, alignItems:"center" }}>
           <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:12 }}>@{user.name}</span>
-          <ThemeSwitcher />
           <div style={{ position:"relative" }}>
             <button onClick={() => setShowShare(s => !s)}
               style={{ background:T.bgPanel, border:"1px solid "+T.border, color:T.ink3, padding:"7px 10px", borderRadius:8, fontSize:12, cursor:"pointer", display:"flex", alignItems:"center", gap:5, fontFamily:"var(--sans)", transition:"all .15s" }}
@@ -2105,12 +2113,12 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
             <button onClick={() => setAiPanel(true)} title="Análisis IA"
               className="ai-glow"
               style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
-                background:"linear-gradient(135deg,rgba(232,82,0,0.16),rgba(61,170,108,0.08))",
+                background:"rgba(255,255,255,0.08)",
                 color:T.accent,
                 fontSize:15, display:"flex", alignItems:"center", justifyContent:"center",
                 transition:"all .15s" }}
-              onMouseEnter={e => { e.currentTarget.style.background="rgba(232,82,0,0.24)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background="linear-gradient(135deg,rgba(232,82,0,0.16),rgba(61,170,108,0.08))"; }}>
+              onMouseEnter={e => { e.currentTarget.style.background="rgba(255,255,255,0.16)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background="rgba(255,255,255,0.08)"; }}>
               ✦
             </button>
 
@@ -5353,25 +5361,24 @@ function OTextarea({ style, ...props }) {
 }
 function OBtn({ children, full, small, disabled, onClick }) {
   const base = {
-    background: disabled ? "rgba(255,255,255,0.06)" : "linear-gradient(135deg,#F06020 0%,#CC4000 100%)",
+    background: disabled ? T.bgHover : T.ink,
     color: disabled ? T.ink4 : "#FFFFFF",
-    border: disabled ? "1px solid rgba(255,255,255,0.10)" : "none",
-    padding: small ? "7px 14px" : "11px 22px",
-    borderRadius: 8,
-    fontFamily: "var(--raj)",
-    fontWeight: 700,
-    fontSize: small ? 12 : 14,
+    border: disabled ? `1px solid ${T.border2}` : "none",
+    padding: small ? "7px 16px" : "10px 24px",
+    borderRadius: 99,
+    fontFamily: "var(--sans)",
+    fontWeight: 600,
+    fontSize: small ? 12 : 13,
     letterSpacing: "0.01em",
-    textTransform: "uppercase",
     cursor: disabled ? "default" : "pointer",
-    boxShadow: disabled ? "none" : "0 4px 18px rgba(232,82,0,0.38), inset 0 1px 0 rgba(255,255,255,0.15)",
+    boxShadow: disabled ? "none" : "0 1px 3px rgba(0,0,0,0.18)",
     width: full ? "100%" : "auto",
-    transition: "opacity .15s, box-shadow .2s, transform .15s",
+    transition: "background .15s, box-shadow .15s, transform .12s",
   };
   return (
     <button onClick={onClick} disabled={disabled} style={base}
-      onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background="linear-gradient(135deg,#FF7030 0%,#E05000 100%)"; e.currentTarget.style.boxShadow="0 8px 28px rgba(232,82,0,0.52), 0 0 20px rgba(232,82,0,0.18), inset 0 1px 0 rgba(255,255,255,0.22)"; e.currentTarget.style.transform="translateY(-2px)"; }}}
-      onMouseLeave={e => { e.currentTarget.style.background=disabled?"rgba(255,255,255,0.06)":"linear-gradient(135deg,#F06020 0%,#CC4000 100%)"; e.currentTarget.style.boxShadow=disabled?"none":"0 4px 18px rgba(232,82,0,0.38), inset 0 1px 0 rgba(255,255,255,0.15)"; e.currentTarget.style.transform="translateY(0)"; }}>
+      onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background=T.accentHover; e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,0.22)"; e.currentTarget.style.transform="translateY(-1px)"; }}}
+      onMouseLeave={e => { e.currentTarget.style.background=disabled?T.bgHover:T.ink; e.currentTarget.style.boxShadow=disabled?"none":"0 1px 3px rgba(0,0,0,0.18)"; e.currentTarget.style.transform="translateY(0)"; }}>
       {children}
     </button>
   );
@@ -5379,12 +5386,12 @@ function OBtn({ children, full, small, disabled, onClick }) {
 function OGhostBtn({ children, small, full, onClick }) {
   return (
     <button onClick={onClick}
-      style={{ background:T.bgHover, border:`1px solid ${T.border2}`, color:T.ink3,
-        padding:small?"6px 12px":"9px 18px", borderRadius:10, fontFamily:"var(--sans)",
+      style={{ background:"transparent", border:`1px solid ${T.border2}`, color:T.ink3,
+        padding:small?"6px 14px":"9px 20px", borderRadius:99, fontFamily:"var(--sans)",
         fontSize:small?12:13, cursor:"pointer", width:full?"100%":"auto", transition:"all .15s",
         fontWeight:500 }}
-      onMouseEnter={e => { e.currentTarget.style.background=T.bgCard; e.currentTarget.style.color=T.ink; e.currentTarget.style.borderColor=T.border2; e.currentTarget.style.boxShadow=`0 2px 8px rgba(0,0,0,.12)`; }}
-      onMouseLeave={e => { e.currentTarget.style.background=T.bgHover; e.currentTarget.style.color=T.ink3; e.currentTarget.style.borderColor=T.border2; e.currentTarget.style.boxShadow="none"; }}>
+      onMouseEnter={e => { e.currentTarget.style.background=T.bgHover; e.currentTarget.style.color=T.ink; e.currentTarget.style.borderColor=T.ink4; }}
+      onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color=T.ink3; e.currentTarget.style.borderColor=T.border2; }}>
       {children}
     </button>
   );
