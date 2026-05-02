@@ -5,16 +5,18 @@ import { createClient } from "@supabase/supabase-js";
 const THEMES = {
   dark: {
     id:"dark", label:"Dark", icon:"◈",
-    bg:"#070712", bgReal:"#070712", bgPanel:"#0C0C1E", bgCard:"#111126", bgHover:"#18183A",
-    border:"rgba(255,255,255,0.07)", border2:"rgba(255,255,255,0.13)",
-    ink:"#EDE8FF", ink2:"#B0AADC", ink3:"#6E6898", ink4:"#3C3860",
-    accent:"#9B6DFF", accentBg:"rgba(155,109,255,0.12)", accentHover:"#8050FF",
-    green:"#0FD68A", greenBg:"rgba(15,214,138,0.1)",
-    amber:"#FFB84D", amberBg:"rgba(255,184,77,0.1)",
-    rose:"#FF4D7E",  roseBg:"rgba(255,77,126,0.1)",
-    blue:"#5AAFFF",  blueBg:"rgba(90,175,255,0.1)",
-    orange:"#FF7A40",orangeBg:"rgba(255,122,64,0.1)",
-    cyan:"#00D4FF",  cyanBg:"rgba(0,212,255,0.1)",
+    // Archivum — void-warm darkness; antique gold illuminates like a torch in
+    // the deep. Eagle Vision (AC) / PS5 HUD / Hitchhiker's terminal — game aesthetic.
+    bg:"#0A0908", bgReal:"#0A0908", bgPanel:"#0F0D12", bgCard:"#15121C", bgHover:"#1E1A28",
+    border:"rgba(200,170,100,0.07)", border2:"rgba(200,170,100,0.14)",
+    ink:"#EDE8DC", ink2:"#9A9080", ink3:"#5C5448", ink4:"#302E28",
+    accent:"#C4963C", accentBg:"rgba(196,150,60,0.10)", accentHover:"#D8AA50",
+    green:"#4AAA70",  greenBg:"rgba(74,170,112,0.10)",
+    amber:"#C4963C",  amberBg:"rgba(196,150,60,0.10)",
+    rose:"#C05060",   roseBg:"rgba(192,80,96,0.10)",
+    blue:"#5080C0",   blueBg:"rgba(80,128,192,0.10)",
+    orange:"#C07040", orangeBg:"rgba(192,112,64,0.10)",
+    cyan:"#3898A8",   cyanBg:"rgba(56,152,168,0.10)",
   },
   // ── Índigo — Concentración profunda ───────────────────────────────────────
   // Azul frío activa el córtex prefrontal → foco analítico, calma cognitiva.
@@ -84,10 +86,10 @@ const CATEGORIES = [
 ];
 
 const COLUMNS = [
-  { id:"concepto",   label:"Concepto",   icon:"◈", color:"#7C3AED", desc:"Ideas nuevas sin desarrollar" },
-  { id:"desarrollo", label:"Desarrollo", icon:"◉", color:"#2563EB", desc:"En proceso activo de trabajo" },
-  { id:"revision",   label:"Revisión",   icon:"◎", color:"#D97706", desc:"Listo, esperando revisión" },
-  { id:"listo",      label:"Listo",      icon:"◆", color:"#059669", desc:"Completado y aprobado" },
+  { id:"concepto",   label:"Concepto",   icon:"◈", color:"#7068A8", desc:"Ideas nuevas sin desarrollar" },
+  { id:"desarrollo", label:"Desarrollo", icon:"◉", color:"#C4963C", desc:"En proceso activo de trabajo" },
+  { id:"revision",   label:"Revisión",   icon:"◎", color:"#A07040", desc:"Listo, esperando revisión" },
+  { id:"listo",      label:"Listo",      icon:"◆", color:"#4AAA70", desc:"Completado y aprobado" },
 ];
 
 const CARD_TYPES = ["tarea","idea","pregunta","referencia","bloqueo"];
@@ -236,8 +238,14 @@ async function callAI(system, userMessages, maxTokens = 1200) {
     ? (userMessages[userMessages.length - 1]?.content || "")
     : userMessages;
 
-  // Try primary model, fall back to gemini-2.0-flash-lite if unavailable
-  const models = [GEMINI_MODEL, "gemini-2.0-flash-lite"];
+  // Model pool — tried in order. On 429 rate limit, each model gets one
+  // retry after a short pause before moving to the next fallback.
+  const models = [
+    GEMINI_MODEL,             // gemini-2.0-flash       — primary
+    "gemini-2.0-flash-lite",  // lighter, higher RPM limit
+    "gemini-1.5-flash-8b",    // 8B, separate quota pool
+    "gemini-1.5-flash",       // classic flash, separate quota
+  ];
   let lastErr = null;
 
   for (const model of models) {
@@ -270,17 +278,21 @@ async function callAI(system, userMessages, maxTokens = 1200) {
     if (res.status === 403 || (res.status === 400 && /api.key|invalid.key/i.test(msg))) {
       throw Object.assign(new Error("INVALID_KEY"), { code:"INVALID_KEY" });
     }
-    // 429 = rate limited → try fallback model before giving up
-    if (res.status === 429) { lastErr = "rate_limit"; continue; }
+    // 429 = rate limited → brief pause, then try next model in pool
+    if (res.status === 429) {
+      lastErr = "rate_limit";
+      await new Promise(r => setTimeout(r, 1500));
+      continue;
+    }
     // 404 = model not found → try fallback
-    if (res.status === 404) { lastErr = msg; continue; }
+    if (res.status === 404) { lastErr = msg || "model_not_found"; continue; }
 
     throw Object.assign(new Error("API_ERROR"), { code:"API_ERROR",
       detail: msg || `Error ${res.status}` });
   }
 
   const detail = lastErr === "rate_limit"
-    ? "Límite de peticiones alcanzado en todos los modelos. Espera 1 minuto e intenta de nuevo."
+    ? "Límite de peticiones en todos los modelos. Espera unos segundos e intenta de nuevo."
     : lastErr || "Modelo no disponible.";
   throw Object.assign(new Error("API_ERROR"), { code:"API_ERROR", detail });
 }
@@ -439,23 +451,37 @@ function getThemeCSS(id) {
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-  :root { --raj: 'Rajdhani', system-ui, sans-serif; --mc: #7BD7E8; --ma: #E8B45C; --mg: #8CD17C; --mr: #E86A5C; --mb0: #0b1014; --mb1: #0f161c; --mb2: #131c24; --ink0: #e8f4f7; --ink1: #b8c8d0; --ink2: #7d8e99; --ink3: #4a5662; }
+  :root {
+    --raj: 'Rajdhani', system-ui, sans-serif;
+    /* Archivum palette — antique gold on void-warm darkness */
+    --mc: #C4963C;   /* Eagle Vision gold — primary connection / selection */
+    --ma: #C4963C;   /* AI warmth — same gold */
+    --mg: #4AAA70;   /* positive / resolved — sage green */
+    --mr: #C05060;   /* conflict / warning — blood rose */
+    --mb0: #0A0908;  /* void — deepest background */
+    --mb1: #0F0D12;  /* archive panel */
+    --mb2: #15121C;  /* card surface */
+    --ink0: #EDE8DC; /* primary text — warm parchment */
+    --ink1: #9A9080; /* secondary text — aged paper */
+    --ink2: #5C5448; /* tertiary text — faded ink */
+    --ink3: #302E28; /* barely visible */
+  }
 
   /* ── Mycelium card ── */
-  .mcard { position:absolute; width:240px; background:var(--mb1); border:1px solid rgba(123,215,232,0.18); font-family:var(--raj); user-select:none; z-index:5; transition:border-color .15s, box-shadow .15s, width .18s; cursor:grab; }
-  .mcard:hover { border-color:rgba(123,215,232,0.55); box-shadow:0 4px 20px rgba(0,0,0,.5); }
-  .mcard-exp { width:300px !important; z-index:8 !important; box-shadow:0 8px 32px rgba(0,0,0,.55), 0 0 0 1px rgba(123,215,232,0.7) !important; }
-  .mcard-head { display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px dashed rgba(123,215,232,0.13); }
+  .mcard { position:absolute; width:240px; background:var(--mb1); border:1px solid rgba(196,150,60,0.18); font-family:var(--raj); user-select:none; z-index:5; transition:border-color .15s, box-shadow .15s, width .18s; cursor:grab; }
+  .mcard:hover { border-color:rgba(196,150,60,0.55); box-shadow:0 4px 20px rgba(0,0,0,.5); }
+  .mcard-exp { width:300px !important; z-index:8 !important; box-shadow:0 8px 32px rgba(0,0,0,.55), 0 0 0 1px rgba(196,150,60,0.7) !important; }
+  .mcard-head { display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px dashed rgba(196,150,60,0.13); }
   .mcard-glyph { flex:none; color:var(--mc); font-family:var(--mono); font-size:11px; width:14px; }
   .mcard-title { flex:1; font-size:13px; font-weight:500; letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink0); }
   .mcard-dot { width:8px; height:8px; border-radius:50%; flex:none; }
   .mcard-body { padding:10px; font-size:12px; line-height:1.5; color:var(--ink1); }
   .mcard-body p { margin-bottom:8px; }
   .mcard-tags { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px; }
-  .mtag { font-family:var(--mono); font-size:9px; padding:2px 6px; border:1px solid rgba(123,215,232,0.18); color:var(--ink2); text-transform:uppercase; letter-spacing:.1em; }
+  .mtag { font-family:var(--mono); font-size:9px; padding:2px 6px; border:1px solid rgba(196,150,60,0.18); color:var(--ink2); text-transform:uppercase; letter-spacing:.1em; }
   .mmuted { color:var(--ink3); font-family:var(--mono); font-size:9px; letter-spacing:.08em; margin-bottom:8px; }
   .mcard-btns { display:flex; gap:6px; flex-wrap:wrap; }
-  .mcard-btns button { font-family:var(--raj); background:transparent; border:1px solid rgba(123,215,232,0.22); color:var(--ink1); padding:4px 9px; text-transform:uppercase; letter-spacing:.1em; font-size:10px; cursor:pointer; transition:.13s; }
+  .mcard-btns button { font-family:var(--raj); background:transparent; border:1px solid rgba(196,150,60,0.22); color:var(--ink1); padding:4px 9px; text-transform:uppercase; letter-spacing:.1em; font-size:10px; cursor:pointer; transition:.13s; }
   .mcard-btns button:hover { border-color:var(--mc); color:var(--mc); }
 
   /* ── HUD corner brackets ── */
@@ -467,23 +493,45 @@ const GLOBAL_CSS = `
   .mcard-exp .hud-c::before, .mcard-exp .hud-c::after { opacity:1; }
 
   /* ── Mycelium HUD toolbar buttons ── */
-  .hud-btn { font-family:var(--raj); background:rgba(15,22,28,0.92); border:1px solid rgba(123,215,232,0.22); color:var(--ink1); padding:6px 13px; text-transform:uppercase; letter-spacing:.12em; font-size:11px; cursor:pointer; transition:.14s; backdrop-filter:blur(8px); }
-  .hud-btn:hover { border-color:var(--mc); color:var(--mc); box-shadow:inset 0 0 12px rgba(123,215,232,0.07); }
-  .hud-btn-active { border-color:var(--mc) !important; color:var(--mc) !important; background:rgba(123,215,232,0.08) !important; }
+  .hud-btn { font-family:var(--raj); background:rgba(10,9,8,0.92); border:1px solid rgba(196,150,60,0.22); color:var(--ink1); padding:6px 14px; text-transform:uppercase; letter-spacing:.16em; font-size:11px; font-weight:600; cursor:pointer; transition:.14s; backdrop-filter:blur(8px); }
+  .hud-btn:hover { border-color:var(--mc); color:var(--mc); box-shadow:0 0 12px rgba(196,150,60,0.15), inset 0 0 8px rgba(196,150,60,0.06); }
+  .hud-btn-active { border-color:var(--mc) !important; color:var(--mc) !important; background:rgba(196,150,60,0.10) !important; box-shadow:0 0 10px rgba(196,150,60,0.12) !important; }
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
   :root { --sans:'Outfit',sans-serif; --mono:'JetBrains Mono',monospace; }
-  html, body { background:#070712; min-height:100vh; }
+  html, body { background:#0A0908; min-height:100vh; }
+
+  /* ── Atmospheric overlay — CRT scan-line texture + edge vignette ── */
+  /* Subtle: adds physical depth without competing with content */
+  html::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0px, transparent 2px,
+      rgba(0,0,0,0.038) 2px, rgba(0,0,0,0.038) 3px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse 110% 110% at 50% 50%,
+      transparent 50%, rgba(0,0,0,0.45) 100%);
+    pointer-events: none;
+    z-index: 9998;
+  }
 
   /* ── Board content area — subtle grid ── */
   .board-area {
     background-image:
-      linear-gradient(rgba(123,215,232,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(123,215,232,0.03) 1px, transparent 1px);
+      linear-gradient(rgba(196,150,60,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(196,150,60,0.04) 1px, transparent 1px);
     background-size: 48px 48px;
   }
 
   /* Dark-theme base — overridden per-theme by getThemeCSS() */
-  :root { --accent-sel: rgba(155,109,255,0.35); --accent-sel-fg: #EDE8FF; --sb-thumb: rgba(155,109,255,0.35); --sb-thumb-h: rgba(155,109,255,0.55); }
+  :root { --accent-sel: rgba(196,150,60,0.30); --accent-sel-fg: #1A1510; --sb-thumb: rgba(196,150,60,0.25); --sb-thumb-h: rgba(196,150,60,0.45); }
   ::selection { background:var(--accent-sel); color:var(--accent-sel-fg); }
   ::-webkit-scrollbar { width:4px; height:4px; }
   ::-webkit-scrollbar-track { background:transparent; }
@@ -493,14 +541,14 @@ const GLOBAL_CSS = `
   /* ── Focus visible — keyboard navigation ── */
   :focus { outline:none; }
   :focus-visible {
-    outline: 2px solid rgba(123,215,232,0.8);
+    outline: 2px solid rgba(196,150,60,0.8);
     outline-offset: 2px;
     border-radius: 4px;
   }
   button:focus-visible, [role="button"]:focus-visible {
-    outline: 2px solid rgba(123,215,232,0.8);
+    outline: 2px solid rgba(196,150,60,0.8);
     outline-offset: 3px;
-    box-shadow: 0 0 0 4px rgba(123,215,232,0.15);
+    box-shadow: 0 0 0 4px rgba(196,150,60,0.15);
   }
   input:focus-visible, textarea:focus-visible, select:focus-visible {
     outline: none; /* Box-shadow focus handled inline */
@@ -543,25 +591,26 @@ const GLOBAL_CSS = `
   }
   .tile:hover {
     transform: translateY(-5px) scale(1.014);
-    box-shadow: 0 24px 52px rgba(0,0,0,.55), 0 0 0 1px rgba(155,109,255,.4) !important;
-    border-color: rgba(155,109,255,.3) !important;
-    background: rgba(20,20,44,0.88) !important;
+    box-shadow: 0 24px 52px rgba(0,0,0,.65), 0 0 0 1px rgba(196,150,60,.45),
+                0 0 30px rgba(196,150,60,.08) !important;
+    border-color: rgba(196,150,60,.35) !important;
+    background: rgba(24,20,18,0.92) !important;
   }
   .wcard {
     transition: transform .16s cubic-bezier(.25,.46,.45,.94), box-shadow .16s, border-color .16s;
   }
   .wcard:hover {
     transform:translateY(-3px);
-    box-shadow: 0 12px 32px rgba(0,0,0,.4), 0 0 0 1px rgba(155,109,255,.25) !important;
-    border-color: rgba(155,109,255,.22) !important;
+    box-shadow: 0 12px 32px rgba(0,0,0,.4), 0 0 0 1px rgba(196,150,60,.25) !important;
+    border-color: rgba(196,150,60,.22) !important;
   }
-  .wcard:hover .edit-ico { color:#B0AADC !important; }
+  .wcard:hover .edit-ico { color:#9A9080 !important; }
   .wcard:active { transform:translateY(-1px) scale(.99); }
 
   .add-btn {
-    background: rgba(255,255,255,0.03);
-    border: 1.5px dashed rgba(255,255,255,0.12);
-    color: #6E6898;
+    background: rgba(196,150,60,0.03);
+    border: 1.5px dashed rgba(196,150,60,0.18);
+    color: rgba(196,150,60,0.45);
     padding: 9px;
     border-radius: 10px;
     font-family: var(--sans);
@@ -571,13 +620,13 @@ const GLOBAL_CSS = `
     width: 100%;
     transition: all .2s;
   }
-  .add-btn:hover { border-color:rgba(155,109,255,.5); color:#9B6DFF; background:rgba(155,109,255,.08); }
-  .att-btn:hover { border-color:rgba(155,109,255,.45) !important; color:#9B6DFF !important; background:rgba(155,109,255,.08) !important; }
-  .mv-btn:hover  { background:rgba(255,255,255,.07) !important; color:#EDE8FF !important; }
-  .ai-trigger:hover { background:rgba(155,109,255,.15) !important; }
+  .add-btn:hover { border-color:rgba(196,150,60,.5); color:#C4963C; background:rgba(196,150,60,.08); }
+  .att-btn:hover { border-color:rgba(196,150,60,.45) !important; color:#C4963C !important; background:rgba(196,150,60,.08) !important; }
+  .mv-btn:hover  { background:rgba(255,255,255,.07) !important; color:#EDE8DC !important; }
+  .ai-trigger:hover { background:rgba(196,150,60,.15) !important; }
   /* ai-glow: use a pseudo-element with box-shadow + opacity animation (compositor-only, no repaint) */
-  .ai-glow { position:relative; box-shadow:0 0 28px rgba(155,109,255,.35), 0 0 60px rgba(155,109,255,.12); }
-  .ai-glow::after { content:''; position:absolute; inset:0; border-radius:inherit; box-shadow:0 0 32px rgba(155,109,255,.6), 0 0 80px rgba(155,109,255,.22); animation:glowPulse 2.6s ease-in-out infinite; pointer-events:none; }
+  .ai-glow { position:relative; box-shadow:0 0 20px rgba(196,150,60,.25), 0 0 50px rgba(196,150,60,.08); }
+  .ai-glow::after { content:''; position:absolute; inset:-1px; border-radius:inherit; box-shadow:0 0 24px rgba(196,150,60,.50), 0 0 60px rgba(196,150,60,.16); animation:glowPulse 3s ease-in-out infinite; pointer-events:none; }
 
   .spinner { animation:spin .7s linear infinite; }
   .toast   { animation:slideIn .32s cubic-bezier(.16,1,.3,1); }
@@ -587,28 +636,28 @@ const GLOBAL_CSS = `
   .orb-bg { position:relative; overflow:hidden; }
   .orb-bg::before, .orb-bg::after, .orb-bg .orb3 { content:''; position:absolute; border-radius:50%; pointer-events:none; }
   .orb-bg::before {
-    width:600px; height:600px; top:-100px; left:-150px;
-    background: radial-gradient(circle, rgba(155,109,255,0.14) 0%, transparent 70%);
-    animation: orb1 18s ease-in-out infinite;
+    width:700px; height:700px; top:-120px; left:-180px;
+    background: radial-gradient(circle, rgba(196,150,60,0.10) 0%, transparent 65%);
+    animation: orb1 22s ease-in-out infinite;
   }
   .orb-bg::after {
     width:500px; height:500px; bottom:-80px; right:-100px;
-    background: radial-gradient(circle, rgba(90,175,255,0.10) 0%, transparent 70%);
-    animation: orb2 22s ease-in-out infinite;
+    background: radial-gradient(circle, rgba(192,80,96,0.06) 0%, transparent 65%);
+    animation: orb2 26s ease-in-out infinite;
   }
 
   .glass {
-    background: rgba(10,10,26,0.82);
+    background: rgba(10,9,8,0.84);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(155,109,255,0.12);
-    box-shadow: 0 8px 32px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,0.06);
+    border: 1px solid rgba(196,150,60,0.12);
+    box-shadow: 0 8px 32px rgba(0,0,0,.4), inset 0 1px 0 rgba(196,150,60,0.05);
   }
   .glass-light {
-    background: rgba(16,16,38,0.72);
+    background: rgba(12,10,14,0.72);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid rgba(200,170,100,0.08);
   }
 
   /* .grad-text and .grad-accent removed — gradient text anti-pattern */
@@ -675,7 +724,7 @@ function PwdInput({ value, onChange, onKeyDown, placeholder, style, autoFocus, i
         aria-label={placeholder || "Contraseña"}
         autoFocus={autoFocus}
         style={{ background:"rgba(255,255,255,0.04)", border:"1.5px solid rgba(255,255,255,0.12)", color:T.ink, padding:"11px 44px 11px 14px", borderRadius:10, fontFamily:"var(--sans)", fontSize:14, width:"100%", outline:"none", transition:"border-color .2s, box-shadow .2s", ...style }}
-        onFocus={e => { e.target.style.borderColor = T.accent; e.target.style.boxShadow = "0 0 0 3px rgba(155,109,255,0.18)"; }}
+        onFocus={e => { e.target.style.borderColor = T.accent; e.target.style.boxShadow = "0 0 0 3px rgba(196,150,60,0.18)"; }}
         onBlur={e => { e.target.style.borderColor = "rgba(255,255,255,0.12)"; e.target.style.boxShadow = "none"; }}
       />
       <button
@@ -817,7 +866,7 @@ export default function App() {
 // ─── THEME SWITCHER ──────────────────────────────────────────────────────────
 function ThemeSwitcher() {
   const { themeId, setThemeId } = useTheme();
-  const swatches = { dark:"#9B6DFF", indigo:"#4338CA", bosque:"#15803D", aurora:"#7C3AED" };
+  const swatches = { dark:"#C4963C", indigo:"#4338CA", bosque:"#15803D", aurora:"#7C3AED" };
   const labels   = { dark:"Dark — modo nocturno", indigo:"Índigo — concentración profunda", bosque:"Bosque — flujo creativo", aurora:"Aurora — imaginación y síntesis" };
   return (
     <div style={{ display:"flex", gap:7, alignItems:"center" }}>
@@ -867,7 +916,7 @@ function MindStormLogo({ size = "md" }) {
           <line key={i}
             x1={nodes[a].x} y1={nodes[a].y}
             x2={nodes[b].x} y2={nodes[b].y}
-            stroke="rgba(155,109,255,0.55)" strokeWidth={sw} strokeLinecap="round"/>
+            stroke="rgba(196,150,60,0.55)" strokeWidth={sw} strokeLinecap="round"/>
         ))}
         {/* Node rings */}
         {nodes.map((n,i) => (
@@ -885,13 +934,13 @@ function MindStormLogo({ size = "md" }) {
         <div>
           <div style={{ lineHeight:1, display:"flex", alignItems:"baseline", gap:0 }}>
             <span style={{ fontFamily:"var(--raj)", fontWeight:400, fontSize:c.fontSize,
-              color:"rgba(123,215,232,0.55)", letterSpacing:"0.12em", textTransform:"uppercase" }}>MIND</span>
+              color:"rgba(196,150,60,0.55)", letterSpacing:"0.12em", textTransform:"uppercase" }}>MIND</span>
             <span style={{ fontFamily:"var(--raj)", fontWeight:700, fontSize:c.fontSize,
               color:"var(--ink0)", letterSpacing:"0.06em", textTransform:"uppercase",
-              textShadow:"0 0 18px rgba(123,215,232,0.25)" }}>STORM</span>
+              textShadow:"0 0 18px rgba(196,150,60,0.25)" }}>STORM</span>
           </div>
           {c.tagSize > 0 && (
-            <div style={{ fontFamily:"var(--mono)", fontSize:c.tagSize, color:"rgba(123,215,232,0.35)", letterSpacing:"0.28em", marginTop:3, textTransform:"uppercase" }}>
+            <div style={{ fontFamily:"var(--mono)", fontSize:c.tagSize, color:"rgba(196,150,60,0.35)", letterSpacing:"0.28em", marginTop:3, textTransform:"uppercase" }}>
               THINK TOGETHER
             </div>
           )}
@@ -912,15 +961,15 @@ function JoinScreen({ onJoin }) {
       <div style={{ position:"absolute", top:16, right:20, zIndex:10 }}><ThemeSwitcher /></div>
       {/* Extra orb */}
       <div style={{ position:"absolute", width:400, height:400, top:"50%", left:"50%", transform:"translate(-50%,-50%)",
-        background:"radial-gradient(circle, rgba(155,109,255,0.08) 0%, transparent 70%)",
+        background:"radial-gradient(circle, rgba(196,150,60,0.08) 0%, transparent 70%)",
         borderRadius:"50%", pointerEvents:"none", animation:"orb3 15s ease-in-out infinite" }} />
       <div style={{ textAlign:"center", maxWidth:400, width:"100%", padding:"0 24px", position:"relative", zIndex:1 }}>
         <div style={{ display:"flex", justifyContent:"center", marginBottom:36 }}>
           <MindStormLogo size="md" />
         </div>
-        <div style={{ background:"rgba(9,9,22,0.88)", border:"1px solid rgba(155,109,255,0.22)",
+        <div style={{ background:"rgba(10,9,8,0.90)", border:"1px solid rgba(196,150,60,0.20)",
           borderRadius:22, padding:"34px 30px", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)",
-          boxShadow:"0 40px 100px rgba(0,0,0,.6), 0 0 0 1px rgba(155,109,255,0.1), inset 0 1px 0 rgba(255,255,255,0.07)" }}>
+          boxShadow:"0 40px 100px rgba(0,0,0,.6), 0 0 0 1px rgba(196,150,60,0.08), inset 0 1px 0 rgba(255,255,255,0.07)" }}>
           <p style={{ color:T.ink3, fontSize:14, marginBottom:20, lineHeight:1.5 }}>
             Elige tu nombre para comenzar
           </p>
@@ -1119,7 +1168,7 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
 
 function Sidebar({ user, boards, onOpen, onSignOut }) {
   return (
-    <div style={{ width:230, background:"rgba(7,7,18,0.94)", borderRight:"1px solid rgba(155,109,255,0.1)",
+    <div style={{ width:230, background:"rgba(10,9,8,0.94)", borderRight:"1px solid rgba(196,150,60,0.10)",
       padding:"20px 12px", display:"flex", flexDirection:"column", flexShrink:0,
       backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)",
       boxShadow:"2px 0 20px rgba(0,0,0,.3)" }}>
@@ -1127,8 +1176,8 @@ function Sidebar({ user, boards, onOpen, onSignOut }) {
         <MindStormLogo size="sm" />
       </div>
       <SideItem icon="🏠" label="Inicio" active />
-      <div style={{ height:1, background:"rgba(123,215,232,0.08)", margin:"10px 0" }} />
-      <div style={{ color:"rgba(123,215,232,0.3)", fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.18em", padding:"4px 10px", marginBottom:4, textTransform:"uppercase" }}>// Proyectos</div>
+      <div style={{ height:1, background:"rgba(196,150,60,0.08)", margin:"10px 0" }} />
+      <div style={{ color:"rgba(196,150,60,0.35)", fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.18em", padding:"4px 10px", marginBottom:4, textTransform:"uppercase" }}>// Proyectos</div>
       {boards.slice(0,10).map(b => {
         const cat = CATEGORIES.find(c => c.id===b.categoryId) || CATEGORIES[6];
         return (
@@ -1146,11 +1195,11 @@ function Sidebar({ user, boards, onOpen, onSignOut }) {
         );
       })}
       <div style={{ flex:1 }} />
-      <div style={{ borderTop:"1px solid rgba(123,215,232,0.08)", paddingTop:12 }}>
+      <div style={{ borderTop:"1px solid rgba(196,150,60,0.08)", paddingTop:12 }}>
         <div style={{ display:"flex", alignItems:"center", gap:9, padding:"4px 10px 10px" }}>
           <div style={{ width:26, height:26, borderRadius:4,
-            background:`linear-gradient(135deg,rgba(123,215,232,0.25),rgba(123,215,232,0.08))`,
-            border:"1px solid rgba(123,215,232,0.3)",
+            background:`linear-gradient(135deg,rgba(196,150,60,0.22),rgba(196,150,60,0.07))`,
+            border:"1px solid rgba(196,150,60,0.28)",
             display:"flex", alignItems:"center", justifyContent:"center",
             fontFamily:"var(--raj)", fontSize:13, fontWeight:700, color:"var(--mc)", flexShrink:0 }}>
             {user.name[0].toUpperCase()}
@@ -1188,7 +1237,7 @@ function BoardTile({ board, onOpen, onDeleteRequest, onExport, exporting }) {
       role="button" tabIndex={0}
       aria-label={`Abrir proyecto: ${board.name}`}
       onKeyDown={e => (e.key==="Enter"||e.key===" ") && onOpen(board)}
-      style={{ background:"rgba(11,16,20,0.88)", border:`1px solid ${cat.color}38`,
+      style={{ background:"rgba(14,12,18,0.88)", border:`1px solid ${cat.color}38`,
         borderRadius:10, padding:"16px 18px 14px",
         position:"relative", overflow:"hidden",
         boxShadow:`0 2px 16px rgba(0,0,0,.4), 0 0 0 1px ${cat.color}10`,
@@ -1210,7 +1259,7 @@ function BoardTile({ board, onOpen, onDeleteRequest, onExport, exporting }) {
             className="hud-btn"
             style={{ padding:"2px 7px", fontSize:10, letterSpacing:".08em" }}
             onMouseEnter={e => { e.currentTarget.style.color=T.green; e.currentTarget.style.borderColor=T.green+"55"; }}
-            onMouseLeave={e => { e.currentTarget.style.color="var(--ink1)"; e.currentTarget.style.borderColor="rgba(123,215,232,0.22)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color="var(--ink1)"; e.currentTarget.style.borderColor="rgba(196,150,60,0.22)"; }}
           >{exporting === board.id ? "…" : "↓"}</button>
           <button
             onClick={e => { e.stopPropagation(); onDeleteRequest(board); }}
@@ -1218,7 +1267,7 @@ function BoardTile({ board, onOpen, onDeleteRequest, onExport, exporting }) {
             className="hud-btn"
             style={{ padding:"2px 7px", fontSize:10, letterSpacing:".08em" }}
             onMouseEnter={e => { e.currentTarget.style.color=T.rose; e.currentTarget.style.borderColor=T.rose+"55"; }}
-            onMouseLeave={e => { e.currentTarget.style.color="var(--ink1)"; e.currentTarget.style.borderColor="rgba(123,215,232,0.22)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color="var(--ink1)"; e.currentTarget.style.borderColor="rgba(196,150,60,0.22)"; }}
           >✕</button>
         </div>
       </div>
@@ -1251,15 +1300,15 @@ function SideItem({ icon, label, active }) {
   return (
     <button style={{
       background: active
-        ? "linear-gradient(90deg,rgba(123,215,232,0.1),transparent)"
+        ? "linear-gradient(90deg,rgba(196,150,60,0.10),transparent)"
         : "transparent",
-      border: active ? "1px solid rgba(123,215,232,0.18)" : "1px solid transparent",
+      border: active ? "1px solid rgba(196,150,60,0.18)" : "1px solid transparent",
       textAlign:"left", padding:"8px 12px", borderRadius:6, cursor:"pointer",
       color: active ? "var(--mc)" : "var(--ink2)", fontFamily:"var(--raj)",
       fontSize:13, fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase",
       display:"flex", alignItems:"center", gap:10, width:"100%", transition:"all .15s",
       boxShadow: active ? "inset 3px 0 0 var(--mc)" : "none" }}
-      onMouseEnter={e => { if(!active){ e.currentTarget.style.background="rgba(123,215,232,0.06)"; e.currentTarget.style.color="var(--ink0)"; } }}
+      onMouseEnter={e => { if(!active){ e.currentTarget.style.background="rgba(196,150,60,0.06)"; e.currentTarget.style.color="var(--ink0)"; } }}
       onMouseLeave={e => { if(!active){ e.currentTarget.style.background="transparent"; e.currentTarget.style.color="var(--ink2)"; } }}>
       <span style={{ fontFamily:"var(--mono)", fontSize:11, opacity:.7, width:14, textAlign:"center" }}>{icon}</span>
       <span>{label}</span>
@@ -1547,7 +1596,7 @@ function CreateBoardModal({ onClose, onCreate }) {
     <OOverlay onClose={onClose}>
       <div style={{ background:"rgba(14,14,32,0.95)", border:"1px solid rgba(255,255,255,0.1)",
         borderRadius:18, width:"100%", maxWidth:560, maxHeight:"92vh", overflowY:"auto",
-        boxShadow:"0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(155,109,255,0.1)",
+        boxShadow:"0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(196,150,60,0.08)",
         backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)",
         animation:"scaleIn .22s ease" }}>
 
@@ -1904,12 +1953,12 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
         <div className="toast" style={{ position:"fixed", bottom:28, left:"50%", transform:"translateX(-50%)",
           background:"rgba(10,10,24,0.97)", color:T.ink, padding:"14px 22px", borderRadius:14, display:"flex",
           gap:14, alignItems:"center", zIndex:999,
-          boxShadow:"0 16px 48px rgba(0,0,0,.6), 0 0 0 1px rgba(155,109,255,0.25), inset 0 1px 0 rgba(255,255,255,0.07)",
-          backdropFilter:"blur(14px)", border:"1px solid rgba(155,109,255,0.2)", fontSize:13 }}>
+          boxShadow:"0 16px 48px rgba(0,0,0,.6), 0 0 0 1px rgba(196,150,60,0.20), inset 0 1px 0 rgba(255,255,255,0.07)",
+          backdropFilter:"blur(14px)", border:"1px solid rgba(196,150,60,0.15)", fontSize:13 }}>
           <span>{toast.msg}</span>
           {toast.undoFn && (
             <button onClick={() => { toast.undoFn(); setToast(null); }}
-              style={{ background:"linear-gradient(135deg,#9B6DFF,#7C3AED)", border:"none", color:"#fff",
+              style={{ background:"linear-gradient(135deg,#D8A848,#B07828)", border:"none", color:"#1A1208",
                 padding:"5px 14px", borderRadius:7, cursor:"pointer", fontSize:12, fontWeight:700 }}>
               Deshacer
             </button>
@@ -1921,7 +1970,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
       {/* Top bar */}
       <div style={{ display:"flex", alignItems:"center", gap:isMobile?8:12,
         padding:isMobile?"9px 12px":"10px 20px",
-        background:"rgba(6,6,18,0.92)", borderBottom:"1px solid rgba(155,109,255,0.1)",
+        background:"rgba(10,9,8,0.92)", borderBottom:"1px solid rgba(196,150,60,0.10)",
         backdropFilter:"blur(14px)", WebkitBackdropFilter:"blur(14px)",
         boxShadow:"0 2px 20px rgba(0,0,0,.3)",
         flexWrap:"wrap", position:"sticky", top:0, zIndex:50 }}>
@@ -2011,8 +2060,8 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
             {isMobile && pendingConns.length>0 && <span style={{ background:T.rose, color:"#fff", fontSize:9, padding:"1px 5px", borderRadius:99, marginLeft:3 }}>{pendingConns.length}</span>}
           </button>
           <button onClick={() => setAiPanel(true)} className="ai-glow"
-            style={{ background:"linear-gradient(135deg,rgba(155,109,255,0.2),rgba(90,175,255,0.12))",
-              border:"1px solid rgba(155,109,255,0.4)", color:T.accent,
+            style={{ background:"linear-gradient(135deg,rgba(196,150,60,0.18),rgba(60,184,122,0.08))",
+              border:"1px solid rgba(196,150,60,0.38)", color:T.accent,
               padding:"7px 12px", borderRadius:9, fontWeight:700, fontSize:13,
               cursor:"pointer", fontFamily:"var(--sans)", transition:"all .2s",
               display:"flex", alignItems:"center", gap:5 }}>
@@ -2138,8 +2187,8 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 const active = filterAuthor === a;
                 return (
                   <button key={a} onClick={() => setFilterAuthor(a)}
-                    style={{ background:active ? "rgba(155,109,255,0.15)" : "transparent",
-                      border:`1px solid ${active ? "rgba(155,109,255,0.45)" : "rgba(255,255,255,0.07)"}`,
+                    style={{ background:active ? "rgba(196,150,60,0.14)" : "transparent",
+                      border:`1px solid ${active ? "rgba(196,150,60,0.45)" : "rgba(255,255,255,0.07)"}`,
                       color:active ? T.accent : T.ink4,
                       borderRadius:99, padding:"3px 10px", fontSize:11, cursor:"pointer",
                       fontFamily:"var(--sans)", fontWeight:active?700:400, transition:"all .15s" }}
@@ -2198,10 +2247,10 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 onDragLeave={() => setDragOver(null)}
                 onDrop={async e => { e.preventDefault(); if (dragCard) await moveCard(dragCard, col.id); setDragOver(null); setDragCard(null); }}
                 style={{ width:isMobile?"100%":268, flexShrink:0,
-                  background:isOver?`rgba(155,109,255,0.07)`:"rgba(11,11,25,0.65)",
+                  background:isOver?`rgba(196,150,60,0.07)`:"rgba(10,9,8,0.65)",
                   borderRadius:15,
-                  border:`1px solid ${isOver?"rgba(155,109,255,0.4)":col.color+"18"}`,
-                  boxShadow:isOver?`0 0 0 2px rgba(155,109,255,0.25), 0 0 30px ${col.color}12`:`0 0 0 1px ${col.color}10`,
+                  border:`1px solid ${isOver?"rgba(196,150,60,0.38)":col.color+"18"}`,
+                  boxShadow:isOver?`0 0 0 2px rgba(196,150,60,0.22), 0 0 30px ${col.color}12`:`0 0 0 1px ${col.color}10`,
                   transition:"all .18s", padding:"14px 12px",
                   backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)" }}>
                 {/* Column header */}
@@ -2405,7 +2454,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                           background:`linear-gradient(135deg,${T.accent},${T.blue})`,
                           display:"flex", alignItems:"center", justifyContent:"center",
                           color:"#fff", fontSize:10, fontWeight:700, flexShrink:0,
-                          boxShadow:"0 0 6px rgba(155,109,255,0.3)" }}>
+                          boxShadow:"0 0 6px rgba(196,150,60,0.28)" }}>
                           {author.charAt(0).toUpperCase()}
                         </div>
                         <div style={{ flex:1, overflow:"hidden" }}>
@@ -2868,8 +2917,8 @@ function AddForm({ col, onAdd, onCancel }) {
   }
 
   return (
-    <div style={{ background:"rgba(17,17,42,0.9)", border:"1.5px solid rgba(155,109,255,0.35)",
-      borderRadius:12, padding:"14px", boxShadow:"0 8px 32px rgba(0,0,0,.4), 0 0 0 1px rgba(155,109,255,0.1)",
+    <div style={{ background:"rgba(14,12,18,0.92)", border:"1.5px solid rgba(196,150,60,0.30)",
+      borderRadius:12, padding:"14px", boxShadow:"0 8px 32px rgba(0,0,0,.4), 0 0 0 1px rgba(196,150,60,0.08)",
       backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)" }}>
       <OInput placeholder="Título *" value={title} onChange={e=>setTitle(e.target.value)} style={{ marginBottom:9 }} autoFocus />
       <OTextarea placeholder="Descripción…" value={body} onChange={e=>setBody(e.target.value)} rows={2} style={{ marginBottom:9 }} />
@@ -3475,9 +3524,9 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
 
   return (
     <div style={{ position:"fixed", inset:0, background:"rgba(0,0,5,.65)", display:"flex", alignItems:"flex-end", justifyContent:"flex-end", zIndex:200, WebkitBackdropFilter:"blur(8px)", backdropFilter:"blur(8px)", padding:20 }}>
-      <div style={{ background:"rgba(13,13,30,0.95)", border:"1px solid rgba(155,109,255,0.2)",
+      <div style={{ background:"rgba(12,10,15,0.95)", border:"1px solid rgba(196,150,60,0.18)",
         borderRadius:16, width:"100%", maxWidth:530, maxHeight:"90vh", display:"flex", flexDirection:"column",
-        boxShadow:"0 30px 80px rgba(0,0,0,.6), 0 0 40px rgba(155,109,255,0.08)",
+        boxShadow:"0 30px 80px rgba(0,0,0,.6), 0 0 40px rgba(196,150,60,0.06)",
         backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)",
         animation:"slideIn .3s cubic-bezier(.16,1,.3,1)" }}>
         <div style={{ padding:"17px 20px 14px", borderBottom:"1px solid rgba(255,255,255,0.07)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
@@ -3492,7 +3541,7 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
           </div>
           <OGhostBtn small onClick={onClose}>× Cerrar</OGhostBtn>
         </div>
-        <div style={{ background:"rgba(155,109,255,0.06)", borderBottom:"1px solid rgba(155,109,255,0.12)", padding:"10px 18px", display:"flex", gap:8 }}>
+        <div style={{ background:"rgba(196,150,60,0.05)", borderBottom:"1px solid rgba(196,150,60,0.10)", padding:"10px 18px", display:"flex", gap:8 }}>
           <span style={{ color:T.accent, fontSize:13, flexShrink:0 }}>ℹ</span>
           <p style={{ color:T.ink3, fontSize:12, lineHeight:1.5 }}>Las conexiones se guardan permanentemente. Las aprobadas muestran 🔗 en las tarjetas.</p>
         </div>
@@ -4004,10 +4053,10 @@ const NODE_R  = 34; // skill-tree node radius (px)
 const NODE_GOLD        = "#F59E0B";   // main amber
 const NODE_GOLD_BRIGHT = "#FDE68A";   // bright center glow
 const NODE_GOLD_DIM    = "#92400E";   // subtle border when idle
-// Per-type accent — subtle variation inside the gold family
-const NODE_PASTEL_BG = { tarea:"#0F0D1A", idea:"#12100A", pregunta:"#0A0F1A", referencia:"#0A130E", bloqueo:"#140A0E" };
-const NODE_PASTEL_BD = { tarea:"#A78BFA", idea:"#F59E0B", pregunta:"#60A5FA", referencia:"#34D399", bloqueo:"#F87171" };
-const NODE_PASTEL_IC = { tarea:"#C4B5FD", idea:"#FDE68A", pregunta:"#93C5FD", referencia:"#6EE7B7", bloqueo:"#FCA5A5" };
+// Per-type accent — Navigator palette family
+const NODE_PASTEL_BG = { tarea:"#0C1020", idea:"#121008", pregunta:"#090E1A", referencia:"#081410", bloqueo:"#130810" };
+const NODE_PASTEL_BD = { tarea:"#7C6AE8", idea:"#C88838", pregunta:"#C4963C", referencia:"#3CB87A", bloqueo:"#C04870" };
+const NODE_PASTEL_IC = { tarea:"#A898F0", idea:"#E0AB60", pregunta:"#84AEF8", referencia:"#68D4A0", bloqueo:"#DC7898" };
 const NODE_ICONS     = { tarea:"✦", idea:"💡", pregunta:"?", referencia:"◎", bloqueo:"⚡" };
 
 // Circle-edge connection endpoint
@@ -4469,7 +4518,7 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
     <div ref={containerRef}
       style={{position:"relative",flex:1,overflow:"hidden",cursor:"grab",touchAction:"none",
         background: isMicelioMode
-          ? "radial-gradient(circle at 50% 50%, rgba(123,215,232,0.04), transparent 65%), #0b1014"
+          ? "radial-gradient(circle at 50% 50%, rgba(196,150,60,0.06), transparent 65%), #0A0908"
           : T.bg,
         backgroundImage: isMicelioMode
           ? "linear-gradient(rgba(255,255,255,0.055) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.055) 1px,transparent 1px)"
@@ -4489,7 +4538,7 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
         ))}
         {running && (
           <span style={{fontFamily:"var(--mono)",fontSize:10,letterSpacing:".1em",
-            color:"#7BD7E8",padding:"6px 0",textTransform:"uppercase",opacity:0.7}}>
+            color:"var(--mc)",padding:"6px 0",textTransform:"uppercase",opacity:0.7}}>
             Organizando…
           </span>
         )}
@@ -4500,9 +4549,9 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
         fontFamily:"var(--mono)",fontSize:10,letterSpacing:".13em",
         color: isMicelioMode ? "#7d8e99" : "#64748B",
         background: isMicelioMode ? "rgba(15,22,28,0.92)" : "rgba(255,255,255,0.82)",
-        border: isMicelioMode ? "1px solid rgba(123,215,232,0.18)" : "1px solid rgba(0,0,0,0.1)",
+        border: isMicelioMode ? "1px solid rgba(196,150,60,0.18)" : "1px solid rgba(0,0,0,0.1)",
         backdropFilter:"blur(8px)",padding:"8px 12px",lineHeight:1.7,pointerEvents:"none"}}>
-        <div style={{color: isMicelioMode ? "#7BD7E8" : T.accent,fontWeight:700}}>
+        <div style={{color: isMicelioMode ? "var(--mc)" : T.accent,fontWeight:700}}>
           ZOOM · {zoomPct}%
         </div>
         <div>DRAG · WHEEL · CLICK</div>
@@ -4549,10 +4598,10 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
             const str=conn.strength||7;
             const bx=mx+ox, by=my+oy;
             // Mycelium connection colors
-            const mcColor = conn.type==="contraste" ? "#E8B45C"
-              : conn.type==="refuerza" ? "#8CD17C"
-              : conn.type==="secuencia" ? "#E8B45C"
-              : "#7BD7E8"; // complementa + default = cyan
+            const mcColor = conn.type==="contraste" ? "#C88838"
+              : conn.type==="refuerza" ? "#3CB87A"
+              : conn.type==="secuencia" ? "#C88838"
+              : "#C4963C"; // complementa + default = navigator blue
             const isMicelio = layoutMode==="micelio";
             return (
               <g key={conn.id}>
@@ -4708,7 +4757,7 @@ function CanvasCardNode({ card, p, tc, col, cc, sc, isOwner, onEditCard, onMouse
 // ── Micelio card node — Mycelium rectangular sci-fi style ─────────────────────
 function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchStart }) {
   const [expanded, setExpanded] = useState(false);
-  const pbd = NODE_PASTEL_BD[card.type] || "#7BD7E8";
+  const pbd = NODE_PASTEL_BD[card.type] || "#C4963C";
   const ico = NODE_ICONS[card.type] || "◈";
   const colColor = col?.color || "#6B7280";
   const isBase = card.col === "listo"; // visually highlight finished cards
@@ -4716,7 +4765,7 @@ function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchSta
   return (
     <div className={`mcard hud-c${expanded ? " mcard-exp" : ""}`}
       style={{ left:p.x, top:p.y,
-        borderLeft:`3px solid ${pbd}`,
+        borderColor:`${pbd}33`,
         cursor:"grab", userSelect:"none" }}
       onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
 
@@ -4760,7 +4809,7 @@ function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchSta
       {/* Collapsed badge row */}
       {!expanded && (cc > 0 || sc > 0) && (
         <div style={{ display:"flex", gap:4, padding:"3px 10px 5px",
-          borderTop:"1px dashed rgba(123,215,232,0.08)" }}>
+          borderTop:"1px dashed rgba(196,150,60,0.08)" }}>
           {cc > 0 && (
             <span style={{ fontFamily:"var(--mono)", fontSize:9,
               color:"var(--ink3)", letterSpacing:".06em" }}>💬 {cc}</span>
@@ -5165,7 +5214,7 @@ function OInput({ style, ...props }) {
         padding:"11px 14px", borderRadius:10, fontFamily:"var(--sans)", fontSize:14, width:"100%",
         outline:"none", transition:"border-color .2s, box-shadow .2s",
         boxShadow:"inset 0 2px 4px rgba(0,0,0,.2)", ...style }}
-      onFocus={e => { e.target.style.borderColor = T.accent; e.target.style.boxShadow = `0 0 0 3px rgba(155,109,255,0.2), inset 0 2px 4px rgba(0,0,0,.15)`; }}
+      onFocus={e => { e.target.style.borderColor = T.accent; e.target.style.boxShadow = `0 0 0 3px rgba(196,150,60,0.18), inset 0 2px 4px rgba(0,0,0,.15)`; }}
       onBlur={e  => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; e.target.style.boxShadow = "inset 0 2px 4px rgba(0,0,0,.2)"; }}
     />
   );
@@ -5176,31 +5225,33 @@ function OTextarea({ style, ...props }) {
       style={{ background:"rgba(255,255,255,0.04)", border:"1.5px solid rgba(255,255,255,0.12)", color:T.ink,
         padding:"11px 14px", borderRadius:10, fontFamily:"var(--mono)", fontSize:13, width:"100%",
         outline:"none", resize:"vertical", lineHeight:1.55, transition:"border-color .2s, box-shadow .2s", ...style }}
-      onFocus={e => { e.target.style.borderColor = T.accent; e.target.style.boxShadow = `0 0 0 3px rgba(155,109,255,0.18)`; }}
+      onFocus={e => { e.target.style.borderColor = T.accent; e.target.style.boxShadow = `0 0 0 3px rgba(196,150,60,0.18)`; }}
       onBlur={e  => { e.target.style.borderColor = "rgba(255,255,255,0.12)"; e.target.style.boxShadow = "none"; }}
     />
   );
 }
 function OBtn({ children, full, small, disabled, onClick }) {
   const base = {
-    background: disabled ? "rgba(255,255,255,0.05)" : "linear-gradient(135deg,#A67CFF 0%,#7C3AED 100%)",
-    color: disabled ? T.ink4 : "#F5F0FF",
-    border: "none",
+    background: disabled ? "rgba(255,255,255,0.04)" : "linear-gradient(135deg,#D8A848 0%,#B07828 100%)",
+    color: disabled ? T.ink4 : "#1A1208",
+    border: disabled ? "1px solid rgba(200,170,100,0.12)" : "none",
     padding: small ? "7px 14px" : "11px 22px",
-    borderRadius: 10,
-    fontFamily: "var(--sans)",
+    borderRadius: 8,
+    fontFamily: "var(--raj)",
     fontWeight: 700,
     fontSize: small ? 12 : 14,
+    letterSpacing: "0.06em",
+    textTransform: "uppercase",
     cursor: disabled ? "default" : "pointer",
-    boxShadow: disabled ? "none" : "0 4px 16px rgba(155,109,255,0.3), inset 0 1px 0 rgba(255,255,255,0.12)",
+    boxShadow: disabled ? "none" : "0 4px 18px rgba(196,150,60,0.40), inset 0 1px 0 rgba(255,255,255,0.18)",
     width: full ? "100%" : "auto",
     transition: "opacity .15s, box-shadow .2s, transform .15s",
     letterSpacing: "0.01em",
   };
   return (
     <button onClick={onClick} disabled={disabled} style={base}
-      onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background="linear-gradient(135deg,#B590FF 0%,#8B46F0 100%)"; e.currentTarget.style.boxShadow="0 8px 28px rgba(124,58,237,0.55), inset 0 1px 0 rgba(255,255,255,0.2)"; e.currentTarget.style.transform="translateY(-2px)"; }}}
-      onMouseLeave={e => { e.currentTarget.style.background=disabled?"rgba(255,255,255,0.05)":"linear-gradient(135deg,#A67CFF 0%,#7C3AED 100%)"; e.currentTarget.style.boxShadow=disabled?"none":"0 4px 20px rgba(124,58,237,0.35), inset 0 1px 0 rgba(255,255,255,0.15)"; e.currentTarget.style.transform="translateY(0)"; }}>
+      onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background="linear-gradient(135deg,#E8BC60 0%,#C48A30 100%)"; e.currentTarget.style.boxShadow="0 8px 28px rgba(196,150,60,0.55), 0 0 20px rgba(196,150,60,0.20), inset 0 1px 0 rgba(255,255,255,0.22)"; e.currentTarget.style.transform="translateY(-2px)"; }}}
+      onMouseLeave={e => { e.currentTarget.style.background=disabled?"rgba(255,255,255,0.04)":"linear-gradient(135deg,#D8A848 0%,#B07828 100%)"; e.currentTarget.style.boxShadow=disabled?"none":"0 4px 18px rgba(196,150,60,0.40), inset 0 1px 0 rgba(255,255,255,0.18)"; e.currentTarget.style.transform="translateY(0)"; }}>
       {children}
     </button>
   );
@@ -5234,10 +5285,10 @@ function OOverlay({ children, onClose }) {
 }
 function OModalBox({ children, wide }) {
   return (
-    <div style={{ background:"rgba(10,10,24,0.95)", border:"1px solid rgba(155,109,255,0.15)",
+    <div style={{ background:"rgba(10,9,8,0.96)", border:"1px solid rgba(196,150,60,0.14)",
       borderRadius:18, padding:"28px", width:"100%", maxWidth:wide?510:430,
       maxHeight:"90vh", overflowY:"auto",
-      boxShadow:"0 40px 100px rgba(0,0,0,.7), 0 0 0 1px rgba(155,109,255,0.12), inset 0 1px 0 rgba(255,255,255,0.06)",
+      boxShadow:"0 40px 100px rgba(0,0,0,.7), 0 0 0 1px rgba(196,150,60,0.10), inset 0 1px 0 rgba(255,255,255,0.06)",
       backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)",
       animation:"scaleIn .22s cubic-bezier(.16,1,.3,1)" }}>
       {children}
