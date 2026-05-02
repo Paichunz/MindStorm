@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
+import { useState, useEffect, useCallback, useRef, createContext, useContext, memo } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 // ─── THEMES ──────────────────────────────────────────────────────────────────
@@ -486,9 +486,9 @@ const GLOBAL_CSS = `
   @keyframes fadeUp    { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
   @keyframes slideIn   { from{opacity:0;transform:translateX(26px)} to{opacity:1;transform:translateX(0)} }
   @keyframes scaleIn   { from{opacity:0;transform:scale(.93)} to{opacity:1;transform:scale(1)} }
-  @keyframes glowPulse { 0%,100%{box-shadow:0 0 18px rgba(155,109,255,.35),0 0 40px rgba(155,109,255,.12)}
-                         50% {box-shadow:0 0 32px rgba(155,109,255,.6), 0 0 80px rgba(155,109,255,.22)} }
-  @keyframes borderGlow{ 0%,100%{border-color:rgba(155,109,255,.35)} 50%{border-color:rgba(155,109,255,.75)} }
+  /* glowPulse: animate opacity on a pseudo-element instead of box-shadow (compositor-only) */
+  @keyframes glowPulse { 0%,100%{opacity:.45} 50%{opacity:1} }
+  @keyframes borderGlow{ 0%,100%{opacity:.4} 50%{opacity:1} }
   @keyframes orb1      { 0%,100%{transform:translate(0,0) scale(1)}
                          40%{transform:translate(80px,-60px) scale(1.15)}
                          70%{transform:translate(-40px,50px) scale(.88)} }
@@ -542,7 +542,9 @@ const GLOBAL_CSS = `
   .att-btn:hover { border-color:rgba(155,109,255,.45) !important; color:#9B6DFF !important; background:rgba(155,109,255,.08) !important; }
   .mv-btn:hover  { background:rgba(255,255,255,.07) !important; color:#EDE8FF !important; }
   .ai-trigger:hover { background:rgba(155,109,255,.15) !important; }
-  .ai-glow { animation: glowPulse 2.6s ease-in-out infinite; }
+  /* ai-glow: use a pseudo-element with box-shadow + opacity animation (compositor-only, no repaint) */
+  .ai-glow { position:relative; box-shadow:0 0 28px rgba(155,109,255,.35), 0 0 60px rgba(155,109,255,.12); }
+  .ai-glow::after { content:''; position:absolute; inset:0; border-radius:inherit; box-shadow:0 0 32px rgba(155,109,255,.6), 0 0 80px rgba(155,109,255,.22); animation:glowPulse 2.6s ease-in-out infinite; pointer-events:none; }
 
   .spinner { animation:spin .7s linear infinite; }
   .toast   { animation:slideIn .32s cubic-bezier(.34,1.56,.64,1); }
@@ -2511,7 +2513,7 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
             <div style={{ display:"flex", gap:4, marginTop:8, marginBottom:6 }}>
               {imgs.slice(0,3).map((img,i) => (
                 <div key={i} style={{ flex:1, height:56, borderRadius:5, overflow:"hidden", background:T.bgPanel }}>
-                  {img.data && <img src={img.data} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} />}
+                  {img.data && <img src={img.data} alt="" loading="lazy" style={{ width:"100%", height:"100%", objectFit:"cover" }} />}
                 </div>
               ))}
               {imgs.length>3 && <div style={{ width:36, height:56, borderRadius:5, background:T.bgPanel, display:"flex", alignItems:"center", justifyContent:"center", color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>+{imgs.length-3}</div>}
@@ -2662,7 +2664,7 @@ function CardReaderModal({ card, cardComments, connections, allCards, user, onEd
                 <div key={i} style={{ borderRadius:12, overflow:"hidden",
                   background:T.bgPanel,
                   maxHeight: imgs.length === 1 ? 340 : 180 }}>
-                  {img.data && <img src={img.data} alt=""
+                  {img.data && <img src={img.data} alt="" loading="lazy"
                     style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} />}
                 </div>
               ))}
@@ -3616,7 +3618,7 @@ function AttachZone({ atts, onRemove, onAdd, loading }) {
         <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:8 }}>
           {imgs.map(img => (
             <div key={img.id} style={{ position:"relative", width:64, height:64, borderRadius:7, overflow:"hidden", background:T.bgPanel, border:"1px solid "+T.border }}>
-              {img.data && <img src={img.data} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} />}
+              {img.data && <img src={img.data} alt="" loading="lazy" style={{ width:"100%", height:"100%", objectFit:"cover" }} />}
               <button onClick={() => onRemove(img.id)} style={{ position:"absolute", top:3, right:3, background:"rgba(0,0,0,.55)", border:"none", color:"#fff", borderRadius:"50%", width:16, height:16, cursor:"pointer", fontSize:10, display:"flex", alignItems:"center", justifyContent:"center" }}>×</button>
             </div>
           ))}
