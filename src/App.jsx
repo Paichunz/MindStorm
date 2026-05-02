@@ -600,9 +600,10 @@ const GLOBAL_CSS = `
     transition: transform .16s cubic-bezier(.25,.46,.45,.94), box-shadow .16s, border-color .16s;
   }
   .wcard:hover {
-    transform:translateY(-3px);
-    box-shadow: 0 12px 32px rgba(0,0,0,.4), 0 0 0 1px rgba(196,150,60,.25) !important;
-    border-color: rgba(196,150,60,.22) !important;
+    transform:translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0,0,0,.3), 0 0 0 1px rgba(196,150,60,.30) !important;
+    border-left-color: rgba(196,150,60,.7) !important;
+    background: rgba(40,34,54,0.95) !important;
   }
   .wcard:hover .edit-ico { color:#9A9080 !important; }
   .wcard:active { transform:translateY(-1px) scale(.99); }
@@ -1967,59 +1968,31 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
         </div>
       )}
 
-      {/* Top bar */}
+      {/* ── NEW TOP BAR (simplified) ── */}
       <div style={{ display:"flex", alignItems:"center", gap:isMobile?8:12,
         padding:isMobile?"9px 12px":"10px 20px",
-        background:"rgba(10,9,8,0.92)", borderBottom:"1px solid rgba(196,150,60,0.10)",
+        background:"rgba(10,9,8,0.95)", borderBottom:"1px solid rgba(200,170,100,0.10)",
         backdropFilter:"blur(14px)", WebkitBackdropFilter:"blur(14px)",
         boxShadow:"0 2px 20px rgba(0,0,0,.3)",
-        flexWrap:"wrap", position:"sticky", top:0, zIndex:50 }}>
+        position:"sticky", top:0, zIndex:50, flexShrink:0 }}>
         {!isMobile && <MindStormLogo size="sm" />}
-        {!isMobile && <div style={{ width:1, height:18, background:"rgba(255,255,255,0.07)" }} />}
-        <button onClick={onBack}
-          style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)",
-            color:T.ink3, cursor:"pointer", fontSize:12, display:"flex", alignItems:"center",
-            gap:5, padding:"5px 11px", borderRadius:8, transition:"all .15s", fontFamily:"var(--sans)" }}
-          onMouseEnter={e=>{ e.currentTarget.style.color=T.ink; e.currentTarget.style.borderColor="rgba(255,255,255,0.22)"; }}
-          onMouseLeave={e=>{ e.currentTarget.style.color=T.ink3; e.currentTarget.style.borderColor="rgba(255,255,255,0.1)"; }}>
-          ← {isMobile ? "" : "Proyectos"}
-        </button>
-        {!isMobile && <div style={{ width:1, height:18, background:"rgba(255,255,255,0.07)" }} />}
+        {!isMobile && <div style={{ width:1, height:18, background:"rgba(255,255,255,0.07)", flexShrink:0 }} />}
         <div style={{ width:26, height:26, background:`${cat.color}22`, borderRadius:7,
           display:"flex", alignItems:"center", justifyContent:"center", fontSize:14,
           border:`1px solid ${cat.color}44`, flexShrink:0 }}>{cat.label.split(" ")[0]}</div>
-        <span style={{ color:T.ink, fontWeight:700, fontSize:isMobile?13:15, flex:isMobile?1:undefined,
-          overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:isMobile?160:undefined }}>
+        <span style={{ color:T.ink, fontWeight:700, fontSize:isMobile?13:15,
+          overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:isMobile?160:280 }}>
           {board.name}
         </span>
-        {!isMobile && (board.subcategories||[]).map(s => <OTag key={s} color={cat.color} bg={`${cat.color}18`} small>{s}</OTag>)}
         {board.password && <button onClick={() => setShowPwd(p=>!p)}
-          style={{ background:"none", border:"none", cursor:"pointer", fontSize:13, color:T.ink4, transition:"color .15s" }}
+          style={{ background:"none", border:"none", cursor:"pointer", fontSize:13, color:T.ink4, transition:"color .15s", flexShrink:0 }}
           onMouseEnter={e=>e.currentTarget.style.color=T.amber}
           onMouseLeave={e=>e.currentTarget.style.color=T.ink4}>🔒</button>}
         {showPwd && board.password && <span style={{ background:T.amberBg, color:T.amber, fontFamily:"var(--mono)", fontSize:12, padding:"4px 11px", borderRadius:7, userSelect:"all", border:`1px solid ${T.amber}33` }}>{board.password}</span>}
         <div style={{ flex:1 }} />
-        <div style={{ display:"flex", gap: isMobile?6:8, alignItems:"center", flexWrap:"nowrap" }}>
-          {/* Save status indicator */}
-          {saveStatus === "saving" && (
-            <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:11, display:"flex", alignItems:"center", gap:4, opacity:0.7 }}>
-              <span className="spinner" style={{ display:"inline-block", width:10, height:10, border:"1.5px solid "+T.border, borderTop:"1.5px solid "+T.ink4, borderRadius:"50%" }} />
-              {!isMobile && "Guardando…"}
-            </span>
-          )}
-          {saveStatus === "saved" && (
-            <span style={{ color:T.green, fontFamily:"var(--mono)", fontSize:11, animation:"fadeIn .2s ease", display:"flex", alignItems:"center", gap:3 }}>
-              ✓{!isMobile && " Guardado"}
-            </span>
-          )}
-          {saveStatus === "error" && (
-            <span style={{ color:T.rose, fontFamily:"var(--mono)", fontSize:11, display:"flex", alignItems:"center", gap:3 }}>
-              ⚠{!isMobile && " Sin guardar"}
-            </span>
-          )}
+        <div style={{ display:"flex", gap:8, alignItems:"center" }}>
           <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:12 }}>@{user.name}</span>
-
-          {/* Share */}
+          <ThemeSwitcher />
           <div style={{ position:"relative" }}>
             <button onClick={() => setShowShare(s => !s)}
               style={{ background:T.bgPanel, border:"1px solid "+T.border, color:T.ink3, padding:"7px 10px", borderRadius:8, fontSize:12, cursor:"pointer", display:"flex", alignItems:"center", gap:5, fontFamily:"var(--sans)", transition:"all .15s" }}
@@ -2028,7 +2001,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               🔗{!isMobile && " Compartir"}
             </button>
             {showShare && (
-              <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, background:T.bgCard, border:"1px solid "+T.border, borderRadius:10, padding:"16px", width:280, boxShadow:"0 8px 30px rgba(0,0,0,.12)", zIndex:50 }}>
+              <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, background:T.bgCard, border:"1px solid "+T.border, borderRadius:10, padding:"16px", width:280, boxShadow:"0 8px 30px rgba(0,0,0,.5)", zIndex:50 }}>
                 <div style={{ color:T.ink, fontWeight:700, fontSize:13, marginBottom:6 }}>Compartir tablero</div>
                 <p style={{ color:T.ink3, fontSize:12, lineHeight:1.5, marginBottom:10 }}>{board.password ? "Comparte esta URL y la contraseña con tus colaboradores." : "Comparte esta URL — el tablero es abierto."}</p>
                 <div style={{ background:T.bgPanel, border:"1px solid "+T.border, borderRadius:7, padding:"8px 10px", fontFamily:"var(--mono)", fontSize:10, color:T.ink3, wordBreak:"break-all", marginBottom:10 }}>{window.location.href}</div>
@@ -2042,469 +2015,523 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               </div>
             )}
           </div>
-
-          {deletedCards.length > 0 && (
-            <button onClick={() => setTrashOpen(true)} style={{ background:T.bgPanel, border:"1px solid "+T.border, color:T.ink3, padding:"7px 10px", borderRadius:8, fontSize:12, cursor:"pointer", fontFamily:"var(--sans)" }}>
-              🗑{!isMobile && " "+deletedCards.length}
-            </button>
-          )}
-          {!isMobile && <button onClick={() => setDocPanel(true)}
-            style={{ background:T.greenBg, border:"1px solid "+T.green+"44", color:T.green, padding:"7px 13px", borderRadius:8, fontWeight:700, fontSize:13, cursor:"pointer", fontFamily:"var(--sans)", transition:"all .2s" }}
-            onMouseEnter={e => e.currentTarget.style.background="#D1FAE5"}
-            onMouseLeave={e => e.currentTarget.style.background=T.greenBg}>
-            📄 Documento
-          </button>}
-          <button onClick={() => setConnPanel(true)} className="ai-trigger"
-            style={{ background:pendingConns.length>0?T.amberBg:T.bgPanel, border:"1px solid "+(pendingConns.length>0?T.amber:T.border)+"88", color:pendingConns.length>0?T.amber:T.ink3, padding:"7px 10px", borderRadius:8, fontSize:12, cursor:"pointer", fontFamily:"var(--sans)", fontWeight:600 }}>
-            💡{!isMobile && (" Conexiones"+(pendingConns.length>0?` (${pendingConns.length})`:""))}
-            {isMobile && pendingConns.length>0 && <span style={{ background:T.rose, color:"#fff", fontSize:9, padding:"1px 5px", borderRadius:99, marginLeft:3 }}>{pendingConns.length}</span>}
-          </button>
-          <button onClick={() => setAiPanel(true)} className="ai-glow"
-            style={{ background:"linear-gradient(135deg,rgba(196,150,60,0.18),rgba(60,184,122,0.08))",
-              border:"1px solid rgba(196,150,60,0.38)", color:T.accent,
-              padding:"7px 12px", borderRadius:9, fontWeight:700, fontSize:13,
-              cursor:"pointer", fontFamily:"var(--sans)", transition:"all .2s",
-              display:"flex", alignItems:"center", gap:5 }}>
-            ✦{!isMobile && " Análisis IA"}
-          </button>
-          <button onClick={() => setKeyModal(true)}
-            title={getAIKey() ? "IA conectada — clic para cambiar clave" : "Conectar IA gratuita"}
-            style={{ background: getAIKey() ? T.greenBg : T.bgPanel,
-              border:"1px solid "+(getAIKey() ? T.green+"44" : T.border),
-              color: getAIKey() ? T.green : T.ink4,
-              padding:"7px 10px", borderRadius:8, fontSize:12, cursor:"pointer",
-              fontFamily:"var(--sans)", transition:"all .2s",
-              display:"flex", alignItems:"center", gap:4, fontWeight:600 }}>
-            {getAIKey() ? <><span style={{fontSize:13}}>🔑</span>{!isMobile && " IA ✓"}</> : <><span style={{fontSize:13}}>🔑</span>{!isMobile && " Conectar IA"}</>}
-          </button>
-          {cat.worldbuilding && (
-            <button onClick={() => setWbPanel(true)}
-              style={{ background:T.amberBg, border:"1px solid "+T.amber+"55", color:T.amber, padding:"7px 10px", borderRadius:8, fontWeight:700, fontSize:13, cursor:"pointer", fontFamily:"var(--sans)", display:"flex", alignItems:"center", gap:5, transition:"all .2s" }}
-              onMouseEnter={e=>{e.currentTarget.style.background="#FEF3C7";}}
-              onMouseLeave={e=>{e.currentTarget.style.background=T.amberBg;}}>
-              📖{!isMobile && " Mundo"}
-            </button>
-          )}
-          <div style={{ width:1, height:18, background:T.border }} />
-          <ThemeSwitcher />
-          <div style={{ width:1, height:18, background:T.border }} />
-          <button onClick={() => setViewMode(v => v==="kanban"?"canvas":"kanban")}
-            style={{ background:viewMode==="canvas"?T.accent:T.bgPanel, border:"1px solid "+(viewMode==="canvas"?T.accent:T.border2), color:viewMode==="canvas"?"#fff":T.ink3, padding:"7px 10px", borderRadius:8, fontWeight:600, fontSize:12, cursor:"pointer", fontFamily:"var(--sans)", transition:"all .2s" }}>
-            {viewMode==="kanban" ? "◯" : "▦"}{!isMobile && (viewMode==="kanban" ? " Canvas" : " Kanban")}
-          </button>
         </div>
       </div>
 
-      {/* Concept bar */}
-      <div onClick={() => setEditConcept(true)}
-        style={{ background:"rgba(8,8,20,0.75)", borderBottom:"1px solid rgba(255,255,255,0.06)",
-          padding:"11px 22px", cursor:"pointer", transition:"all .15s",
-          backdropFilter:"blur(8px)" }}
-        onMouseEnter={e=>{ e.currentTarget.style.background="rgba(14,14,32,0.85)"; e.currentTarget.style.borderBottomColor=`${cat.color}28`; }}
-        onMouseLeave={e=>{ e.currentTarget.style.background="rgba(8,8,20,0.75)"; e.currentTarget.style.borderBottomColor="rgba(255,255,255,0.06)"; }}>
-        <div style={{ display:"flex", gap:12, alignItems:"flex-start", maxWidth:860 }}>
-          <div style={{ width:3, borderRadius:2, background:`linear-gradient(180deg,${cat.color},${cat.color}44)`,
-            alignSelf:"stretch", flexShrink:0, boxShadow:`0 0 8px ${cat.color}66` }} />
-          <div style={{ flex:1 }}>
-            <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.12em", marginBottom:2, textTransform:"uppercase" }}>Concepto base · clic para editar</div>
-            <div style={{ color:T.ink, fontWeight:700, fontSize:14 }}>
-              {concept.title || <span style={{ color:T.ink4, fontStyle:"italic" }}>Sin concepto — haz clic para agregar</span>}
+      {/* ── THREE-COLUMN BODY ── */}
+      <div style={{ display:"flex", flex:1, overflow:"hidden", minHeight:0 }}>
+
+        {/* ── LEFT SIDEBAR (52px) — hidden on mobile ── */}
+        {!isMobile && (
+          <div style={{ width:52, flexShrink:0, background:T.bgPanel,
+            borderRight:"1px solid rgba(200,170,100,0.10)",
+            display:"flex", flexDirection:"column", alignItems:"center",
+            padding:"10px 0", gap:4, zIndex:10 }}>
+
+            <button onClick={onBack} title="Volver a Proyectos"
+              style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
+                background:"transparent", color:T.ink4,
+                fontSize:15, display:"flex", alignItems:"center", justifyContent:"center",
+                transition:"all .15s" }}
+              onMouseEnter={e => { e.currentTarget.style.background="rgba(255,255,255,0.07)"; e.currentTarget.style.color=T.ink; }}
+              onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color=T.ink4; }}>
+              ←
+            </button>
+
+            <div style={{ width:24, height:1, background:"rgba(200,170,100,0.10)", margin:"4px 0" }} />
+
+            <button onClick={() => setViewMode("kanban")} title="Vista Kanban"
+              style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
+                background: viewMode==="kanban" ? T.accentBg : "transparent",
+                color: viewMode==="kanban" ? T.accent : T.ink4,
+                fontSize:15, display:"flex", alignItems:"center", justifyContent:"center",
+                transition:"all .15s" }}
+              onMouseEnter={e => { if (viewMode!=="kanban") { e.currentTarget.style.background="rgba(255,255,255,0.07)"; e.currentTarget.style.color=T.ink; } }}
+              onMouseLeave={e => { e.currentTarget.style.background=viewMode==="kanban"?T.accentBg:"transparent"; e.currentTarget.style.color=viewMode==="kanban"?T.accent:T.ink4; }}>
+              ▦
+            </button>
+
+            <button onClick={() => setViewMode("canvas")} title="Vista Canvas"
+              style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
+                background: viewMode==="canvas" ? T.accentBg : "transparent",
+                color: viewMode==="canvas" ? T.accent : T.ink4,
+                fontSize:15, display:"flex", alignItems:"center", justifyContent:"center",
+                transition:"all .15s" }}
+              onMouseEnter={e => { if (viewMode!=="canvas") { e.currentTarget.style.background="rgba(255,255,255,0.07)"; e.currentTarget.style.color=T.ink; } }}
+              onMouseLeave={e => { e.currentTarget.style.background=viewMode==="canvas"?T.accentBg:"transparent"; e.currentTarget.style.color=viewMode==="canvas"?T.accent:T.ink4; }}>
+              ◯
+            </button>
+
+            <div style={{ width:24, height:1, background:"rgba(200,170,100,0.10)", margin:"4px 0" }} />
+
+            <button onClick={() => setConnPanel(true)} title={`Conexiones${pendingConns.length>0?" ("+pendingConns.length+" pendientes)":""}`}
+              style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer", position:"relative",
+                background: pendingConns.length>0 ? T.amberBg : "transparent",
+                color: pendingConns.length>0 ? T.amber : T.ink4,
+                fontSize:15, display:"flex", alignItems:"center", justifyContent:"center",
+                transition:"all .15s" }}
+              onMouseEnter={e => { e.currentTarget.style.background=pendingConns.length>0?T.amberBg:"rgba(255,255,255,0.07)"; e.currentTarget.style.color=pendingConns.length>0?T.amber:T.ink; }}
+              onMouseLeave={e => { e.currentTarget.style.background=pendingConns.length>0?T.amberBg:"transparent"; e.currentTarget.style.color=pendingConns.length>0?T.amber:T.ink4; }}>
+              💡
+              {pendingConns.length > 0 && (
+                <span style={{ position:"absolute", top:3, right:3, background:T.amber, color:"#1a0e00",
+                  fontSize:8, fontWeight:800, width:14, height:14, borderRadius:"50%",
+                  display:"flex", alignItems:"center", justifyContent:"center", lineHeight:1 }}>
+                  {pendingConns.length}
+                </span>
+              )}
+            </button>
+
+            <button onClick={() => setAiPanel(true)} title="Análisis IA"
+              className="ai-glow"
+              style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
+                background:"linear-gradient(135deg,rgba(196,150,60,0.18),rgba(60,184,122,0.08))",
+                color:T.accent,
+                fontSize:15, display:"flex", alignItems:"center", justifyContent:"center",
+                transition:"all .15s" }}
+              onMouseEnter={e => { e.currentTarget.style.background="rgba(196,150,60,0.25)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background="linear-gradient(135deg,rgba(196,150,60,0.18),rgba(60,184,122,0.08))"; }}>
+              ✦
+            </button>
+
+            <div style={{ width:24, height:1, background:"rgba(200,170,100,0.10)", margin:"4px 0" }} />
+
+            <button onClick={() => setDocPanel(true)} title="Documento"
+              style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
+                background:"transparent", color:T.ink4,
+                fontSize:14, display:"flex", alignItems:"center", justifyContent:"center",
+                transition:"all .15s" }}
+              onMouseEnter={e => { e.currentTarget.style.background="rgba(255,255,255,0.07)"; e.currentTarget.style.color=T.ink; }}
+              onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color=T.ink4; }}>
+              📄
+            </button>
+
+            {deletedCards.length > 0 && (
+              <button onClick={() => setTrashOpen(true)} title={`Papelera (${deletedCards.length})`}
+                style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer", position:"relative",
+                  background:"transparent", color:T.ink4,
+                  fontSize:14, display:"flex", alignItems:"center", justifyContent:"center",
+                  transition:"all .15s" }}
+                onMouseEnter={e => { e.currentTarget.style.background="rgba(255,255,255,0.07)"; e.currentTarget.style.color=T.ink; }}
+                onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color=T.ink4; }}>
+                🗑
+                <span style={{ position:"absolute", top:3, right:3, background:T.rose, color:"#fff",
+                  fontSize:8, fontWeight:800, width:14, height:14, borderRadius:"50%",
+                  display:"flex", alignItems:"center", justifyContent:"center", lineHeight:1 }}>
+                  {deletedCards.length}
+                </span>
+              </button>
+            )}
+
+            {cat.worldbuilding && (
+              <button onClick={() => setWbPanel(true)} title="Worldbuilding"
+                style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
+                  background:T.amberBg, color:T.amber,
+                  fontSize:14, display:"flex", alignItems:"center", justifyContent:"center",
+                  transition:"all .15s" }}>
+                📖
+              </button>
+            )}
+
+            <div style={{ flex:1 }} />
+            <div style={{ width:24, height:1, background:"rgba(200,170,100,0.10)", margin:"4px 0" }} />
+
+            <button onClick={() => setKeyModal(true)} title={getAIKey() ? "IA conectada — cambiar clave" : "Conectar IA"}
+              style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
+                background: getAIKey() ? T.greenBg : "transparent",
+                color: getAIKey() ? T.green : T.ink4,
+                fontSize:14, display:"flex", alignItems:"center", justifyContent:"center",
+                transition:"all .15s" }}
+              onMouseEnter={e => { e.currentTarget.style.background=getAIKey()?T.greenBg:"rgba(255,255,255,0.07)"; e.currentTarget.style.color=getAIKey()?T.green:T.ink; }}
+              onMouseLeave={e => { e.currentTarget.style.background=getAIKey()?T.greenBg:"transparent"; e.currentTarget.style.color=getAIKey()?T.green:T.ink4; }}>
+              🔑
+            </button>
+          </div>
+        )}
+
+        {/* ── CENTER CONTENT ── */}
+        <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", minWidth:0 }}>
+
+          {/* Concept bar */}
+          <div onClick={() => setEditConcept(true)}
+            style={{ background:T.bgPanel, borderBottom:"1px solid rgba(200,170,100,0.10)",
+              padding:"11px 18px", cursor:"pointer", transition:"background .15s, border-color .15s",
+              flexShrink:0 }}
+            onMouseEnter={e=>{ e.currentTarget.style.background=T.bgHover; e.currentTarget.style.borderBottomColor=`${cat.color}28`; }}
+            onMouseLeave={e=>{ e.currentTarget.style.background=T.bgPanel; e.currentTarget.style.borderBottomColor="rgba(200,170,100,0.10)"; }}>
+            <div style={{ display:"flex", gap:12, alignItems:"flex-start" }}>
+              <div style={{ width:3, minHeight:32, borderRadius:2,
+                background:`linear-gradient(180deg,${cat.color},${cat.color}44)`,
+                flexShrink:0, boxShadow:`0 0 8px ${cat.color}66` }} />
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.12em", marginBottom:2, textTransform:"uppercase" }}>Concepto base · clic para editar</div>
+                <div style={{ color:T.ink, fontWeight:700, fontSize:14, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                  {concept.title || <span style={{ color:T.ink4, fontStyle:"italic" }}>Sin concepto — haz clic para agregar</span>}
+                </div>
+                {concept.desc && <div style={{ color:T.ink3, fontSize:12, marginTop:2, lineHeight:1.4, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{concept.desc}</div>}
+              </div>
             </div>
-            {concept.desc && <div style={{ color:T.ink3, fontSize:12, marginTop:2, lineHeight:1.4 }}>{concept.desc}</div>}
           </div>
-        </div>
-      </div>
 
-      {/* Filter bar — only in kanban mode */}
-      {viewMode === "kanban" && (
-        <div style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 20px",
-          background:"rgba(8,8,20,0.7)", borderBottom:"1px solid rgba(255,255,255,0.05)",
-          backdropFilter:"blur(8px)", flexWrap:"wrap" }}>
-          {/* Search input */}
-          <div style={{ position:"relative", flexShrink:0 }}>
-            <span style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)",
-              color:T.ink4, fontSize:13, pointerEvents:"none" }}>⌕</span>
-            <input
-              ref={searchInputRef}
-              value={filterQuery}
-              onChange={e => setFilterQuery(e.target.value)}
-              placeholder="Buscar tarjetas…"
-              aria-label="Buscar tarjetas en el tablero"
-              style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.09)",
-                color:T.ink, borderRadius:8, padding:"6px 10px 6px 28px", fontSize:12,
-                fontFamily:"var(--sans)", outline:"none", width:190,
-                transition:"border-color .15s", caretColor:T.accent }}
-              onFocus={e => e.target.style.borderColor=T.accent+"88"}
-              onBlur={e => e.target.style.borderColor="rgba(255,255,255,0.09)"}
-            />
-            {!filterQuery && (
-              <span style={{ position:"absolute", right:8, top:"50%", transform:"translateY(-50%)",
-                color:T.ink4, fontSize:10, fontFamily:"var(--mono)", pointerEvents:"none",
-                background:"rgba(255,255,255,0.05)", padding:"1px 5px", borderRadius:4,
-                border:"1px solid rgba(255,255,255,0.08)" }}>
-                {/Mac|iPhone|iPad/.test(navigator.userAgent) ? "⌘K" : "Ctrl+K"}
-              </span>
-            )}
-            {filterQuery && (
-              <button onClick={() => setFilterQuery("")}
-                style={{ position:"absolute", right:7, top:"50%", transform:"translateY(-50%)",
-                  background:"none", border:"none", color:T.ink4, cursor:"pointer",
-                  fontSize:13, lineHeight:1, padding:0 }}>×</button>
-            )}
-          </div>
-          {/* Vertical divider */}
-          <div style={{ width:1, height:18, background:T.border, flexShrink:0 }} />
-          {/* Type filter pills */}
-          <div style={{ display:"flex", gap:5, alignItems:"center", flexWrap:"wrap" }}>
-            <span style={{ color:T.ink4, fontSize:11, fontFamily:"var(--mono)", letterSpacing:"0.08em", marginRight:2 }}>TIPO</span>
-            {["", ...CARD_TYPES].map(t => {
-              const isAll = t === "";
-              const active = filterType === t;
-              const color = isAll ? T.ink3 : TYPE_COLOR[t];
-              const bg = isAll ? "rgba(255,255,255,0.06)" : TYPE_BG[t];
-              return (
-                <button key={t} onClick={() => setFilterType(t)}
-                  style={{ background:active ? (isAll ? "rgba(255,255,255,0.12)" : bg) : "transparent",
-                    border:`1px solid ${active ? (isAll ? "rgba(255,255,255,0.22)" : color+"55") : "rgba(255,255,255,0.07)"}`,
-                    color:active ? (isAll ? T.ink : color) : T.ink4,
-                    borderRadius:99, padding:"3px 10px", fontSize:11, cursor:"pointer",
-                    fontFamily:"var(--sans)", fontWeight:active?700:400,
-                    transition:"all .15s" }}
-                  onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor="rgba(255,255,255,0.18)"; e.currentTarget.style.color=T.ink3; } }}
-                  onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor="rgba(255,255,255,0.07)"; e.currentTarget.style.color=T.ink4; } }}>
-                  {isAll ? "Todos" : t}
-                </button>
-              );
-            })}
-          </div>
-          {/* Author filter — only if multiple authors */}
-          {allAuthors.length > 1 && <>
-            <div style={{ width:1, height:18, background:T.border, flexShrink:0 }} />
-            <div style={{ display:"flex", gap:5, alignItems:"center", flexWrap:"wrap" }}>
-              <span style={{ color:T.ink4, fontSize:11, fontFamily:"var(--mono)", letterSpacing:"0.08em", marginRight:2 }}>AUTOR</span>
-              {["", ...allAuthors].map(a => {
-                const isAll = a === "";
-                const active = filterAuthor === a;
+          {/* Filter bar — pill style, only in kanban mode */}
+          {viewMode === "kanban" && (
+            <div style={{ display:"flex", alignItems:"center", gap:8, padding:"7px 18px",
+              background:T.bgPanel, borderBottom:"1px solid rgba(200,170,100,0.07)",
+              overflowX:"auto", flexShrink:0 }}>
+              <div style={{ position:"relative", flexShrink:0 }}>
+                <span style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)",
+                  color:T.ink4, fontSize:13, pointerEvents:"none" }}>⌕</span>
+                <input
+                  ref={searchInputRef}
+                  value={filterQuery}
+                  onChange={e => setFilterQuery(e.target.value)}
+                  placeholder="Buscar…"
+                  aria-label="Buscar tarjetas en el tablero"
+                  style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(200,170,100,0.15)",
+                    color:T.ink, borderRadius:99, padding:"5px 10px 5px 28px", fontSize:12,
+                    fontFamily:"var(--sans)", outline:"none", width:160,
+                    transition:"border-color .15s", caretColor:T.accent }}
+                  onFocus={e => e.target.style.borderColor=T.accent+"88"}
+                  onBlur={e => e.target.style.borderColor="rgba(200,170,100,0.15)"}
+                />
+                {filterQuery && (
+                  <button onClick={() => setFilterQuery("")}
+                    style={{ position:"absolute", right:8, top:"50%", transform:"translateY(-50%)",
+                      background:"none", border:"none", color:T.ink4, cursor:"pointer",
+                      fontSize:13, lineHeight:1, padding:0 }}>×</button>
+                )}
+              </div>
+              <div style={{ width:1, height:16, background:"rgba(200,170,100,0.10)", flexShrink:0 }} />
+              {["", ...CARD_TYPES].map(t => {
+                const isAll = t === "";
+                const active = filterType === t;
+                const color = isAll ? T.ink3 : TYPE_COLOR[t];
+                const bg = isAll ? "rgba(255,255,255,0.08)" : TYPE_BG[t];
                 return (
-                  <button key={a} onClick={() => setFilterAuthor(a)}
-                    style={{ background:active ? "rgba(196,150,60,0.14)" : "transparent",
-                      border:`1px solid ${active ? "rgba(196,150,60,0.45)" : "rgba(255,255,255,0.07)"}`,
-                      color:active ? T.accent : T.ink4,
-                      borderRadius:99, padding:"3px 10px", fontSize:11, cursor:"pointer",
-                      fontFamily:"var(--sans)", fontWeight:active?700:400, transition:"all .15s" }}
-                    onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor="rgba(255,255,255,0.18)"; e.currentTarget.style.color=T.ink3; } }}
-                    onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor="rgba(255,255,255,0.07)"; e.currentTarget.style.color=T.ink4; } }}>
-                    {isAll ? "Todos" : `@${a}`}
+                  <button key={t} onClick={() => setFilterType(t)}
+                    style={{ background: active ? (isAll ? "rgba(255,255,255,0.12)" : bg) : "transparent",
+                      border:`1px solid ${active ? (isAll ? "rgba(255,255,255,0.25)" : color+"55") : "rgba(200,170,100,0.15)"}`,
+                      color: active ? (isAll ? T.ink : color) : T.ink4,
+                      borderRadius:99, padding:"4px 12px", fontSize:11, cursor:"pointer",
+                      fontFamily:"var(--sans)", fontWeight:active?700:400, whiteSpace:"nowrap",
+                      transition:"all .15s", flexShrink:0 }}
+                    onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor="rgba(200,170,100,0.35)"; e.currentTarget.style.color=T.ink3; } }}
+                    onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor="rgba(200,170,100,0.15)"; e.currentTarget.style.color=T.ink4; } }}>
+                    {isAll ? "Todos" : t}
                   </button>
                 );
               })}
-            </div>
-          </>}
-          {/* Results count when filtering */}
-          {hasFilter && (
-            <div style={{ display:"flex", alignItems:"center", gap:8, marginLeft:"auto" }}>
-              <span style={{ color:T.ink4, fontSize:11, fontFamily:"var(--mono)" }}>
-                {filteredActiveCards.length} resultado{filteredActiveCards.length!==1?"s":""}
-              </span>
-              <button onClick={() => { setFilterQuery(""); setFilterType(""); setFilterAuthor(""); }}
-                style={{ background:"rgba(255,77,126,0.1)", border:"1px solid rgba(255,77,126,0.3)",
-                  color:T.rose, borderRadius:7, padding:"3px 9px", fontSize:11,
-                  cursor:"pointer", fontFamily:"var(--sans)", fontWeight:600, transition:"all .15s" }}
-                onMouseEnter={e => e.currentTarget.style.background="rgba(255,77,126,0.2)"}
-                onMouseLeave={e => e.currentTarget.style.background="rgba(255,77,126,0.1)"}>
-                ✕ Limpiar
-              </button>
+              {allAuthors.length > 1 && <>
+                <div style={{ width:1, height:16, background:"rgba(200,170,100,0.10)", flexShrink:0 }} />
+                {["", ...allAuthors].map(a => {
+                  const isAll = a === "";
+                  const active = filterAuthor === a;
+                  return (
+                    <button key={a} onClick={() => setFilterAuthor(a)}
+                      style={{ background: active ? T.accentBg : "transparent",
+                        border:`1px solid ${active ? T.accent+"55" : "rgba(200,170,100,0.15)"}`,
+                        color: active ? T.accent : T.ink4,
+                        borderRadius:99, padding:"4px 12px", fontSize:11, cursor:"pointer",
+                        fontFamily:"var(--sans)", fontWeight:active?700:400, whiteSpace:"nowrap",
+                        transition:"all .15s", flexShrink:0 }}
+                      onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor="rgba(200,170,100,0.35)"; e.currentTarget.style.color=T.ink3; } }}
+                      onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor="rgba(200,170,100,0.15)"; e.currentTarget.style.color=T.ink4; } }}>
+                      {isAll ? "Autores" : `@${a}`}
+                    </button>
+                  );
+                })}
+              </>}
+              {hasFilter && (
+                <>
+                  <div style={{ flex:1 }} />
+                  <span style={{ color:T.ink4, fontSize:11, fontFamily:"var(--mono)", flexShrink:0 }}>
+                    {filteredActiveCards.length} resultado{filteredActiveCards.length!==1?"s":""}
+                  </span>
+                  <button onClick={() => { setFilterQuery(""); setFilterType(""); setFilterAuthor(""); }}
+                    style={{ background:"rgba(192,80,96,0.10)", border:"1px solid rgba(192,80,96,0.28)",
+                      color:T.rose, borderRadius:99, padding:"4px 12px", fontSize:11,
+                      cursor:"pointer", fontFamily:"var(--sans)", fontWeight:600, transition:"all .15s", flexShrink:0 }}
+                    onMouseEnter={e => e.currentTarget.style.background="rgba(192,80,96,0.20)"}
+                    onMouseLeave={e => e.currentTarget.style.background="rgba(192,80,96,0.10)"}>
+                    ✕ Limpiar
+                  </button>
+                </>
+              )}
             </div>
           )}
-        </div>
-      )}
 
-      {/* Board area */}
-      {viewMode === "canvas"
-        ? <CanvasView
-            cards={activeCards}
-            connections={connections}
-            comments={comments}
-            user={user}
-            onEditCard={setEditCard}
-            onReadCard={setReadCard}
-            canvasPositions={data.canvasPositions || { cards:{}, stickers:{} }}
-            onSavePositions={saveCanvasPositions}
-            cat={cat}
-          />
-        : <div style={{ display:"flex", flex:1, overflow:"hidden", position:"relative" }}>
-
-        {/* Kanban columns */}
-        <div style={{ display:"flex", flexDirection:isMobile?"column":"row", gap:isMobile?12:14,
-          padding:isMobile?"12px":"18px 20px", overflowX:isMobile?"visible":"auto",
-          overflowY:isMobile?"auto":"visible", flex:1, alignItems:"flex-start", background:"transparent" }}>
-          {COLUMNS.map(col => {
-            const colCards = filteredActiveCards.filter(c => c.col===col.id);
-            const isOver = dragOver===col.id;
-            return (
-              <div key={col.id} data-col={col.id}
-                onDragOver={e => { e.preventDefault(); setDragOver(col.id); }}
-                onDragLeave={() => setDragOver(null)}
-                onDrop={async e => { e.preventDefault(); if (dragCard) await moveCard(dragCard, col.id); setDragOver(null); setDragCard(null); }}
-                style={{ width:isMobile?"100%":268, flexShrink:0,
-                  background:isOver?`rgba(196,150,60,0.05)`:T.bgPanel,
-                  borderRadius:12,
-                  border:`1px solid ${isOver?col.color+"55":col.color+"20"}`,
-                  boxShadow:isOver?`0 0 0 1px ${col.color}30, 0 8px 24px rgba(0,0,0,.25)`:`0 2px 12px rgba(0,0,0,.20)`,
-                  transition:"all .18s", padding:"14px 12px" }}>
-                {/* Column header */}
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center",
-                  paddingBottom:12, marginBottom:12,
-                  borderBottom:`1px solid ${col.color}28` }}>
-                  <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-                    <div style={{ width:10, height:10, borderRadius:"50%", background:col.color,
-                      boxShadow:`0 0 8px ${col.color}cc, 0 0 16px ${col.color}44`, flexShrink:0 }} />
-                    <div>
-                      <div style={{ color:T.ink, fontWeight:700, fontSize:13, letterSpacing:"-0.01em" }}>{col.label}</div>
-                      <div style={{ color:T.ink4, fontSize:10, fontFamily:"var(--mono)", marginTop:1 }}>{col.desc}</div>
-                    </div>
-                  </div>
-                  <div style={{ display:"flex", gap:6, alignItems:"center" }}>
-                    <span style={{ background:`${col.color}20`, color:col.color,
-                      fontFamily:"var(--mono)", fontSize:11, padding:"3px 10px",
-                      borderRadius:99, border:`1px solid ${col.color}44`, fontWeight:700 }}>{colCards.length}</span>
-                    {addingTo !== col.id && (
-                      <button onClick={() => setAddingTo(col.id)} title="Añadir tarjeta"
-                        style={{ background:`${col.color}18`, border:`1px solid ${col.color}44`,
-                          color:col.color, width:26, height:26, borderRadius:8, cursor:"pointer",
-                          fontSize:16, fontWeight:700, display:"flex", alignItems:"center",
-                          justifyContent:"center", lineHeight:1, flexShrink:0, transition:"all .15s" }}
-                        onMouseEnter={e => { e.currentTarget.style.background=`${col.color}33`; e.currentTarget.style.boxShadow=`0 0 8px ${col.color}44`; }}
-                        onMouseLeave={e => { e.currentTarget.style.background=`${col.color}18`; e.currentTarget.style.boxShadow="none"; }}>
-                        +
-                      </button>
-                    )}
-                  </div>
-                </div>
-                {/* Add form inline at top when active */}
-                {addingTo===col.id && (
-                  <div style={{ marginBottom:9 }}>
-                    <AddForm col={col.id} onAdd={addCard} onCancel={() => setAddingTo(null)} />
-                  </div>
-                )}
-                <div style={{ display:"flex", flexDirection:"column", gap:9 }}>
-                  {colCards.map(card => (
-                    <WorkCard key={card.id} card={card}
-                      commentCount={(comments[card.id]||[]).length}
-                      connCount={connections.filter(c=>(c.cardA===card.id||c.cardB===card.id)&&c.status==="approved").length}
-                      isOwner={card.author === user.name}
-                      onOpen={() => setReadCard(card)}
-                      onEdit={() => setEditCard(card)}
-                      onMove={c => moveCard(card.id, c)}
-                      onDragStart={() => setDragCard(card.id)}
-                      currentCol={col.id} />
-                  ))}
-                  {hasFilter && colCards.length === 0 && (
-                    <div style={{ textAlign:"center", padding:"22px 0", color:T.ink4, fontSize:12,
-                      fontFamily:"var(--mono)", border:"1px dashed rgba(255,255,255,0.06)",
-                      borderRadius:10, marginTop:4 }}>sin resultados</div>
-                  )}
-                  {/* Quick-add tap zone — visible when no form is open */}
-                  {addingTo !== col.id && (
-                    <button onClick={() => setAddingTo(col.id)}
-                      style={{ width:"100%", marginTop:colCards.length?8:0,
-                        background:"transparent", border:"1px dashed rgba(255,255,255,0.07)",
-                        borderRadius:9, padding:"9px 0", cursor:"pointer", color:T.ink4,
-                        fontSize:12, fontFamily:"var(--sans)", transition:"all .15s",
-                        display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor=`${col.color}55`; e.currentTarget.style.color=col.color; e.currentTarget.style.background=`${col.color}08`; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(255,255,255,0.07)"; e.currentTarget.style.color=T.ink4; e.currentTarget.style.background="transparent"; }}>
-                      <span style={{ fontSize:14, fontWeight:300, lineHeight:1 }}>+</span>
-                      <span>Nueva tarjeta</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Right sidebar — hidden on mobile */}
-        {!isMobile && <div style={{ width:235, flexShrink:0, borderLeft:"1px solid rgba(255,255,255,0.06)",
-          background:"rgba(10,10,26,0.8)", display:"flex", flexDirection:"column", overflowY:"auto",
-          backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)" }}>
-
-          {/* ── TAREAS ── */}
-          <button
-            onClick={() => setTaskPanelOpen(p => !p)}
-            style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"13px 14px 11px", background:"transparent", border:"none", borderBottom:"1px solid "+T.border, cursor:"pointer", width:"100%", transition:"background .15s", flexShrink:0 }}
-            onMouseEnter={e => e.currentTarget.style.background = T.bgHover}
-            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-          >
-            <div style={{ display:"flex", alignItems:"center", gap:7 }}>
-              <span style={{ color:T.accent, fontSize:13 }}>✓</span>
-              <span style={{ color:T.ink, fontWeight:700, fontSize:13 }}>Tareas</span>
-              <span style={{ background:T.accentBg, color:T.accent, fontFamily:"var(--mono)", fontSize:10, padding:"1px 7px", borderRadius:99 }}>{taskCards.length}</span>
-            </div>
-            <span style={{ color:T.ink4, fontSize:11 }}>{taskPanelOpen ? "▲" : "▼"}</span>
-          </button>
-
-          {taskPanelOpen && (
-            <div style={{ padding:"10px 12px 4px" }}>
-              {taskCards.length === 0 && (
-                <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:11, padding:"8px 4px 10px" }}>
-                  Sin tareas aún. Crea tarjetas de tipo "tarea" o généralas desde una conexión.
-                </div>
-              )}
-              {COLUMNS.map(col => {
-                const colTasks = taskCards.filter(c => c.col===col.id);
-                if (!colTasks.length) return null;
-                return (
-                  <div key={col.id} style={{ marginBottom:12 }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:5 }}>
-                      <span style={{ color:col.color, fontSize:10 }}>{col.icon}</span>
-                      <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10, letterSpacing:0.5 }}>{col.label.toUpperCase()}</span>
-                    </div>
-                    {colTasks.map(task => (
-                      <div key={task.id} onClick={() => setEditCard(task)}
-                        style={{ background:T.bgCard, border:"1px solid "+col.color+"30", borderRadius:7, padding:"8px 10px", marginBottom:5, cursor:"pointer", transition:"box-shadow .15s, border-color .15s" }}
-                        onMouseEnter={e => e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,.08)"}
-                        onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}
-                      >
-                        <div style={{ color:T.ink, fontSize:12, fontWeight:600, lineHeight:1.3, marginBottom:3 }}>{task.title}</div>
-                        <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>@{task.author}</div>
+          {/* Board area */}
+          {viewMode === "canvas"
+            ? <CanvasView
+                cards={activeCards}
+                connections={connections}
+                comments={comments}
+                user={user}
+                onEditCard={setEditCard}
+                onReadCard={setReadCard}
+                canvasPositions={data.canvasPositions || { cards:{}, stickers:{} }}
+                onSavePositions={saveCanvasPositions}
+                cat={cat}
+              />
+            : <div style={{ display:"flex", flex:1, overflow:"hidden", position:"relative" }}>
+              <div style={{ display:"flex", flexDirection:isMobile?"column":"row", gap:isMobile?12:14,
+                padding:isMobile?"12px":"18px 16px", overflowX:isMobile?"visible":"auto",
+                overflowY:isMobile?"auto":"visible", flex:1, alignItems:"flex-start", background:"transparent" }}>
+                {COLUMNS.map(col => {
+                  const colCards = filteredActiveCards.filter(c => c.col===col.id);
+                  const isOver = dragOver===col.id;
+                  return (
+                    <div key={col.id} data-col={col.id}
+                      onDragOver={e => { e.preventDefault(); setDragOver(col.id); }}
+                      onDragLeave={() => setDragOver(null)}
+                      onDrop={async e => { e.preventDefault(); if (dragCard) await moveCard(dragCard, col.id); setDragOver(null); setDragCard(null); }}
+                      style={{ width:isMobile?"100%":258, flexShrink:0,
+                        background:isOver?`rgba(196,150,60,0.05)`:T.bgPanel,
+                        borderRadius:12,
+                        border:`1px solid ${isOver?col.color+"55":col.color+"20"}`,
+                        boxShadow:isOver?`0 0 0 1px ${col.color}30, 0 8px 24px rgba(0,0,0,.25)`:`0 2px 12px rgba(0,0,0,.20)`,
+                        transition:"all .18s", padding:"14px 12px" }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center",
+                        paddingBottom:12, marginBottom:12,
+                        borderBottom:`1px solid ${col.color}28` }}>
+                        <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                          <div style={{ width:10, height:10, borderRadius:"50%", background:col.color,
+                            boxShadow:`0 0 8px ${col.color}cc, 0 0 16px ${col.color}44`, flexShrink:0 }} />
+                          <div>
+                            <div style={{ color:T.ink, fontWeight:700, fontSize:13, letterSpacing:"-0.01em" }}>{col.label}</div>
+                            <div style={{ color:T.ink4, fontSize:10, fontFamily:"var(--mono)", marginTop:1 }}>{col.desc}</div>
+                          </div>
+                        </div>
+                        <div style={{ display:"flex", gap:6, alignItems:"center" }}>
+                          <span style={{ background:`${col.color}20`, color:col.color,
+                            fontFamily:"var(--mono)", fontSize:11, padding:"3px 10px",
+                            borderRadius:99, border:`1px solid ${col.color}44`, fontWeight:700 }}>{colCards.length}</span>
+                          {addingTo !== col.id && (
+                            <button onClick={() => setAddingTo(col.id)} title="Añadir tarjeta"
+                              style={{ background:`${col.color}18`, border:`1px solid ${col.color}44`,
+                                color:col.color, width:26, height:26, borderRadius:8, cursor:"pointer",
+                                fontSize:16, fontWeight:700, display:"flex", alignItems:"center",
+                                justifyContent:"center", lineHeight:1, flexShrink:0, transition:"all .15s" }}
+                              onMouseEnter={e => { e.currentTarget.style.background=`${col.color}33`; e.currentTarget.style.boxShadow=`0 0 8px ${col.color}44`; }}
+                              onMouseLeave={e => { e.currentTarget.style.background=`${col.color}18`; e.currentTarget.style.boxShadow="none"; }}>
+                              +
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    ))}
+                      {addingTo===col.id && (
+                        <div style={{ marginBottom:9 }}>
+                          <AddForm col={col.id} onAdd={addCard} onCancel={() => setAddingTo(null)} />
+                        </div>
+                      )}
+                      <div style={{ display:"flex", flexDirection:"column", gap:9 }}>
+                        {colCards.map(card => (
+                          <WorkCard key={card.id} card={card}
+                            commentCount={(comments[card.id]||[]).length}
+                            connCount={connections.filter(c=>(c.cardA===card.id||c.cardB===card.id)&&c.status==="approved").length}
+                            isOwner={card.author === user.name}
+                            onOpen={() => setReadCard(card)}
+                            onEdit={() => setEditCard(card)}
+                            onMove={c => moveCard(card.id, c)}
+                            onDragStart={() => setDragCard(card.id)}
+                            currentCol={col.id} />
+                        ))}
+                        {hasFilter && colCards.length === 0 && (
+                          <div style={{ textAlign:"center", padding:"22px 0", color:T.ink4, fontSize:12,
+                            fontFamily:"var(--mono)", border:"1px dashed rgba(255,255,255,0.06)",
+                            borderRadius:10, marginTop:4 }}>sin resultados</div>
+                        )}
+                        {addingTo !== col.id && (
+                          <button onClick={() => setAddingTo(col.id)}
+                            style={{ width:"100%", marginTop:colCards.length?8:0,
+                              background:"transparent", border:"1px dashed rgba(255,255,255,0.07)",
+                              borderRadius:9, padding:"9px 0", cursor:"pointer", color:T.ink4,
+                              fontSize:12, fontFamily:"var(--sans)", transition:"all .15s",
+                              display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}
+                            onMouseEnter={e => { e.currentTarget.style.borderColor=`${col.color}55`; e.currentTarget.style.color=col.color; e.currentTarget.style.background=`${col.color}08`; }}
+                            onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(255,255,255,0.07)"; e.currentTarget.style.color=T.ink4; e.currentTarget.style.background="transparent"; }}>
+                            <span style={{ fontSize:14, fontWeight:300, lineHeight:1 }}>+</span>
+                            <span>Nueva tarjeta</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          }
+        </div>{/* end center */}
+
+        {/* ── RIGHT STATS PANEL (200px) — hidden on mobile ── */}
+        {!isMobile && (
+          <div style={{ width:200, flexShrink:0, background:T.bgPanel,
+            borderLeft:"1px solid rgba(200,170,100,0.10)",
+            display:"flex", flexDirection:"column", overflowY:"auto" }}>
+
+            <div style={{ padding:"13px 14px 10px", borderBottom:"1px solid rgba(200,170,100,0.08)" }}>
+              <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:4 }}>TABLERO</div>
+              <div style={{ color:T.ink, fontWeight:700, fontSize:13, lineHeight:1.3, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{board.name}</div>
+              <div style={{ display:"flex", alignItems:"center", gap:5, marginTop:4 }}>
+                <div style={{ fontSize:12 }}>{cat.label.split(" ")[0]}</div>
+                <div style={{ color:cat.color, fontSize:11, fontWeight:600 }}>{cat.label.replace(/^.{2}/,"").trim()}</div>
+              </div>
+            </div>
+
+            <div style={{ padding:"12px 14px 8px", borderBottom:"1px solid rgba(200,170,100,0.08)" }}>
+              <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:8 }}>TARJETAS</div>
+              {COLUMNS.map(col => {
+                const count = activeCards.filter(c => c.col===col.id).length;
+                return (
+                  <div key={col.id} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
+                    <div style={{ width:7, height:7, borderRadius:"50%", background:col.color,
+                      boxShadow:`0 0 5px ${col.color}88`, flexShrink:0 }} />
+                    <span style={{ color:T.ink3, fontSize:11, flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{col.label}</span>
+                    <span style={{ color:col.color, fontFamily:"var(--mono)", fontSize:12, fontWeight:700, flexShrink:0 }}>{count}</span>
                   </div>
                 );
               })}
+              {(() => {
+                const total = activeCards.length;
+                const done = activeCards.filter(c => c.col==="listo").length;
+                const pct = total ? Math.round(done/total*100) : 0;
+                return (
+                  <div style={{ marginTop:8 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                      <span style={{ color:T.ink4, fontSize:10, fontFamily:"var(--mono)" }}>completado</span>
+                      <span style={{ color:pct>=75?T.green:pct>=40?T.amber:T.ink3, fontFamily:"var(--mono)", fontSize:10, fontWeight:700 }}>{pct}%</span>
+                    </div>
+                    <div style={{ height:4, background:"rgba(255,255,255,0.05)", borderRadius:2 }}>
+                      <div style={{ height:"100%", width:pct+"%",
+                        background:pct>=75?T.green:pct>=40?T.amber:T.accent,
+                        borderRadius:2, transition:"width .6s ease" }} />
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
-          )}
 
-          {/* ── STATS ── */}
-          {(() => {
-            const total = activeCards.length;
-            const done  = activeCards.filter(c => c.col==="listo").length;
-            const pctDone = total ? Math.round(done/total*100) : 0;
-            const weekAgo = Date.now() - 7*24*60*60*1000;
-            const weeklyNew = activeCards.filter(c => c.ts > weekAgo).length;
-            const authorMap = {};
-            activeCards.forEach(c => { authorMap[c.author] = (authorMap[c.author]||0)+1; });
-            const authorList = Object.entries(authorMap).sort((a,b)=>b[1]-a[1]);
-            return (
-              <div style={{ borderTop:"1px solid "+T.border, padding:"13px 14px 10px" }}>
-                <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10, letterSpacing:1, marginBottom:10 }}>ESTADÍSTICAS</div>
+            <div style={{ padding:"12px 14px 10px", borderBottom:"1px solid rgba(200,170,100,0.08)" }}>
+              <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:8 }}>ESTADO IA</div>
+              <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
+                <div style={{ width:7, height:7, borderRadius:"50%",
+                  background: getAIKey() ? T.green : T.ink4,
+                  boxShadow: getAIKey() ? `0 0 5px ${T.green}88` : "none",
+                  flexShrink:0 }} />
+                <span style={{ color: getAIKey() ? T.green : T.ink4, fontSize:11, fontWeight:600 }}>
+                  {getAIKey() ? "IA conectada" : "IA desconectada"}
+                </span>
+              </div>
+              <button onClick={() => setAiPanel(true)}
+                style={{ display:"flex", alignItems:"center", gap:6, background:T.accentBg,
+                  border:`1px solid ${T.accent}44`, color:T.accent, borderRadius:8,
+                  padding:"6px 10px", fontSize:11, fontWeight:700, cursor:"pointer",
+                  fontFamily:"var(--sans)", width:"100%", marginBottom:6, transition:"all .15s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor=T.accent+"88"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor=T.accent+"44"; }}>
+                <span>✦</span><span>Analizar</span>
+              </button>
+              <button onClick={() => setConnPanel(true)}
+                style={{ display:"flex", alignItems:"center", gap:6,
+                  background: pendingConns.length>0 ? T.amberBg : "rgba(255,255,255,0.03)",
+                  border:`1px solid ${pendingConns.length>0 ? T.amber+"55" : "rgba(200,170,100,0.15)"}`,
+                  color: pendingConns.length>0 ? T.amber : T.ink4,
+                  borderRadius:8, padding:"6px 10px", fontSize:11, fontWeight:600, cursor:"pointer",
+                  fontFamily:"var(--sans)", width:"100%", transition:"all .15s", position:"relative" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor=pendingConns.length>0?T.amber+"88":"rgba(200,170,100,0.35)"; e.currentTarget.style.color=pendingConns.length>0?T.amber:T.ink3; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor=pendingConns.length>0?T.amber+"55":"rgba(200,170,100,0.15)"; e.currentTarget.style.color=pendingConns.length>0?T.amber:T.ink4; }}>
+                <span>💡</span>
+                <span>Conexiones</span>
+                {pendingConns.length > 0 && (
+                  <span style={{ marginLeft:"auto", background:T.amber, color:"#1a0e00",
+                    fontSize:9, fontWeight:800, padding:"1px 6px", borderRadius:99 }}>
+                    {pendingConns.length}
+                  </span>
+                )}
+              </button>
+            </div>
 
-                {/* Completion */}
-                <div style={{ marginBottom:12 }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:5 }}>
-                    <span style={{ color:T.ink3, fontSize:11 }}>Completado</span>
-                    <span style={{ color:pctDone>=75?T.green:pctDone>=40?T.amber:T.ink3,
-                      fontFamily:"var(--mono)", fontWeight:700, fontSize:13 }}>{pctDone}%</span>
-                  </div>
-                  <div style={{ height:6, background:"rgba(255,255,255,0.05)", borderRadius:3 }}>
-                    <div style={{ height:"100%", width:pctDone+"%",
-                      background:pctDone>=75?`linear-gradient(90deg,${T.green},${T.cyan})`
-                        :pctDone>=40?`linear-gradient(90deg,${T.amber},${T.orange})`
-                        :`linear-gradient(90deg,${T.accent},${T.blue})`,
-                      borderRadius:3, transition:"width .6s ease" }} />
-                  </div>
-                  <div style={{ display:"flex", justifyContent:"space-between", marginTop:3 }}>
-                    <span style={{ color:T.ink4, fontSize:10 }}>{done} listas</span>
-                    <span style={{ color:T.ink4, fontSize:10 }}>{total} total</span>
-                  </div>
+            <div style={{ padding:"10px 14px", borderBottom:"1px solid rgba(200,170,100,0.08)" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                {saveStatus === "saving" && <>
+                  <span className="spinner" style={{ display:"inline-block", width:8, height:8, border:"1.5px solid "+T.border, borderTop:"1.5px solid "+T.ink4, borderRadius:"50%" }} />
+                  <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>Guardando…</span>
+                </>}
+                {saveStatus === "saved" && <>
+                  <div style={{ width:7, height:7, borderRadius:"50%", background:T.green }} />
+                  <span style={{ color:T.green, fontFamily:"var(--mono)", fontSize:10 }}>Guardado</span>
+                </>}
+                {saveStatus === "error" && <>
+                  <div style={{ width:7, height:7, borderRadius:"50%", background:T.rose }} />
+                  <span style={{ color:T.rose, fontFamily:"var(--mono)", fontSize:10 }}>Error al guardar</span>
+                </>}
+                {!saveStatus && <>
+                  <div style={{ width:7, height:7, borderRadius:"50%", background:T.ink4 }} />
+                  <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>Sincronizado</span>
+                </>}
+              </div>
+            </div>
+
+            <div style={{ flex:1, overflowY:"auto" }}>
+              <button
+                onClick={() => setTaskPanelOpen(p => !p)}
+                style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"11px 14px 9px", background:"transparent", border:"none", borderBottom:"1px solid "+T.border, cursor:"pointer", width:"100%", transition:"background .15s", flexShrink:0 }}
+                onMouseEnter={e => e.currentTarget.style.background = T.bgHover}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              >
+                <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                  <span style={{ color:T.accent, fontSize:12 }}>✓</span>
+                  <span style={{ color:T.ink, fontWeight:700, fontSize:12 }}>Tareas</span>
+                  <span style={{ background:T.accentBg, color:T.accent, fontFamily:"var(--mono)", fontSize:9, padding:"1px 6px", borderRadius:99 }}>{taskCards.length}</span>
                 </div>
-
-                {/* Weekly velocity */}
-                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
-                  background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)",
-                  borderRadius:8, padding:"7px 10px", marginBottom:12 }}>
-                  <div>
-                    <div style={{ color:T.ink4, fontSize:10, fontFamily:"var(--mono)", marginBottom:1 }}>Esta semana</div>
-                    <div style={{ color:T.ink, fontWeight:700, fontSize:16 }}>{weeklyNew}</div>
-                  </div>
-                  <div style={{ textAlign:"right" }}>
-                    <div style={{ color:T.ink4, fontSize:10, fontFamily:"var(--mono)", marginBottom:1 }}>tarjeta{weeklyNew!==1?"s":""}</div>
-                    <div style={{ fontSize:18 }}>{weeklyNew>5?"🔥":weeklyNew>2?"⚡":"💤"}</div>
-                  </div>
-                </div>
-
-                {/* Flow bars */}
-                <div style={{ marginBottom:12 }}>
+                <span style={{ color:T.ink4, fontSize:10 }}>{taskPanelOpen ? "▲" : "▼"}</span>
+              </button>
+              {taskPanelOpen && (
+                <div style={{ padding:"8px 12px 4px" }}>
+                  {taskCards.length === 0 && (
+                    <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10, padding:"6px 2px 8px" }}>
+                      Sin tareas aún.
+                    </div>
+                  )}
                   {COLUMNS.map(col => {
-                    const n = activeCards.filter(c => c.col===col.id).length;
-                    const pct = total ? Math.round(n/total*100) : 0;
+                    const colTasks = taskCards.filter(c => c.col===col.id);
+                    if (!colTasks.length) return null;
                     return (
-                      <div key={col.id} style={{ marginBottom:7 }}>
-                        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
-                          <span style={{ color:T.ink3, fontSize:11 }}>{col.label}</span>
-                          <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>{n} · {pct}%</span>
+                      <div key={col.id} style={{ marginBottom:10 }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:4, marginBottom:4 }}>
+                          <span style={{ color:col.color, fontSize:9 }}>{col.icon}</span>
+                          <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:9, letterSpacing:0.5 }}>{col.label.toUpperCase()}</span>
                         </div>
-                        <div style={{ height:3, background:"rgba(255,255,255,0.04)", borderRadius:2 }}>
-                          <div style={{ height:"100%", width:pct+"%", background:col.color, borderRadius:2, transition:"width .5s", boxShadow:`0 0 4px ${col.color}66` }} />
-                        </div>
+                        {colTasks.map(task => (
+                          <div key={task.id} onClick={() => setEditCard(task)}
+                            style={{ background:T.bgCard, border:"1px solid "+col.color+"30", borderRadius:6, padding:"6px 8px", marginBottom:4, cursor:"pointer", transition:"box-shadow .15s" }}
+                            onMouseEnter={e => e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,.12)"}
+                            onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}
+                          >
+                            <div style={{ color:T.ink, fontSize:11, fontWeight:600, lineHeight:1.3, marginBottom:2 }}>{task.title}</div>
+                            <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:9 }}>@{task.author}</div>
+                          </div>
+                        ))}
                       </div>
                     );
                   })}
                 </div>
-
-                {/* Active authors */}
-                {authorList.length > 0 && (
-                  <div>
-                    <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10, letterSpacing:1, marginBottom:7 }}>AUTORES</div>
-                    {authorList.map(([author, count]) => (
-                      <div key={author} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
-                        <div style={{ width:24, height:24, borderRadius:"50%",
-                          background:`linear-gradient(135deg,${T.accent},${T.blue})`,
-                          display:"flex", alignItems:"center", justifyContent:"center",
-                          color:"#fff", fontSize:10, fontWeight:700, flexShrink:0,
-                          boxShadow:"0 0 6px rgba(196,150,60,0.28)" }}>
-                          {author.charAt(0).toUpperCase()}
-                        </div>
-                        <div style={{ flex:1, overflow:"hidden" }}>
-                          <div style={{ color:T.ink2, fontSize:11, fontWeight:600, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>@{author}</div>
-                        </div>
-                        <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10, flexShrink:0 }}>{count}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-
-          {/* ── CONEXIONES ── */}
-          <div style={{ borderTop:"1px solid "+T.border, padding:"13px 14px 8px" }}>
-            <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10, letterSpacing:1, marginBottom:10 }}>CONEXIONES</div>
-            <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
-              {[
-                ["pending",   "⏳", T.amber, "pendiente"],
-                ["approved",  "✓",  T.green, "aprobada"],
-                ["discarded", "✕",  T.rose,  "descartada"],
-              ].map(([status, ic, col, label]) => {
-                const n = connections.filter(c => c.status===status).length;
-                if (!n) return null;
-                return (
-                  <div key={status} style={{ textAlign:"center" }}>
-                    <div style={{ color:col, fontWeight:800, fontSize:18 }}>{n}</div>
-                    <div style={{ color:T.ink4, fontSize:10, fontFamily:"var(--mono)" }}>{ic} {label}</div>
-                  </div>
-                );
-              })}
-              {connections.length===0 && <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:11 }}>Sin conexiones</div>}
+              )}
             </div>
-          </div>
 
-          {/* ── CATEGORÍA ── */}
-          <div style={{ borderTop:"1px solid "+T.border, padding:"13px 14px 14px" }}>
-            <div style={{ background:cat.colorBg, border:"1px solid "+cat.color+"33", borderRadius:8, padding:"10px 12px" }}>
-              <div style={{ color:cat.color, fontFamily:"var(--mono)", fontSize:10, letterSpacing:1, marginBottom:4 }}>CATEGORÍA</div>
-              <div style={{ fontSize:18, marginBottom:3 }}>{cat.label.split(" ")[0]}</div>
-              <div style={{ color:cat.color, fontWeight:700, fontSize:12 }}>{cat.label.replace(/^.{2}/,"").trim()}</div>
-            </div>
           </div>
+        )}{/* end right stats panel */}
 
+      </div>{/* end three-column body */}
+
+      {/* Mobile save indicator */}
+      {isMobile && saveStatus === "saving" && (
+        <div style={{ position:"fixed", bottom:16, left:"50%", transform:"translateX(-50%)", background:"rgba(10,9,8,0.9)", color:T.ink4, padding:"6px 14px", borderRadius:99, fontSize:11, fontFamily:"var(--mono)", zIndex:99 }}>
+          Guardando…
         </div>
-        } {/* end right sidebar */}
-      </div>
-      }
+      )}
 
-      {readCard && (() => {
+{readCard && (() => {
         const live = activeCards.find(c => c.id === readCard.id) || readCard;
         return <CardReaderModal
           card={live}
