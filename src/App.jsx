@@ -530,25 +530,25 @@ const GLOBAL_CSS = `
                          70%{transform:translate(90px,-30px) scale(1.1)} }
   @keyframes orb3      { 0%,100%{transform:translate(0,0) scale(1)}
                          50%{transform:translate(-50px,-70px) scale(1.08)} }
-  @keyframes gradShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
   @keyframes shimmer   { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
   @keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
   @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
   @keyframes popIn     { from{opacity:0;transform:scale(.88)} to{opacity:1;transform:scale(1)} }
 
   .tile {
-    transition: transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s, border-color .22s, background .22s;
+    /* ease-out-quart — no bounce/elastic */
+    transition: transform .22s cubic-bezier(.25,.46,.45,.94), box-shadow .22s, border-color .22s, background .22s;
     cursor:pointer;
     position: relative;
   }
   .tile:hover {
-    transform: translateY(-6px) scale(1.018);
+    transform: translateY(-5px) scale(1.014);
     box-shadow: 0 24px 52px rgba(0,0,0,.55), 0 0 0 1px rgba(155,109,255,.4) !important;
     border-color: rgba(155,109,255,.3) !important;
     background: rgba(20,20,44,0.88) !important;
   }
   .wcard {
-    transition: transform .16s cubic-bezier(.34,1.56,.64,1), box-shadow .16s, border-color .16s;
+    transition: transform .16s cubic-bezier(.25,.46,.45,.94), box-shadow .16s, border-color .16s;
   }
   .wcard:hover {
     transform:translateY(-3px);
@@ -580,7 +580,7 @@ const GLOBAL_CSS = `
   .ai-glow::after { content:''; position:absolute; inset:0; border-radius:inherit; box-shadow:0 0 32px rgba(155,109,255,.6), 0 0 80px rgba(155,109,255,.22); animation:glowPulse 2.6s ease-in-out infinite; pointer-events:none; }
 
   .spinner { animation:spin .7s linear infinite; }
-  .toast   { animation:slideIn .32s cubic-bezier(.34,1.56,.64,1); }
+  .toast   { animation:slideIn .32s cubic-bezier(.16,1,.3,1); }
   .conn-card { animation:fadeUp .28s ease; }
 
   /* Gradient orb background */
@@ -611,12 +611,7 @@ const GLOBAL_CSS = `
     border: 1px solid rgba(255,255,255,0.08);
   }
 
-  /* .grad-text removed — gradient text is decorative and not meaningful */
-  .grad-accent {
-    background: linear-gradient(135deg,#9B6DFF,#7C3AED);
-    background-size: 200% 200%;
-    animation: gradShift 4s ease infinite;
-  }
+  /* .grad-text and .grad-accent removed — gradient text anti-pattern */
 
   /* ── Tablet (768–1023px): 2-col grid, condensed sidebar ── */
   @media (max-width:1023px) and (min-width:681px) {
@@ -835,7 +830,7 @@ function ThemeSwitcher() {
               ? `0 0 0 2px ${T.bgCard}, 0 0 0 4px ${swatches[id]}`
               : `0 1px 3px rgba(0,0,0,.18)`,
             transform: themeId===id ? "scale(1.18)" : "scale(1)",
-            transition:"all .18s cubic-bezier(.34,1.56,.64,1)" }} />
+            transition:"all .18s cubic-bezier(.16,1,.3,1)" }} />
       ))}
     </div>
   );
@@ -2653,7 +2648,7 @@ function CardReaderModal({ card, cardComments, connections, allCards, user, onEd
         style={{ background:T.bgCard, borderRadius:20, width:"100%", maxWidth:700,
           maxHeight:"92vh", display:"flex", flexDirection:"column",
           boxShadow:"0 32px 80px rgba(0,0,0,.35), 0 0 0 1px "+T.border,
-          overflow:"hidden", animation:"scaleIn .22s cubic-bezier(.34,1.56,.64,1)" }}>
+          overflow:"hidden", animation:"scaleIn .22s cubic-bezier(.16,1,.3,1)" }}>
 
         {/* ── Barra superior ── */}
         <div style={{ padding:"14px 20px", borderBottom:"1px solid "+T.border,
@@ -3484,7 +3479,7 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
         borderRadius:16, width:"100%", maxWidth:530, maxHeight:"90vh", display:"flex", flexDirection:"column",
         boxShadow:"0 30px 80px rgba(0,0,0,.6), 0 0 40px rgba(155,109,255,0.08)",
         backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)",
-        animation:"slideIn .3s cubic-bezier(.34,1.56,.64,1)" }}>
+        animation:"slideIn .3s cubic-bezier(.16,1,.3,1)" }}>
         <div style={{ padding:"17px 20px 14px", borderBottom:"1px solid rgba(255,255,255,0.07)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <div>
             <div style={{ display:"flex", gap:8, alignItems:"center" }}>
@@ -3588,7 +3583,7 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
         borderRadius:16, width:"100%", maxWidth:490, maxHeight:"88vh", display:"flex", flexDirection:"column",
         boxShadow:`0 30px 80px rgba(0,0,0,.6), 0 0 40px ${cat.color}12`,
         backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)",
-        animation:"slideIn .3s cubic-bezier(.34,1.56,.64,1)" }}>
+        animation:"slideIn .3s cubic-bezier(.16,1,.3,1)" }}>
         <div style={{ padding:"17px 20px 12px", borderBottom:"1px solid rgba(255,255,255,0.07)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <div>
             <div style={{ display:"flex", gap:8, alignItems:"center" }}>
@@ -5189,7 +5184,7 @@ function OTextarea({ style, ...props }) {
 function OBtn({ children, full, small, disabled, onClick }) {
   const base = {
     background: disabled ? "rgba(255,255,255,0.05)" : "linear-gradient(135deg,#A67CFF 0%,#7C3AED 100%)",
-    color: disabled ? T.ink4 : "#fff",
+    color: disabled ? T.ink4 : "#F5F0FF",
     border: "none",
     padding: small ? "7px 14px" : "11px 22px",
     borderRadius: 10,
@@ -5197,10 +5192,9 @@ function OBtn({ children, full, small, disabled, onClick }) {
     fontWeight: 700,
     fontSize: small ? 12 : 14,
     cursor: disabled ? "default" : "pointer",
-    boxShadow: disabled ? "none" : "0 4px 20px rgba(124,58,237,0.35), inset 0 1px 0 rgba(255,255,255,0.15)",
+    boxShadow: disabled ? "none" : "0 4px 16px rgba(155,109,255,0.3), inset 0 1px 0 rgba(255,255,255,0.12)",
     width: full ? "100%" : "auto",
     transition: "opacity .15s, box-shadow .2s, transform .15s",
-    boxShadow: disabled ? "none" : "0 4px 16px rgba(155,109,255,0.3)",
     letterSpacing: "0.01em",
   };
   return (
@@ -5245,7 +5239,7 @@ function OModalBox({ children, wide }) {
       maxHeight:"90vh", overflowY:"auto",
       boxShadow:"0 40px 100px rgba(0,0,0,.7), 0 0 0 1px rgba(155,109,255,0.12), inset 0 1px 0 rgba(255,255,255,0.06)",
       backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)",
-      animation:"scaleIn .22s cubic-bezier(.34,1.56,.64,1)" }}>
+      animation:"scaleIn .22s cubic-bezier(.16,1,.3,1)" }}>
       {children}
     </div>
   );
