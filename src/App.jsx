@@ -236,8 +236,8 @@ async function callAI(system, userMessages, maxTokens = 1200) {
     ? (userMessages[userMessages.length - 1]?.content || "")
     : userMessages;
 
-  // Try primary model, fall back to gemini-1.5-flash if unavailable
-  const models = [GEMINI_MODEL, "gemini-1.5-flash"];
+  // Try primary model, fall back to gemini-2.0-flash-lite if unavailable
+  const models = [GEMINI_MODEL, "gemini-2.0-flash-lite"];
   let lastErr = null;
 
   for (const model of models) {
