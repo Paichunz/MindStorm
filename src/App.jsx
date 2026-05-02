@@ -249,51 +249,45 @@ async function callAI(system, userMessages, maxTokens = 1200) {
   for (const model of models) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
 
-    // Each model gets up to 2 attempts (immediate + one retry after pause)
-    for (let attempt = 0; attempt < 2; attempt++) {
-      let res;
-      try {
-        res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            system_instruction: { parts: [{ text: system }] },
-            contents: [{ role:"user", parts:[{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 },
-          }),
-        });
-      } catch {
-        throw Object.assign(new Error("CONNECTION_ERROR"), { code:"API_ERROR",
-          detail: "Sin conexión a internet o error de red." });
-      }
-
-      if (res.ok) {
-        const d = await res.json();
-        return d.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("") || "";
-      }
-
-      const errBody = await res.json().catch(() => ({}));
-      const msg = errBody?.error?.message || "";
-
-      if (res.status === 403 || (res.status === 400 && /api.key|invalid.key/i.test(msg))) {
-        throw Object.assign(new Error("INVALID_KEY"), { code:"INVALID_KEY" });
-      }
-      if (res.status === 429) {
-        lastErr = "rate_limit";
-        // On first attempt: wait 8s and retry same model
-        if (attempt === 0) { await new Promise(r => setTimeout(r, 8000)); continue; }
-        // On second attempt: move to next model
-        break;
-      }
-      // Any other error (404, 500…): move to next model immediately
-      lastErr = msg || `error_${res.status}`;
-      break;
+    // Single attempt per model — no internal retry (UI handles countdown)
+    let res;
+    try {
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: system }] },
+          contents: [{ role:"user", parts:[{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 },
+        }),
+      });
+    } catch {
+      throw Object.assign(new Error("CONNECTION_ERROR"), { code:"API_ERROR",
+        detail: "Sin conexión a internet o error de red." });
     }
+
+    if (res.ok) {
+      const d = await res.json();
+      return d.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("") || "";
+    }
+
+    const errBody = await res.json().catch(() => ({}));
+    const msg = errBody?.error?.message || "";
+
+    if (res.status === 403 || (res.status === 400 && /api.key|invalid.key/i.test(msg))) {
+      throw Object.assign(new Error("INVALID_KEY"), { code:"INVALID_KEY" });
+    }
+    if (res.status === 429) {
+      lastErr = "rate_limit";
+      continue; // try next model immediately
+    }
+    // Any other error (404, 500…): try next model
+    lastErr = msg || `error_${res.status}`;
   }
 
   if (lastErr === "rate_limit") {
     throw Object.assign(new Error("RATE_LIMIT"), { code:"RATE_LIMIT",
-      detail: "Cupo del minuto agotado. Espera unos segundos e intenta de nuevo — la IA sigue funcionando." });
+      detail: "Límite de solicitudes alcanzado. El contador te avisará cuando puedas reintentar." });
   }
   throw Object.assign(new Error("API_ERROR"), { code:"API_ERROR",
     detail: lastErr || "Modelo no disponible." });
@@ -3578,8 +3572,8 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
             <AIKeySetup onSaved={() => setStatus("idle")} />
           ) : (
           <>
-          <OBtn full onClick={findConnections} disabled={status==="loading"}>
-            {status==="loading" ? "🔍 Analizando…" : "🔍 Buscar nuevas conexiones con IA"}
+          <OBtn full onClick={findConnections} disabled={status==="loading" || status==="rate_limit"}>
+            {status==="loading" ? "🔍 Analizando…" : status==="rate_limit" ? `⏳ Esperando ${countdown}s…` : "🔍 Buscar nuevas conexiones con IA"}
           </OBtn>
           <div style={{ height:12 }}/>
           {status==="loading" && (
@@ -3700,7 +3694,9 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
             <div style={{ textAlign:"center", padding:"12px 0" }}>
               <div style={{ width:56, height:56, background:cat.colorBg, borderRadius:14, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", border:"1px solid "+T.border, fontSize:24 }}>{cat.label.split(" ")[0]}</div>
               <p style={{ color:T.ink3, fontSize:13, lineHeight:1.6, marginBottom:20 }}>Analiza el proyecto con criterio de experto. Sin complacencia.</p>
-              <OBtn full onClick={run}>Analizar proyecto →</OBtn>
+              <OBtn full onClick={run} disabled={status==="rate_limit"}>
+                {status==="rate_limit" ? `⏳ Esperando ${countdown}s…` : "Analizar proyecto →"}
+              </OBtn>
             </div>
           )}
           {status==="loading" && (
