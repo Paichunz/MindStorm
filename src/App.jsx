@@ -514,30 +514,30 @@ const GLOBAL_CSS = `
     transition: background-color 9999s ease-in-out 0s;
   }
 
-  /* ── Mycelium card ── */
-  .mcard { position:absolute; width:240px; background:var(--mb1); border:1px solid rgba(232,82,0,0.18); font-family:var(--raj); user-select:none; z-index:5; transition:border-color .15s, box-shadow .15s, width .18s; cursor:grab; }
-  .mcard:hover { border-color:rgba(232,82,0,0.55); box-shadow:0 4px 20px rgba(0,0,0,.5); }
-  .mcard-exp { width:300px !important; z-index:8 !important; box-shadow:0 8px 32px rgba(0,0,0,.55), 0 0 0 1px rgba(232,82,0,0.70) !important; }
-  .mcard-head { display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px dashed rgba(232,82,0,0.13); }
-  .mcard-glyph { flex:none; color:var(--mc); font-family:var(--mono); font-size:11px; width:14px; }
-  .mcard-title { flex:1; font-size:13px; font-weight:500; letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink0); }
-  .mcard-dot { width:8px; height:8px; border-radius:50%; flex:none; }
-  .mcard-body { padding:10px; font-size:12px; line-height:1.5; color:var(--ink1); }
+  /* ── Mycelium card — Cardiology tone: white, clean, shadows only ── */
+  .mcard { position:absolute; width:240px; background:#FFFFFF; border:1px solid rgba(0,0,0,0.08); border-radius:10px; box-shadow:0 2px 12px rgba(0,0,0,0.08),0 1px 3px rgba(0,0,0,0.05); font-family:var(--sans); user-select:none; z-index:5; transition:border-color .15s, box-shadow .18s, width .2s; cursor:grab; }
+  .mcard:hover { border-color:rgba(0,0,0,0.14); box-shadow:0 8px 28px rgba(0,0,0,0.13),0 2px 6px rgba(0,0,0,0.07); }
+  .mcard-exp { width:300px !important; z-index:8 !important; box-shadow:0 16px 48px rgba(0,0,0,0.16),0 4px 12px rgba(0,0,0,0.08) !important; }
+  .mcard-head { display:flex; align-items:center; gap:8px; padding:9px 12px; border-bottom:1px solid rgba(0,0,0,0.06); }
+  .mcard-glyph { flex:none; color:rgba(0,0,0,0.28); font-size:11px; width:14px; }
+  .mcard-title { flex:1; font-size:13px; font-weight:600; letter-spacing:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#1A1816; }
+  .mcard-dot { width:7px; height:7px; border-radius:50%; flex:none; }
+  .mcard-body { padding:10px 12px; font-size:12px; line-height:1.55; color:#5A5450; }
   .mcard-body p { margin-bottom:8px; }
   .mcard-tags { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px; }
-  .mtag { font-family:var(--mono); font-size:9px; padding:2px 6px; border:1px solid rgba(232,82,0,0.18); color:var(--ink2); text-transform:uppercase; letter-spacing:.1em; }
-  .mmuted { color:var(--ink3); font-family:var(--mono); font-size:9px; letter-spacing:.08em; margin-bottom:8px; }
+  .mtag { font-size:10px; padding:2px 8px; border-radius:99px; border:1px solid rgba(0,0,0,0.10); color:#8A8480; font-family:var(--sans); }
+  .mmuted { color:#B4B0AC; font-size:10px; margin-bottom:8px; }
   .mcard-btns { display:flex; gap:6px; flex-wrap:wrap; }
-  .mcard-btns button { font-family:var(--raj); background:transparent; border:1px solid rgba(232,82,0,0.22); color:var(--ink1); padding:4px 9px; text-transform:uppercase; letter-spacing:.1em; font-size:10px; cursor:pointer; transition:.13s; }
-  .mcard-btns button:hover { border-color:var(--mc); color:var(--mc); }
+  .mcard-btns button { font-family:var(--sans); background:transparent; border:1px solid rgba(0,0,0,0.12); color:#5A5450; padding:4px 12px; border-radius:99px; font-size:11px; cursor:pointer; transition:.13s; }
+  .mcard-btns button:hover { border-color:rgba(0,0,0,0.28); color:#1A1816; background:rgba(0,0,0,0.03); }
 
-  /* ── HUD corner brackets ── */
+  /* ── HUD corner brackets — invisible in Cardiology tone ── */
   .hud-c { position:relative; }
-  .hud-c::before, .hud-c::after { content:''; position:absolute; width:10px; height:10px; border:1px solid var(--mc); pointer-events:none; z-index:1; opacity:.45; transition:opacity .15s; }
+  .hud-c::before, .hud-c::after { content:''; position:absolute; width:8px; height:8px; border:1px solid rgba(0,0,0,0.14); pointer-events:none; z-index:1; opacity:0; transition:opacity .15s; }
   .hud-c::before { top:-1px; left:-1px; border-right:none; border-bottom:none; }
   .hud-c::after  { bottom:-1px; right:-1px; border-left:none; border-top:none; }
   .mcard:hover .hud-c::before, .mcard:hover .hud-c::after,
-  .mcard-exp .hud-c::before, .mcard-exp .hud-c::after { opacity:1; }
+  .mcard-exp .hud-c::before, .mcard-exp .hud-c::after { opacity:0; }
 
   /* ── Mycelium HUD toolbar buttons ── */
   .hud-btn { font-family:var(--sans); background:var(--mb2); border:1px solid rgba(0,0,0,0.10); color:var(--ink1); padding:5px 12px; text-transform:none; letter-spacing:0; font-size:12px; font-weight:500; cursor:pointer; transition:.14s; border-radius:99px; }
@@ -4647,13 +4647,9 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
   return (
     <div ref={containerRef}
       style={{position:"relative",flex:1,overflow:"hidden",cursor:"grab",touchAction:"none",
-        background: isMicelioMode
-          ? "radial-gradient(circle at 50% 50%, rgba(232,82,0,0.06), transparent 65%), #141210"
-          : T.bg,
-        backgroundImage: isMicelioMode
-          ? "linear-gradient(rgba(255,255,255,0.055) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.055) 1px,transparent 1px)"
-          : `radial-gradient(${T.border2} 1px, transparent 1px)`,
-        backgroundSize: isMicelioMode ? "32px 32px" : "28px 28px",
+        background: T.bg,
+        backgroundImage: `radial-gradient(${T.border2} 1px, transparent 1px)`,
+        backgroundSize: "28px 28px",
         backgroundPosition: "0 0"}}
       onMouseDown={startPan}
       onTouchStart={onTouchStart}
@@ -4677,11 +4673,11 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
       {/* ── HUD zoom + hint bottom-right ── */}
       <div style={{position:"absolute",bottom:14,right:14,zIndex:20,
         fontFamily:"var(--mono)",fontSize:10,letterSpacing:".13em",
-        color: isMicelioMode ? "#7d8e99" : "#64748B",
-        background: isMicelioMode ? "rgba(15,22,28,0.92)" : "rgba(255,255,255,0.82)",
-        border: isMicelioMode ? "1px solid rgba(232,82,0,0.16)" : "1px solid rgba(0,0,0,0.1)",
+        color: T.ink3,
+        background: T.bgPanel,
+        border: `1px solid ${T.border2}`,
         backdropFilter:"blur(8px)",padding:"8px 12px",lineHeight:1.7,pointerEvents:"none"}}>
-        <div style={{color: isMicelioMode ? "var(--mc)" : T.accent,fontWeight:700}}>
+        <div style={{color: T.ink2,fontWeight:700}}>
           ZOOM · {zoomPct}%
         </div>
         <div>DRAG · WHEEL · CLICK</div>
@@ -4695,10 +4691,8 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
       {/* Empty state */}
       {cards.length===0 && (
         <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:12}}>
-          <div style={{fontSize:44, filter: layoutMode==="micelio" ? `drop-shadow(0 0 18px ${NODE_GOLD}66)` : "none",
-            opacity: layoutMode==="micelio" ? 0.6 : 0.2, color: layoutMode==="micelio" ? NODE_GOLD : T.ink4}}>◯</div>
-          <div style={{fontFamily:"var(--mono)",fontSize:13,
-            color: layoutMode==="micelio" ? NODE_GOLD+"77" : T.ink4}}>
+          <div style={{fontSize:44,opacity:0.2,color:T.ink4}}>◯</div>
+          <div style={{fontFamily:"var(--mono)",fontSize:13,color:T.ink4}}>
             Sin tarjetas — créalas en la vista Kanban
           </div>
         </div>
@@ -4728,10 +4722,10 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
             const str=conn.strength||7;
             const bx=mx+ox, by=my+oy;
             // Mycelium connection colors
-            const mcColor = conn.type==="contraste" ? "#C88838"
-              : conn.type==="refuerza" ? "#3CB87A"
-              : conn.type==="secuencia" ? "#C88838"
-              : "#E85200"; // complementa + default = orange
+            const mcColor = conn.type==="contraste" ? "#B07830"
+              : conn.type==="refuerza" ? "#2A9960"
+              : conn.type==="secuencia" ? "#3868B8"
+              : "#3A3632"; // complementa + default = warm charcoal
             const isMicelio = layoutMode==="micelio";
             return (
               <g key={conn.id}>
@@ -4895,7 +4889,8 @@ function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchSta
   return (
     <div className={`mcard hud-c${expanded ? " mcard-exp" : ""}`}
       style={{ left:p.x, top:p.y,
-        borderColor:`${pbd}33`,
+        borderColor:"rgba(0,0,0,0.08)",
+        borderLeft:`3px solid ${pbd}`,
         cursor:"grab", userSelect:"none" }}
       onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
 
@@ -4939,14 +4934,14 @@ function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchSta
       {/* Collapsed badge row */}
       {!expanded && (cc > 0 || sc > 0) && (
         <div style={{ display:"flex", gap:4, padding:"3px 10px 5px",
-          borderTop:"1px dashed rgba(232,82,0,0.08)" }}>
+          borderTop:"1px solid rgba(0,0,0,0.06)" }}>
           {cc > 0 && (
             <span style={{ fontFamily:"var(--mono)", fontSize:9,
-              color:"var(--ink3)", letterSpacing:".06em" }}>💬 {cc}</span>
+              color:"#8A8480", letterSpacing:".06em" }}>💬 {cc}</span>
           )}
           {sc > 0 && (
             <span style={{ fontFamily:"var(--mono)", fontSize:9,
-              color:"var(--ink3)", letterSpacing:".06em" }}>◎ {sc}</span>
+              color:"#8A8480", letterSpacing:".06em" }}>◎ {sc}</span>
           )}
         </div>
       )}
