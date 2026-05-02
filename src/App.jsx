@@ -7,7 +7,7 @@ const THEMES = {
     id:"dark", label:"Dark", icon:"◈",
     // Archivum — void-warm darkness; antique gold illuminates like a torch in
     // the deep. Eagle Vision (AC) / PS5 HUD / Hitchhiker's terminal — game aesthetic.
-    bg:"#0A0908", bgReal:"#0A0908", bgPanel:"#0F0D12", bgCard:"#15121C", bgHover:"#1E1A28",
+    bg:"#0A0908", bgReal:"#0A0908", bgPanel:"#0F0D12", bgCard:"#211C2E", bgHover:"#2A2440",
     border:"rgba(200,170,100,0.07)", border2:"rgba(200,170,100,0.14)",
     ink:"#EDE8DC", ink2:"#9A9080", ink3:"#5C5448", ink4:"#302E28",
     accent:"#C4963C", accentBg:"rgba(196,150,60,0.10)", accentHover:"#D8AA50",
@@ -462,11 +462,22 @@ const GLOBAL_CSS = `
     --mr: #C05060;   /* conflict / warning — blood rose */
     --mb0: #0A0908;  /* void — deepest background */
     --mb1: #0F0D12;  /* archive panel */
-    --mb2: #15121C;  /* card surface */
+    --mb2: #211C2E;  /* card surface */
     --ink0: #EDE8DC; /* primary text — warm parchment */
     --ink1: #9A9080; /* secondary text — aged paper */
     --ink2: #5C5448; /* tertiary text — faded ink */
     --ink3: #302E28; /* barely visible */
+  }
+
+  /* ── Autofill override — Chrome replaces bg+text color on saved inputs ── */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--ink0) !important;
+    -webkit-box-shadow: 0 0 0 1000px #211C2E inset !important;
+    caret-color: var(--ink0) !important;
+    transition: background-color 9999s ease-in-out 0s;
   }
 
   /* ── Mycelium card ── */
@@ -3490,12 +3501,12 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
   const inReview  = connections.filter(c => c.status==="review");
   const discarded = connections.filter(c => c.status==="discarded");
 
-  // Auto-retry countdown when rate-limited
+  // Countdown when rate-limited — resets to idle when done so user can retry
   useEffect(() => {
     if (countdown <= 0) { clearInterval(countdownRef.current); return; }
     countdownRef.current = setInterval(() => {
       setCountdown(n => {
-        if (n <= 1) { clearInterval(countdownRef.current); findConnections(); return 0; }
+        if (n <= 1) { clearInterval(countdownRef.current); setStatus("idle"); return 0; }
         return n - 1;
       });
     }, 1000);
@@ -3642,7 +3653,7 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
     if (countdown <= 0) { clearInterval(countdownRef.current); return; }
     countdownRef.current = setInterval(() => {
       setCountdown(n => {
-        if (n <= 1) { clearInterval(countdownRef.current); run(); return 0; }
+        if (n <= 1) { clearInterval(countdownRef.current); setStatus("idle"); return 0; }
         return n - 1;
       });
     }, 1000);
