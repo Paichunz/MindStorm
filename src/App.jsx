@@ -306,6 +306,7 @@ function AIKeySetup({ onSaved }) {
       </p>
       <input
         placeholder="AIzaSy…"
+        aria-label="Clave de API de Google Gemini"
         value={val}
         onChange={e => { setVal(e.target.value); setErr(""); }}
         onKeyDown={e => e.key==="Enter" && save()}
@@ -461,6 +462,31 @@ const GLOBAL_CSS = `
   ::-webkit-scrollbar-thumb { background:rgba(155,109,255,0.35); border-radius:4px; }
   ::-webkit-scrollbar-thumb:hover { background:rgba(155,109,255,0.55); }
 
+  /* ── Focus visible — keyboard navigation ── */
+  :focus { outline:none; }
+  :focus-visible {
+    outline: 2px solid rgba(123,215,232,0.8);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  button:focus-visible, [role="button"]:focus-visible {
+    outline: 2px solid rgba(123,215,232,0.8);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 4px rgba(123,215,232,0.15);
+  }
+  input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: none; /* Box-shadow focus handled inline */
+  }
+
+  /* ── Reduced motion — respect user OS preference ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
   @keyframes spin      { to { transform:rotate(360deg); } }
   @keyframes fadeUp    { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
   @keyframes slideIn   { from{opacity:0;transform:translateX(26px)} to{opacity:1;transform:translateX(0)} }
@@ -589,16 +615,19 @@ function useIsMobile() {
 }
 
 // ─── PASSWORD INPUT WITH SHOW/HIDE ───────────────────────────────────────────
-function PwdInput({ value, onChange, onKeyDown, placeholder, style, autoFocus }) {
+function PwdInput({ value, onChange, onKeyDown, placeholder, style, autoFocus, id }) {
   const [show, setShow] = useState(false);
+  const inputId = id || "pwd-input";
   return (
     <div style={{ position:"relative" }}>
       <input
+        id={inputId}
         type={show ? "text" : "password"}
         value={value}
         onChange={onChange}
         onKeyDown={onKeyDown}
         placeholder={placeholder || "Contraseña…"}
+        aria-label={placeholder || "Contraseña"}
         autoFocus={autoFocus}
         style={{ background:"rgba(255,255,255,0.04)", border:"1.5px solid rgba(255,255,255,0.12)", color:T.ink, padding:"11px 44px 11px 14px", borderRadius:10, fontFamily:"var(--sans)", fontSize:14, width:"100%", outline:"none", transition:"border-color .2s, box-shadow .2s", ...style }}
         onFocus={e => { e.target.style.borderColor = T.accent; e.target.style.boxShadow = "0 0 0 3px rgba(155,109,255,0.18)"; }}
@@ -607,8 +636,9 @@ function PwdInput({ value, onChange, onKeyDown, placeholder, style, autoFocus })
       <button
         type="button"
         onClick={() => setShow(s => !s)}
-        title={show ? "Ocultar" : "Mostrar contraseña"}
-        style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:T.ink4, fontSize:16, lineHeight:1, padding:"2px 4px", transition:"color .15s" }}
+        aria-label={show ? "Ocultar contraseña" : "Mostrar contraseña"}
+        aria-controls={inputId}
+        style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:T.ink4, fontSize:16, lineHeight:1, padding:"6px", transition:"color .15s" }}
         onMouseEnter={e => e.currentTarget.style.color = T.ink2}
         onMouseLeave={e => e.currentTarget.style.color = T.ink4}
       >
@@ -747,7 +777,7 @@ function ThemeSwitcher() {
   return (
     <div style={{ display:"flex", gap:7, alignItems:"center" }}>
       {Object.entries(THEMES).map(([id, th]) => (
-        <button key={id} title={labels[id] || th.label} onClick={() => setThemeId(id)}
+        <button key={id} aria-label={labels[id] || th.label} aria-pressed={themeId===id} onClick={() => setThemeId(id)}
           style={{ width:22, height:22, borderRadius:"50%",
             border:`2.5px solid ${themeId===id ? swatches[id] : "transparent"}`,
             background:swatches[id], cursor:"pointer", padding:0, flexShrink:0,
@@ -755,7 +785,7 @@ function ThemeSwitcher() {
               ? `0 0 0 2px ${T.bgCard}, 0 0 0 4px ${swatches[id]}`
               : `0 1px 3px rgba(0,0,0,.18)`,
             transform: themeId===id ? "scale(1.18)" : "scale(1)",
-            transition:"all .18s cubic-bezier(.34,1.56,.64,1)", outline:"none" }} />
+            transition:"all .18s cubic-bezier(.34,1.56,.64,1)" }} />
       ))}
     </div>
   );
@@ -849,7 +879,7 @@ function JoinScreen({ onJoin }) {
           <p style={{ color:T.ink3, fontSize:14, marginBottom:20, lineHeight:1.5 }}>
             Elige tu nombre para comenzar
           </p>
-          <OInput placeholder="Tu nombre…" value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key==="Enter" && name.trim() && onJoin({name:name.trim()})} autoFocus style={{ marginBottom:12, textAlign:"center", fontSize:16 }} />
+          <OInput placeholder="Tu nombre…" aria-label="Tu nombre de usuario" value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key==="Enter" && name.trim() && onJoin({name:name.trim()})} autoFocus style={{ marginBottom:12, textAlign:"center", fontSize:16 }} />
           <OBtn full onClick={() => name.trim() && onJoin({name:name.trim()})}>Entrar al espacio →</OBtn>
         </div>
         <p style={{ color:T.ink4, fontSize:10, marginTop:16, fontFamily:"var(--mono)", letterSpacing:"0.05em" }}>Tu nombre se guarda en este dispositivo</p>
@@ -1026,7 +1056,7 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
 
           <div style={{ position:"relative", marginBottom:20 }}>
             <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:T.ink4, fontSize:14, pointerEvents:"none" }}>🔍</span>
-            <OInput placeholder="Buscar proyectos…" value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft:36 }} />
+            <OInput placeholder="Buscar proyectos…" aria-label="Buscar proyectos" value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft:36 }} />
           </div>
           {creating && <CreateBoardModal onClose={() => setCreating(false)} onCreate={onCreate} />}
           {pwdModal && <PasswordModal board={pwdModal} onClose={() => setPwdModal(null)} onSubmit={async pwd => { const r = await onOpen(pwdModal, pwd); if (r==="wrong") return false; setPwdModal(null); return true; }} />}
@@ -1107,6 +1137,9 @@ function BoardTile({ board, onOpen, onDeleteRequest, onExport, exporting }) {
   const cat = CATEGORIES.find(c => c.id===board.categoryId) || CATEGORIES[6];
   return (
     <div className="tile hud-c" onClick={() => onOpen(board)}
+      role="button" tabIndex={0}
+      aria-label={`Abrir proyecto: ${board.name}`}
+      onKeyDown={e => (e.key==="Enter"||e.key===" ") && onOpen(board)}
       style={{ background:"rgba(11,16,20,0.88)", border:`1px solid ${cat.color}20`,
         borderLeft:`3px solid ${cat.color}`, borderRadius:10, padding:"16px 18px 14px",
         position:"relative", overflow:"hidden",
@@ -1999,6 +2032,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               value={filterQuery}
               onChange={e => setFilterQuery(e.target.value)}
               placeholder="Buscar tarjetas…"
+              aria-label="Buscar tarjetas en el tablero"
               style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.09)",
                 color:T.ink, borderRadius:8, padding:"6px 10px 6px 28px", fontSize:12,
                 fontFamily:"var(--sans)", outline:"none", width:190,
