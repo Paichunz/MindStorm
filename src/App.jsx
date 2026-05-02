@@ -411,7 +411,7 @@ function getThemeCSS(id) {
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const GLOBAL_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
   :root { --raj: 'Rajdhani', system-ui, sans-serif; --mc: #7BD7E8; --ma: #E8B45C; --mg: #8CD17C; --mr: #E86A5C; --mb0: #0b1014; --mb1: #0f161c; --mb2: #131c24; --ink0: #e8f4f7; --ink1: #b8c8d0; --ink2: #7d8e99; --ink3: #4a5662; }
 
   /* ── Mycelium card ── */
@@ -444,8 +444,16 @@ const GLOBAL_CSS = `
   .hud-btn:hover { border-color:var(--mc); color:var(--mc); box-shadow:inset 0 0 12px rgba(123,215,232,0.07); }
   .hud-btn-active { border-color:var(--mc) !important; color:var(--mc) !important; background:rgba(123,215,232,0.08) !important; }
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-  :root { --sans:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',monospace; }
+  :root { --sans:'Outfit',sans-serif; --mono:'JetBrains Mono',monospace; }
   html, body { background:#070712; min-height:100vh; }
+
+  /* ── Board content area — subtle grid ── */
+  .board-area {
+    background-image:
+      linear-gradient(rgba(123,215,232,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(123,215,232,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
 
   ::selection { background:rgba(155,109,255,0.35); color:#EDE8FF; }
   ::-webkit-scrollbar { width:4px; height:4px; }
@@ -800,13 +808,16 @@ function MindStormLogo({ size = "md" }) {
       {/* Wordmark */}
       {size !== "xs" && (
         <div>
-          <div style={{ lineHeight:1, letterSpacing:"-0.5px" }}>
-            <span style={{ fontFamily:"var(--sans)", fontWeight:300, fontSize:c.fontSize, color:T.ink }}>Mind</span>
-            <span className="grad-text" style={{ fontFamily:"var(--sans)", fontWeight:900, fontSize:c.fontSize }}>Storm</span>
+          <div style={{ lineHeight:1, display:"flex", alignItems:"baseline", gap:0 }}>
+            <span style={{ fontFamily:"var(--raj)", fontWeight:400, fontSize:c.fontSize,
+              color:"rgba(123,215,232,0.55)", letterSpacing:"0.12em", textTransform:"uppercase" }}>MIND</span>
+            <span style={{ fontFamily:"var(--raj)", fontWeight:700, fontSize:c.fontSize,
+              color:"var(--ink0)", letterSpacing:"0.06em", textTransform:"uppercase",
+              textShadow:"0 0 18px rgba(123,215,232,0.25)" }}>STORM</span>
           </div>
           {c.tagSize > 0 && (
-            <div style={{ fontFamily:"var(--mono)", fontSize:c.tagSize, color:T.ink4, letterSpacing:"0.3em", marginTop:4, textTransform:"uppercase" }}>
-              Think Together
+            <div style={{ fontFamily:"var(--mono)", fontSize:c.tagSize, color:"rgba(123,215,232,0.35)", letterSpacing:"0.28em", marginTop:3, textTransform:"uppercase" }}>
+              THINK TOGETHER
             </div>
           )}
         </div>
@@ -954,7 +965,7 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
       <style>{GLOBAL_CSS}</style>
       <style>{getThemeCSS(themeId)}</style>
       {!isMobile && <Sidebar user={user} boards={allBoards} onOpen={handleOpen} onSignOut={onSignOut} />}
-      <div style={{ flex:1, padding: isMobile ? "16px 14px" : "32px 36px", overflowY:"auto", position:"relative", zIndex:1 }}>
+      <div className="board-area" style={{ flex:1, padding: isMobile ? "16px 14px" : "32px 36px", overflowY:"auto", position:"relative", zIndex:1 }}>
         {/* Mobile top bar */}
         {isMobile && (
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16, paddingBottom:14, borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
@@ -1040,37 +1051,43 @@ function Sidebar({ user, boards, onOpen, onSignOut }) {
         <MindStormLogo size="sm" />
       </div>
       <SideItem icon="🏠" label="Inicio" active />
-      <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"10px 0" }} />
-      <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.12em", padding:"4px 10px", marginBottom:6, textTransform:"uppercase" }}>Proyectos recientes</div>
+      <div style={{ height:1, background:"rgba(123,215,232,0.08)", margin:"10px 0" }} />
+      <div style={{ color:"rgba(123,215,232,0.3)", fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.18em", padding:"4px 10px", marginBottom:4, textTransform:"uppercase" }}>// Proyectos</div>
       {boards.slice(0,10).map(b => {
         const cat = CATEGORIES.find(c => c.id===b.categoryId) || CATEGORIES[6];
         return (
           <button key={b.id} onClick={() => onOpen(b)}
-            style={{ background:"transparent", border:"none", textAlign:"left", padding:"8px 10px", borderRadius:8, cursor:"pointer", color:T.ink2, fontSize:12, display:"flex", alignItems:"center", gap:8, width:"100%", transition:"all .15s" }}
-            onMouseEnter={e => { e.currentTarget.style.background="rgba(155,109,255,0.1)"; e.currentTarget.style.color=T.ink; }}
-            onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color=T.ink2; }}>
-            <span style={{ fontSize:14, flexShrink:0 }}>{cat.label.split(" ")[0]}</span>
+            style={{ background:"transparent", border:"none", borderLeft:"2px solid transparent",
+              textAlign:"left", padding:"6px 10px 6px 8px", cursor:"pointer",
+              color:"var(--ink2)", fontFamily:"var(--raj)", fontSize:12, fontWeight:500,
+              letterSpacing:"0.04em", display:"flex", alignItems:"center", gap:8, width:"100%", transition:"all .13s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderLeftColor=cat.color+"88"; e.currentTarget.style.color="var(--ink0)"; e.currentTarget.style.background="rgba(255,255,255,0.03)"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderLeftColor="transparent"; e.currentTarget.style.color="var(--ink2)"; e.currentTarget.style.background="transparent"; }}>
+            <span style={{ width:6, height:6, borderRadius:"50%", background:cat.color, flexShrink:0, boxShadow:`0 0 6px ${cat.color}88` }} />
             <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", flex:1 }}>{b.name}</span>
-            {b.password && <span style={{ color:T.ink4, fontSize:10 }}>🔒</span>}
+            {b.password && <span style={{ color:"var(--ink3)", fontFamily:"var(--mono)", fontSize:9 }}>⚿</span>}
           </button>
         );
       })}
       <div style={{ flex:1 }} />
-      <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", paddingTop:14 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:8, padding:"4px 10px", marginBottom:8 }}>
-          <div style={{ width:28, height:28, borderRadius:"50%",
-            background:"linear-gradient(135deg,#9B6DFF,#5AAFFF)",
+      <div style={{ borderTop:"1px solid rgba(123,215,232,0.08)", paddingTop:12 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:9, padding:"4px 10px 10px" }}>
+          <div style={{ width:26, height:26, borderRadius:4,
+            background:`linear-gradient(135deg,rgba(123,215,232,0.25),rgba(123,215,232,0.08))`,
+            border:"1px solid rgba(123,215,232,0.3)",
             display:"flex", alignItems:"center", justifyContent:"center",
-            fontSize:11, fontWeight:700, color:"#fff", flexShrink:0 }}>
+            fontFamily:"var(--raj)", fontSize:13, fontWeight:700, color:"var(--mc)", flexShrink:0 }}>
             {user.name[0].toUpperCase()}
           </div>
-          <span style={{ color:T.ink2, fontSize:12, fontWeight:500 }}>@{user.name}</span>
+          <span style={{ fontFamily:"var(--raj)", color:"var(--ink2)", fontSize:12, fontWeight:500, letterSpacing:".06em" }}>@{user.name}</span>
         </div>
         <button onClick={onSignOut}
-          style={{ background:"transparent", border:"none", color:T.ink4, fontSize:12, cursor:"pointer", padding:"6px 10px", borderRadius:7, width:"100%", textAlign:"left", transition:"all .15s" }}
-          onMouseEnter={e => { e.currentTarget.style.background="rgba(255,77,126,0.08)"; e.currentTarget.style.color=T.rose; }}
-          onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color=T.ink4; }}>
-          → Cerrar sesión
+          className="hud-btn"
+          style={{ width:"100%", textAlign:"left", fontSize:10, padding:"5px 10px",
+            borderColor:"transparent", background:"transparent", letterSpacing:".1em" }}
+          onMouseEnter={e => { e.currentTarget.style.background="rgba(232,106,92,0.08)"; e.currentTarget.style.color=T.rose; e.currentTarget.style.borderColor=T.rose+"33"; }}
+          onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="var(--ink2)"; e.currentTarget.style.borderColor="transparent"; }}>
+          ⎋ CERRAR SESIÓN
         </button>
       </div>
     </div>
@@ -1089,58 +1106,59 @@ function BoardGrid({ boards, onOpen, isMobile, onDeleteRequest, onExport, export
 function BoardTile({ board, onOpen, onDeleteRequest, onExport, exporting }) {
   const cat = CATEGORIES.find(c => c.id===board.categoryId) || CATEGORIES[6];
   return (
-    <div className="tile" onClick={() => onOpen(board)}
-      style={{ background:"rgba(13,13,30,0.82)", border:`1px solid ${cat.color}22`,
-        borderRadius:15, padding:"18px", position:"relative", overflow:"hidden",
-        boxShadow:`0 4px 24px rgba(0,0,0,.35), 0 0 0 1px ${cat.color}10`,
-        backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)" }}>
-      {/* Top gradient strip */}
-      <div style={{ position:"absolute", top:0, left:0, right:0, height:4,
-        background:`linear-gradient(90deg, ${cat.color} 0%, ${cat.color}99 50%, ${cat.color}22 100%)`,
-        boxShadow:`0 0 18px ${cat.color}77` }} />
-      {/* Faint color glow top-right */}
-      <div style={{ position:"absolute", top:-60, right:-60, width:160, height:160, borderRadius:"50%",
-        background:`radial-gradient(circle, ${cat.color}22 0%, transparent 70%)`, pointerEvents:"none" }} />
-      {/* Bottom glow strip */}
-      <div style={{ position:"absolute", bottom:0, left:0, right:0, height:60, pointerEvents:"none",
-        background:`linear-gradient(0deg, ${cat.color}08 0%, transparent 100%)` }} />
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:12, marginTop:4 }}>
-        <div style={{ width:42, height:42, background:`linear-gradient(135deg,${cat.color}28,${cat.color}12)`,
-          borderRadius:11, display:"flex", alignItems:"center", justifyContent:"center",
-          fontSize:20, border:`1px solid ${cat.color}44`, flexShrink:0,
-          boxShadow:`0 0 14px ${cat.color}22, inset 0 1px 0 ${cat.color}33` }}>
-          {cat.label.split(" ")[0]}
+    <div className="tile hud-c" onClick={() => onOpen(board)}
+      style={{ background:"rgba(11,16,20,0.88)", border:`1px solid ${cat.color}20`,
+        borderLeft:`3px solid ${cat.color}`, borderRadius:10, padding:"16px 18px 14px",
+        position:"relative", overflow:"hidden",
+        boxShadow:`0 2px 16px rgba(0,0,0,.4), 0 0 0 1px ${cat.color}08`,
+        backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}>
+      {/* Ambient top-right glow */}
+      <div style={{ position:"absolute", top:-40, right:-40, width:120, height:120, borderRadius:"50%",
+        background:`radial-gradient(circle, ${cat.color}18 0%, transparent 70%)`, pointerEvents:"none" }} />
+      {/* Category line */}
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+        <div style={{ fontFamily:"var(--mono)", fontSize:9, color:cat.color, letterSpacing:"0.16em",
+          textTransform:"uppercase", opacity:.8 }}>
+          {cat.label.replace(/^.{2}/,"").trim()}
         </div>
-        <div style={{ display:"flex", gap:6, alignItems:"center" }}>
-          {board.password && <span style={{ color:T.ink4, fontSize:12 }}>🔒</span>}
+        <div style={{ display:"flex", gap:5, alignItems:"center" }}>
+          {board.password && <span style={{ color:"var(--ink3)", fontFamily:"var(--mono)", fontSize:9 }}>⚿</span>}
           <button
             onClick={e => { e.stopPropagation(); onExport && onExport(board); }}
             title="Exportar"
-            style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", color:T.ink4,
-              cursor:"pointer", fontSize:13, padding:"4px 8px", borderRadius:7, lineHeight:1, transition:"all .15s", fontWeight:700 }}
-            onMouseEnter={e => { e.currentTarget.style.color=T.green; e.currentTarget.style.borderColor=T.green+"44"; }}
-            onMouseLeave={e => { e.currentTarget.style.color=T.ink4; e.currentTarget.style.borderColor="rgba(255,255,255,0.1)"; }}
-          >{exporting === board.id ? "⏳" : "↓"}</button>
+            className="hud-btn"
+            style={{ padding:"2px 7px", fontSize:10, letterSpacing:".08em" }}
+            onMouseEnter={e => { e.currentTarget.style.color=T.green; e.currentTarget.style.borderColor=T.green+"55"; }}
+            onMouseLeave={e => { e.currentTarget.style.color="var(--ink1)"; e.currentTarget.style.borderColor="rgba(123,215,232,0.22)"; }}
+          >{exporting === board.id ? "…" : "↓"}</button>
           <button
             onClick={e => { e.stopPropagation(); onDeleteRequest(board); }}
             title="Eliminar"
-            style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", color:T.ink4,
-              cursor:"pointer", fontSize:14, padding:"4px 7px", borderRadius:7, lineHeight:1, transition:"all .15s" }}
-            onMouseEnter={e => { e.currentTarget.style.color=T.rose; e.currentTarget.style.borderColor=T.rose+"44"; }}
-            onMouseLeave={e => { e.currentTarget.style.color=T.ink4; e.currentTarget.style.borderColor="rgba(255,255,255,0.1)"; }}
-          >🗑</button>
+            className="hud-btn"
+            style={{ padding:"2px 7px", fontSize:10, letterSpacing:".08em" }}
+            onMouseEnter={e => { e.currentTarget.style.color=T.rose; e.currentTarget.style.borderColor=T.rose+"55"; }}
+            onMouseLeave={e => { e.currentTarget.style.color="var(--ink1)"; e.currentTarget.style.borderColor="rgba(123,215,232,0.22)"; }}
+          >✕</button>
         </div>
       </div>
-      <div style={{ color:T.ink, fontWeight:800, fontSize:15, marginBottom:5, lineHeight:1.3, letterSpacing:"-0.02em" }}>{board.name}</div>
-      <div style={{ color:T.ink3, fontSize:12, marginBottom:14, lineHeight:1.5,
-        display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>
-        {board.conceptTitle || <span style={{ fontStyle:"italic", opacity:0.6 }}>Sin concepto base</span>}
+      {/* Title */}
+      <div style={{ fontFamily:"var(--raj)", fontWeight:700, fontSize:17, marginBottom:6,
+        lineHeight:1.2, letterSpacing:"0.02em", color:"var(--ink0)",
+        textShadow:`0 0 20px ${cat.color}22` }}>
+        {board.name}
       </div>
-      <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
-        <OTag color={cat.color} bg={`${cat.color}18`}>{cat.label.replace(/^.{2}/,"").trim()}</OTag>
-        {(board.subcategories||[]).slice(0,2).map(s => <OTag key={s}>{s}</OTag>)}
+      <div style={{ color:"var(--ink2)", fontSize:12, marginBottom:12, lineHeight:1.55,
+        display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden", fontFamily:"var(--sans)" }}>
+        {board.conceptTitle || <span style={{ opacity:0.45, fontStyle:"italic" }}>Sin concepto base</span>}
       </div>
-      <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10, marginTop:12, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+      <div style={{ display:"flex", gap:4, flexWrap:"wrap", marginBottom:10 }}>
+        {(board.subcategories||[]).slice(0,2).map(s => (
+          <span key={s} style={{ fontFamily:"var(--mono)", fontSize:9, padding:"2px 6px",
+            border:`1px solid ${cat.color}28`, color:"var(--ink2)", textTransform:"uppercase", letterSpacing:".08em" }}>{s}</span>
+        ))}
+      </div>
+      <div style={{ color:"var(--ink3)", fontFamily:"var(--mono)", fontSize:9, letterSpacing:".08em",
+        display:"flex", justifyContent:"space-between", borderTop:`1px dashed ${cat.color}18`, paddingTop:8 }}>
         <span>@{board.createdBy}</span>
         <span>{fmtDate(board.createdAt)}</span>
       </div>
@@ -1152,14 +1170,18 @@ function SideItem({ icon, label, active }) {
   return (
     <button style={{
       background: active
-        ? "linear-gradient(90deg,rgba(155,109,255,0.18),rgba(155,109,255,0.06))"
+        ? "linear-gradient(90deg,rgba(123,215,232,0.1),transparent)"
         : "transparent",
-      border: active ? "1px solid rgba(155,109,255,0.25)" : "1px solid transparent",
-      textAlign:"left", padding:"9px 12px", borderRadius:9, cursor:"pointer",
-      color: active ? T.accent : T.ink2, fontSize:13, display:"flex", alignItems:"center", gap:9,
-      fontWeight: active ? 700 : 400, width:"100%", transition:"all .15s",
-      boxShadow: active ? "inset 2px 0 0 rgba(155,109,255,0.6)" : "none" }}>
-      <span>{icon}</span><span>{label}</span>
+      border: active ? "1px solid rgba(123,215,232,0.18)" : "1px solid transparent",
+      textAlign:"left", padding:"8px 12px", borderRadius:6, cursor:"pointer",
+      color: active ? "var(--mc)" : "var(--ink2)", fontFamily:"var(--raj)",
+      fontSize:13, fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase",
+      display:"flex", alignItems:"center", gap:10, width:"100%", transition:"all .15s",
+      boxShadow: active ? "inset 3px 0 0 var(--mc)" : "none" }}
+      onMouseEnter={e => { if(!active){ e.currentTarget.style.background="rgba(123,215,232,0.06)"; e.currentTarget.style.color="var(--ink0)"; } }}
+      onMouseLeave={e => { if(!active){ e.currentTarget.style.background="transparent"; e.currentTarget.style.color="var(--ink2)"; } }}>
+      <span style={{ fontFamily:"var(--mono)", fontSize:11, opacity:.7, width:14, textAlign:"center" }}>{icon}</span>
+      <span>{label}</span>
     </button>
   );
 }
