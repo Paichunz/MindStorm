@@ -356,6 +356,37 @@ function getThemeCSS(id) {
     ::selection { background:${t.accentBg}; color:${t.ink}; }
     ::-webkit-scrollbar-thumb { background:${t.accent}55; border-radius:4px; }
     ::-webkit-scrollbar-thumb:hover { background:${t.accent}88; }
+
+    /* Focus visible: follow theme accent */
+    :focus-visible { outline-color:${t.accent}cc !important; }
+    button:focus-visible,[role="button"]:focus-visible { outline-color:${t.accent}cc !important; box-shadow:0 0 0 4px ${t.accentBg} !important; }
+
+    /* Scrollbar track */
+    ::-webkit-scrollbar-track { background:${t.bgPanel} !important; }
+
+    /* HUD buttons outside the canvas (toolbar, modals) — adapt to light theme */
+    .hud-btn {
+      background:${t.bgCard} !important;
+      border-color:${t.border2} !important;
+      color:${t.ink2} !important;
+      backdrop-filter:none !important;
+    }
+    .hud-btn:hover {
+      border-color:${t.accent}66 !important;
+      color:${t.accent} !important;
+      box-shadow:none !important;
+    }
+    .hud-btn-active {
+      border-color:${t.accent} !important;
+      color:${t.accent} !important;
+      background:${t.accentBg} !important;
+    }
+    /* BoardTile in light themes */
+    .tile { background:${t.bgCard} !important; }
+    .tile:hover {
+      box-shadow:0 12px 32px ${t.accent}18, 0 0 0 1px ${t.accent}33 !important;
+      border-color:${t.accent}33 !important;
+    }
     .glass {
       background:rgba(255,255,255,0.82) !important;
       border-color:${t.border} !important;
@@ -451,11 +482,13 @@ const GLOBAL_CSS = `
     background-size: 48px 48px;
   }
 
-  ::selection { background:rgba(155,109,255,0.35); color:#EDE8FF; }
+  /* Dark-theme base — overridden per-theme by getThemeCSS() */
+  :root { --accent-sel: rgba(155,109,255,0.35); --accent-sel-fg: #EDE8FF; --sb-thumb: rgba(155,109,255,0.35); --sb-thumb-h: rgba(155,109,255,0.55); }
+  ::selection { background:var(--accent-sel); color:var(--accent-sel-fg); }
   ::-webkit-scrollbar { width:4px; height:4px; }
   ::-webkit-scrollbar-track { background:transparent; }
-  ::-webkit-scrollbar-thumb { background:rgba(155,109,255,0.35); border-radius:4px; }
-  ::-webkit-scrollbar-thumb:hover { background:rgba(155,109,255,0.55); }
+  ::-webkit-scrollbar-thumb { background:var(--sb-thumb); border-radius:4px; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--sb-thumb-h); }
 
   /* ── Focus visible — keyboard navigation ── */
   :focus { outline:none; }
