@@ -3,20 +3,33 @@ import { createClient } from "@supabase/supabase-js";
 
 // ─── THEMES ──────────────────────────────────────────────────────────────────
 const THEMES = {
+  estudio: {
+    id:"estudio", label:"Estudio", icon:"◆",
+    // Editorial studio — warm canvas + deep orange, creative workspace
+    bg:"#ECEAE5", bgReal:"#ECEAE5", bgPanel:"#F5F3EF", bgCard:"#FFFFFF", bgHover:"#E5E2DC",
+    border:"rgba(50,40,30,0.09)", border2:"rgba(50,40,30,0.18)",
+    ink:"#18140F", ink2:"#4A4238", ink3:"#7A6E64", ink4:"#AEA49A",
+    accent:"#E85200", accentBg:"rgba(232,82,0,0.09)", accentHover:"#CC4800",
+    green:"#2A9960",  greenBg:"rgba(42,153,96,0.10)",
+    amber:"#B07830",  amberBg:"rgba(176,120,48,0.10)",
+    rose:"#C03858",   roseBg:"rgba(192,56,88,0.10)",
+    blue:"#3868B8",   blueBg:"rgba(56,104,184,0.10)",
+    orange:"#E85200", orangeBg:"rgba(232,82,0,0.10)",
+    cyan:"#1888A8",   cyanBg:"rgba(24,136,168,0.10)",
+  },
   dark: {
-    id:"dark", label:"Dark", icon:"◈",
-    // Archivum — void-warm darkness; antique gold illuminates like a torch in
-    // the deep. Eagle Vision (AC) / PS5 HUD / Hitchhiker's terminal — game aesthetic.
-    bg:"#0A0908", bgReal:"#0A0908", bgPanel:"#0F0D12", bgCard:"#211C2E", bgHover:"#2A2440",
-    border:"rgba(200,170,100,0.07)", border2:"rgba(200,170,100,0.14)",
-    ink:"#EDE8DC", ink2:"#9A9080", ink3:"#5C5448", ink4:"#302E28",
-    accent:"#C4963C", accentBg:"rgba(196,150,60,0.10)", accentHover:"#D8AA50",
-    green:"#4AAA70",  greenBg:"rgba(74,170,112,0.10)",
-    amber:"#C4963C",  amberBg:"rgba(196,150,60,0.10)",
-    rose:"#C05060",   roseBg:"rgba(192,80,96,0.10)",
-    blue:"#5080C0",   blueBg:"rgba(80,128,192,0.10)",
-    orange:"#C07040", orangeBg:"rgba(192,112,64,0.10)",
-    cyan:"#3898A8",   cyanBg:"rgba(56,152,168,0.10)",
+    id:"dark", label:"Noche", icon:"◈", isDark:true,
+    // Studio night — refined editorial dark, orange pulse on near-black
+    bg:"#141210", bgReal:"#141210", bgPanel:"#1C1A18", bgCard:"#242220", bgHover:"#2E2B27",
+    border:"rgba(255,255,255,0.07)", border2:"rgba(255,255,255,0.12)",
+    ink:"#F0EDE8", ink2:"#9C9488", ink3:"#60584E", ink4:"#38342E",
+    accent:"#E85200", accentBg:"rgba(232,82,0,0.12)", accentHover:"#FF6010",
+    green:"#3DAA6C",  greenBg:"rgba(61,170,108,0.10)",
+    amber:"#C49030",  amberBg:"rgba(196,144,48,0.10)",
+    rose:"#D04060",   roseBg:"rgba(208,64,96,0.10)",
+    blue:"#4878C0",   blueBg:"rgba(72,120,192,0.10)",
+    orange:"#E85200", orangeBg:"rgba(232,82,0,0.10)",
+    cyan:"#2898A8",   cyanBg:"rgba(40,152,168,0.10)",
   },
   // ── Índigo — Concentración profunda ───────────────────────────────────────
   // Azul frío activa el córtex prefrontal → foco analítico, calma cognitiva.
@@ -66,7 +79,7 @@ const THEMES = {
 };
 
 // T is mutable — updated when theme changes
-let T = { ...THEMES.dark };
+let T = { ...THEMES.estudio };
 
 // Theme context
 const ThemeCtx = createContext({ themeId:"dark", setThemeId:()=>{} });
@@ -364,7 +377,7 @@ function resizeImage(file) {
 // ─── THEME OVERRIDE CSS ───────────────────────────────────────────────────────
 function getThemeCSS(id) {
   const t = THEMES[id];
-  if (!t || id === "dark") return "";
+  if (!t || t.isDark) return "";
   // All non-dark themes are light
   return `
     html,body { background:${t.bg} !important; color:${t.ink} !important; }
@@ -448,26 +461,33 @@ function getThemeCSS(id) {
       background:${t.accentBg} !important;
       border-color:${t.accent}88 !important;
     }
+    /* Board area dot grid for light themes */
+    .board-area {
+      background-image: radial-gradient(circle, rgba(50,40,30,0.10) 1px, transparent 1px) !important;
+    }
+    /* Add-btn in light themes */
+    .add-btn { border-color:${t.accent}33 !important; }
   `;
 }
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const GLOBAL_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@300;400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
   :root {
     --raj: 'Rajdhani', system-ui, sans-serif;
-    /* Archivum palette — antique gold on void-warm darkness */
-    --mc: #C4963C;   /* Eagle Vision gold — primary connection / selection */
-    --ma: #C4963C;   /* AI warmth — same gold */
-    --mg: #4AAA70;   /* positive / resolved — sage green */
-    --mr: #C05060;   /* conflict / warning — blood rose */
-    --mb0: #0A0908;  /* void — deepest background */
-    --mb1: #0F0D12;  /* archive panel */
-    --mb2: #211C2E;  /* card surface */
-    --ink0: #EDE8DC; /* primary text — warm parchment */
-    --ink1: #9A9080; /* secondary text — aged paper */
-    --ink2: #5C5448; /* tertiary text — faded ink */
-    --ink3: #302E28; /* barely visible */
+    --serif: 'DM Serif Display', Georgia, serif;
+    /* Studio dark palette — default (overridden per theme via getThemeCSS) */
+    --mc: #E85200;   /* primary accent — deep orange */
+    --ma: #E85200;   /* AI accent */
+    --mg: #3DAA6C;   /* positive / resolved */
+    --mr: #D04060;   /* conflict / warning */
+    --mb0: #141210;  /* void — deepest background */
+    --mb1: #1C1A18;  /* panel background */
+    --mb2: #242220;  /* card surface */
+    --ink0: #F0EDE8; /* primary text */
+    --ink1: #9C9488; /* secondary text */
+    --ink2: #60584E; /* tertiary text */
+    --ink3: #38342E; /* barely visible */
   }
 
   /* ── Autofill override — Chrome replaces bg+text color on saved inputs ── */
@@ -476,26 +496,26 @@ const GLOBAL_CSS = `
   input:-webkit-autofill:focus,
   input:-webkit-autofill:active {
     -webkit-text-fill-color: var(--ink0) !important;
-    -webkit-box-shadow: 0 0 0 1000px #211C2E inset !important;
+    -webkit-box-shadow: 0 0 0 1000px #242220 inset !important;
     caret-color: var(--ink0) !important;
     transition: background-color 9999s ease-in-out 0s;
   }
 
   /* ── Mycelium card ── */
-  .mcard { position:absolute; width:240px; background:var(--mb1); border:1px solid rgba(196,150,60,0.18); font-family:var(--raj); user-select:none; z-index:5; transition:border-color .15s, box-shadow .15s, width .18s; cursor:grab; }
-  .mcard:hover { border-color:rgba(196,150,60,0.55); box-shadow:0 4px 20px rgba(0,0,0,.5); }
-  .mcard-exp { width:300px !important; z-index:8 !important; box-shadow:0 8px 32px rgba(0,0,0,.55), 0 0 0 1px rgba(196,150,60,0.7) !important; }
-  .mcard-head { display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px dashed rgba(196,150,60,0.13); }
+  .mcard { position:absolute; width:240px; background:var(--mb1); border:1px solid rgba(232,82,0,0.18); font-family:var(--raj); user-select:none; z-index:5; transition:border-color .15s, box-shadow .15s, width .18s; cursor:grab; }
+  .mcard:hover { border-color:rgba(232,82,0,0.55); box-shadow:0 4px 20px rgba(0,0,0,.5); }
+  .mcard-exp { width:300px !important; z-index:8 !important; box-shadow:0 8px 32px rgba(0,0,0,.55), 0 0 0 1px rgba(232,82,0,0.70) !important; }
+  .mcard-head { display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px dashed rgba(232,82,0,0.13); }
   .mcard-glyph { flex:none; color:var(--mc); font-family:var(--mono); font-size:11px; width:14px; }
   .mcard-title { flex:1; font-size:13px; font-weight:500; letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink0); }
   .mcard-dot { width:8px; height:8px; border-radius:50%; flex:none; }
   .mcard-body { padding:10px; font-size:12px; line-height:1.5; color:var(--ink1); }
   .mcard-body p { margin-bottom:8px; }
   .mcard-tags { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px; }
-  .mtag { font-family:var(--mono); font-size:9px; padding:2px 6px; border:1px solid rgba(196,150,60,0.18); color:var(--ink2); text-transform:uppercase; letter-spacing:.1em; }
+  .mtag { font-family:var(--mono); font-size:9px; padding:2px 6px; border:1px solid rgba(232,82,0,0.18); color:var(--ink2); text-transform:uppercase; letter-spacing:.1em; }
   .mmuted { color:var(--ink3); font-family:var(--mono); font-size:9px; letter-spacing:.08em; margin-bottom:8px; }
   .mcard-btns { display:flex; gap:6px; flex-wrap:wrap; }
-  .mcard-btns button { font-family:var(--raj); background:transparent; border:1px solid rgba(196,150,60,0.22); color:var(--ink1); padding:4px 9px; text-transform:uppercase; letter-spacing:.1em; font-size:10px; cursor:pointer; transition:.13s; }
+  .mcard-btns button { font-family:var(--raj); background:transparent; border:1px solid rgba(232,82,0,0.22); color:var(--ink1); padding:4px 9px; text-transform:uppercase; letter-spacing:.1em; font-size:10px; cursor:pointer; transition:.13s; }
   .mcard-btns button:hover { border-color:var(--mc); color:var(--mc); }
 
   /* ── HUD corner brackets ── */
@@ -507,12 +527,12 @@ const GLOBAL_CSS = `
   .mcard-exp .hud-c::before, .mcard-exp .hud-c::after { opacity:1; }
 
   /* ── Mycelium HUD toolbar buttons ── */
-  .hud-btn { font-family:var(--raj); background:rgba(10,9,8,0.92); border:1px solid rgba(196,150,60,0.22); color:var(--ink1); padding:6px 14px; text-transform:uppercase; letter-spacing:.16em; font-size:11px; font-weight:600; cursor:pointer; transition:.14s; backdrop-filter:blur(8px); }
-  .hud-btn:hover { border-color:var(--mc); color:var(--mc); box-shadow:0 0 12px rgba(196,150,60,0.15), inset 0 0 8px rgba(196,150,60,0.06); }
-  .hud-btn-active { border-color:var(--mc) !important; color:var(--mc) !important; background:rgba(196,150,60,0.10) !important; box-shadow:0 0 10px rgba(196,150,60,0.12) !important; }
+  .hud-btn { font-family:var(--raj); background:rgba(10,9,8,0.92); border:1px solid rgba(232,82,0,0.22); color:var(--ink1); padding:6px 14px; text-transform:uppercase; letter-spacing:.16em; font-size:11px; font-weight:600; cursor:pointer; transition:.14s; backdrop-filter:blur(8px); }
+  .hud-btn:hover { border-color:var(--mc); color:var(--mc); box-shadow:0 0 12px rgba(232,82,0,0.15), inset 0 0 8px rgba(232,82,0,0.06); }
+  .hud-btn-active { border-color:var(--mc) !important; color:var(--mc) !important; background:rgba(232,82,0,0.10) !important; box-shadow:0 0 10px rgba(232,82,0,0.12) !important; }
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
   :root { --sans:'Outfit',sans-serif; --mono:'JetBrains Mono',monospace; }
-  html, body { background:#0A0908; min-height:100vh; }
+  html, body { background:#141210; min-height:100vh; }
 
   /* ── Edge vignette — subtle depth, not game-UI darkness ── */
   body::before {
@@ -526,12 +546,12 @@ const GLOBAL_CSS = `
 
   /* ── Board canvas — dot grid (workspace signal, ref: Project Collaboration Space) ── */
   .board-area {
-    background-image: radial-gradient(circle, rgba(196,150,60,0.14) 1px, transparent 1px);
+    background-image: radial-gradient(circle, rgba(232,82,0,0.12) 1px, transparent 1px);
     background-size: 28px 28px;
   }
 
   /* Dark-theme base — overridden per-theme by getThemeCSS() */
-  :root { --accent-sel: rgba(196,150,60,0.30); --accent-sel-fg: #1A1510; --sb-thumb: rgba(196,150,60,0.25); --sb-thumb-h: rgba(196,150,60,0.45); }
+  :root { --accent-sel: rgba(232,82,0,0.25); --accent-sel-fg: #FFFFFF; --sb-thumb: rgba(232,82,0,0.20); --sb-thumb-h: rgba(232,82,0,0.40); }
   ::selection { background:var(--accent-sel); color:var(--accent-sel-fg); }
   ::-webkit-scrollbar { width:4px; height:4px; }
   ::-webkit-scrollbar-track { background:transparent; }
@@ -541,14 +561,14 @@ const GLOBAL_CSS = `
   /* ── Focus visible — keyboard navigation ── */
   :focus { outline:none; }
   :focus-visible {
-    outline: 2px solid rgba(196,150,60,0.8);
+    outline: 2px solid rgba(232,82,0,0.8);
     outline-offset: 2px;
     border-radius: 4px;
   }
   button:focus-visible, [role="button"]:focus-visible {
-    outline: 2px solid rgba(196,150,60,0.8);
+    outline: 2px solid rgba(232,82,0,0.8);
     outline-offset: 3px;
-    box-shadow: 0 0 0 4px rgba(196,150,60,0.15);
+    box-shadow: 0 0 0 4px rgba(232,82,0,0.15);
   }
   input:focus-visible, textarea:focus-visible, select:focus-visible {
     outline: none; /* Box-shadow focus handled inline */
@@ -591,27 +611,27 @@ const GLOBAL_CSS = `
   }
   .tile:hover {
     transform: translateY(-5px) scale(1.014);
-    box-shadow: 0 24px 52px rgba(0,0,0,.65), 0 0 0 1px rgba(196,150,60,.45),
-                0 0 30px rgba(196,150,60,.08) !important;
-    border-color: rgba(196,150,60,.35) !important;
-    background: rgba(24,20,18,0.92) !important;
+    box-shadow: 0 24px 52px rgba(0,0,0,.55), 0 0 0 1px rgba(232,82,0,.45),
+                0 0 30px rgba(232,82,0,.10) !important;
+    border-color: rgba(232,82,0,.35) !important;
+    background: rgba(28,26,24,0.97) !important;
   }
   .wcard {
     transition: transform .16s cubic-bezier(.25,.46,.45,.94), box-shadow .16s, border-color .16s;
   }
   .wcard:hover {
     transform:translateY(-1px);
-    box-shadow: 0 4px 16px rgba(0,0,0,.3), 0 0 0 1px rgba(196,150,60,.30) !important;
-    border-left-color: rgba(196,150,60,.7) !important;
-    background: rgba(40,34,54,0.95) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,.3), 0 0 0 1px rgba(232,82,0,.30) !important;
+    border-left-color: rgba(232,82,0,.7) !important;
+    background: rgba(36,34,32,0.97) !important;
   }
   .wcard:hover .edit-ico { color:#9A9080 !important; }
   .wcard:active { transform:translateY(-1px) scale(.99); }
 
   .add-btn {
-    background: rgba(196,150,60,0.03);
-    border: 1.5px dashed rgba(196,150,60,0.18);
-    color: rgba(196,150,60,0.45);
+    background: rgba(232,82,0,0.03);
+    border: 1.5px dashed rgba(232,82,0,0.18);
+    color: rgba(232,82,0,0.45);
     padding: 9px;
     border-radius: 10px;
     font-family: var(--sans);
@@ -621,13 +641,13 @@ const GLOBAL_CSS = `
     width: 100%;
     transition: all .2s;
   }
-  .add-btn:hover { border-color:rgba(196,150,60,.5); color:#C4963C; background:rgba(196,150,60,.08); }
-  .att-btn:hover { border-color:rgba(196,150,60,.45) !important; color:#C4963C !important; background:rgba(196,150,60,.08) !important; }
+  .add-btn:hover { border-color:rgba(232,82,0,.5); color:#E85200; background:rgba(232,82,0,.08); }
+  .att-btn:hover { border-color:rgba(232,82,0,.45) !important; color:#E85200 !important; background:rgba(232,82,0,.08) !important; }
   .mv-btn:hover  { background:rgba(255,255,255,.07) !important; color:#EDE8DC !important; }
-  .ai-trigger:hover { background:rgba(196,150,60,.15) !important; }
+  .ai-trigger:hover { background:rgba(232,82,0,.15) !important; }
   /* ai-glow: use a pseudo-element with box-shadow + opacity animation (compositor-only, no repaint) */
-  .ai-glow { position:relative; box-shadow:0 0 20px rgba(196,150,60,.25), 0 0 50px rgba(196,150,60,.08); }
-  .ai-glow::after { content:''; position:absolute; inset:-1px; border-radius:inherit; box-shadow:0 0 24px rgba(196,150,60,.50), 0 0 60px rgba(196,150,60,.16); animation:glowPulse 3s ease-in-out infinite; pointer-events:none; }
+  .ai-glow { position:relative; box-shadow:0 0 20px rgba(232,82,0,.22), 0 0 50px rgba(232,82,0,.08); }
+  .ai-glow::after { content:''; position:absolute; inset:-1px; border-radius:inherit; box-shadow:0 0 24px rgba(232,82,0,.45), 0 0 60px rgba(232,82,0,.14); animation:glowPulse 3s ease-in-out infinite; pointer-events:none; }
 
   .spinner { animation:spin .7s linear infinite; }
   .toast   { animation:slideIn .32s cubic-bezier(.16,1,.3,1); }
@@ -638,7 +658,7 @@ const GLOBAL_CSS = `
   .orb-bg::before, .orb-bg::after, .orb-bg .orb3 { content:''; position:absolute; border-radius:50%; pointer-events:none; }
   .orb-bg::before {
     width:700px; height:700px; top:-120px; left:-180px;
-    background: radial-gradient(circle, rgba(196,150,60,0.10) 0%, transparent 65%);
+    background: radial-gradient(circle, rgba(232,82,0,0.08) 0%, transparent 65%);
     animation: orb1 22s ease-in-out infinite;
   }
   .orb-bg::after {
@@ -651,14 +671,14 @@ const GLOBAL_CSS = `
     background: rgba(10,9,8,0.84);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(196,150,60,0.12);
-    box-shadow: 0 8px 32px rgba(0,0,0,.4), inset 0 1px 0 rgba(196,150,60,0.05);
+    border: 1px solid rgba(232,82,0,0.10);
+    box-shadow: 0 8px 32px rgba(0,0,0,.4), inset 0 1px 0 rgba(232,82,0,0.04);
   }
   .glass-light {
     background: rgba(12,10,14,0.72);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(200,170,100,0.08);
+    border: 1px solid rgba(232,82,0,0.08);
   }
 
   /* .grad-text and .grad-accent removed — gradient text anti-pattern */
@@ -724,9 +744,9 @@ function PwdInput({ value, onChange, onKeyDown, placeholder, style, autoFocus, i
         placeholder={placeholder || "Contraseña…"}
         aria-label={placeholder || "Contraseña"}
         autoFocus={autoFocus}
-        style={{ background:"rgba(255,255,255,0.04)", border:"1.5px solid rgba(255,255,255,0.12)", color:T.ink, padding:"11px 44px 11px 14px", borderRadius:10, fontFamily:"var(--sans)", fontSize:14, width:"100%", outline:"none", transition:"border-color .2s, box-shadow .2s", ...style }}
-        onFocus={e => { e.target.style.borderColor = T.accent; e.target.style.boxShadow = "0 0 0 3px rgba(196,150,60,0.18)"; }}
-        onBlur={e => { e.target.style.borderColor = "rgba(255,255,255,0.12)"; e.target.style.boxShadow = "none"; }}
+        style={{ background:T.bgCard, border:`1.5px solid ${T.border2}`, color:T.ink, padding:"11px 44px 11px 14px", borderRadius:10, fontFamily:"var(--sans)", fontSize:14, width:"100%", outline:"none", transition:"border-color .2s, box-shadow .2s", ...style }}
+        onFocus={e => { e.target.style.borderColor = T.accent; e.target.style.boxShadow = `0 0 0 3px ${T.accentBg}`; }}
+        onBlur={e => { e.target.style.borderColor = T.border2; e.target.style.boxShadow = "none"; }}
       />
       <button
         type="button"
@@ -757,8 +777,8 @@ export default function App() {
   const [activeBoard, setActiveBoard] = useState(null);
   const [boardData, setBoardData]     = useState(null);
   const [themeId, setThemeIdRaw]      = useState(() => {
-    const stored = getL("mindstorm-theme", "dark");
-    return THEMES[stored] ? stored : "dark"; // fallback for old theme IDs (zen/neutral/sumer)
+    const stored = getL("mindstorm-theme", "estudio");
+    return THEMES[stored] ? stored : "estudio"; // fallback
   });
 
   const setThemeId = (id) => {
@@ -867,8 +887,8 @@ export default function App() {
 // ─── THEME SWITCHER ──────────────────────────────────────────────────────────
 function ThemeSwitcher() {
   const { themeId, setThemeId } = useTheme();
-  const swatches = { dark:"#C4963C", indigo:"#4338CA", bosque:"#15803D", aurora:"#7C3AED" };
-  const labels   = { dark:"Dark — modo nocturno", indigo:"Índigo — concentración profunda", bosque:"Bosque — flujo creativo", aurora:"Aurora — imaginación y síntesis" };
+  const swatches = { estudio:"#E85200", dark:"#F0EDE8", indigo:"#4338CA", bosque:"#15803D", aurora:"#7C3AED" };
+  const labels   = { estudio:"Estudio — luz editorial", dark:"Noche — oscuro refinado", indigo:"Índigo — concentración profunda", bosque:"Bosque — flujo creativo", aurora:"Aurora — imaginación y síntesis" };
   return (
     <div style={{ display:"flex", gap:7, alignItems:"center" }}>
       {Object.entries(THEMES).map(([id, th]) => (
@@ -917,7 +937,7 @@ function MindStormLogo({ size = "md" }) {
           <line key={i}
             x1={nodes[a].x} y1={nodes[a].y}
             x2={nodes[b].x} y2={nodes[b].y}
-            stroke="rgba(196,150,60,0.55)" strokeWidth={sw} strokeLinecap="round"/>
+            stroke="rgba(232,82,0,0.55)" strokeWidth={sw} strokeLinecap="round"/>
         ))}
         {/* Node rings */}
         {nodes.map((n,i) => (
@@ -935,13 +955,13 @@ function MindStormLogo({ size = "md" }) {
         <div>
           <div style={{ lineHeight:1, display:"flex", alignItems:"baseline", gap:0 }}>
             <span style={{ fontFamily:"var(--raj)", fontWeight:400, fontSize:c.fontSize,
-              color:"rgba(196,150,60,0.55)", letterSpacing:"0.12em", textTransform:"uppercase" }}>MIND</span>
+              color:"rgba(232,82,0,0.60)", letterSpacing:"0.12em", textTransform:"uppercase" }}>MIND</span>
             <span style={{ fontFamily:"var(--raj)", fontWeight:700, fontSize:c.fontSize,
               color:"var(--ink0)", letterSpacing:"0.06em", textTransform:"uppercase",
-              textShadow:"0 0 18px rgba(196,150,60,0.25)" }}>STORM</span>
+              textShadow:"0 0 18px rgba(232,82,0,0.20)" }}>STORM</span>
           </div>
           {c.tagSize > 0 && (
-            <div style={{ fontFamily:"var(--mono)", fontSize:c.tagSize, color:"rgba(196,150,60,0.35)", letterSpacing:"0.28em", marginTop:3, textTransform:"uppercase" }}>
+            <div style={{ fontFamily:"var(--mono)", fontSize:c.tagSize, color:"rgba(232,82,0,0.40)", letterSpacing:"0.28em", marginTop:3, textTransform:"uppercase" }}>
               THINK TOGETHER
             </div>
           )}
@@ -962,15 +982,15 @@ function JoinScreen({ onJoin }) {
       <div style={{ position:"absolute", top:16, right:20, zIndex:10 }}><ThemeSwitcher /></div>
       {/* Extra orb */}
       <div style={{ position:"absolute", width:400, height:400, top:"50%", left:"50%", transform:"translate(-50%,-50%)",
-        background:"radial-gradient(circle, rgba(196,150,60,0.08) 0%, transparent 70%)",
+        background:"radial-gradient(circle, rgba(232,82,0,0.07) 0%, transparent 70%)",
         borderRadius:"50%", pointerEvents:"none", animation:"orb3 15s ease-in-out infinite" }} />
       <div style={{ textAlign:"center", maxWidth:400, width:"100%", padding:"0 24px", position:"relative", zIndex:1 }}>
         <div style={{ display:"flex", justifyContent:"center", marginBottom:36 }}>
           <MindStormLogo size="md" />
         </div>
-        <div style={{ background:"rgba(10,9,8,0.90)", border:"1px solid rgba(196,150,60,0.20)",
+        <div style={{ background:"rgba(20,18,16,0.92)", border:"1px solid rgba(232,82,0,0.18)",
           borderRadius:22, padding:"34px 30px", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)",
-          boxShadow:"0 40px 100px rgba(0,0,0,.6), 0 0 0 1px rgba(196,150,60,0.08), inset 0 1px 0 rgba(255,255,255,0.07)" }}>
+          boxShadow:"0 40px 100px rgba(0,0,0,.55), 0 0 0 1px rgba(232,82,0,0.07), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
           <p style={{ color:T.ink3, fontSize:14, marginBottom:20, lineHeight:1.5 }}>
             Elige tu nombre para comenzar
           </p>
@@ -1169,16 +1189,16 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
 
 function Sidebar({ user, boards, onOpen, onSignOut }) {
   return (
-    <div style={{ width:230, background:"rgba(10,9,8,0.94)", borderRight:"1px solid rgba(196,150,60,0.10)",
+    <div style={{ width:230, background:"rgba(20,18,16,0.97)", borderRight:"1px solid rgba(232,82,0,0.12)",
       padding:"20px 12px", display:"flex", flexDirection:"column", flexShrink:0,
       backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)",
-      boxShadow:"2px 0 20px rgba(0,0,0,.3)" }}>
+      boxShadow:"2px 0 24px rgba(0,0,0,.35)" }}>
       <div style={{ padding:"8px 8px 4px", marginBottom:18 }}>
         <MindStormLogo size="sm" />
       </div>
       <SideItem icon="🏠" label="Inicio" active />
-      <div style={{ height:1, background:"rgba(196,150,60,0.08)", margin:"10px 0" }} />
-      <div style={{ color:"rgba(196,150,60,0.35)", fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.18em", padding:"4px 10px", marginBottom:4, textTransform:"uppercase" }}>// Proyectos</div>
+      <div style={{ height:1, background:"rgba(232,82,0,0.10)", margin:"10px 0" }} />
+      <div style={{ color:"rgba(232,82,0,0.40)", fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.18em", padding:"4px 10px", marginBottom:4, textTransform:"uppercase" }}>// Proyectos</div>
       {boards.slice(0,10).map(b => {
         const cat = CATEGORIES.find(c => c.id===b.categoryId) || CATEGORIES[6];
         return (
@@ -1196,11 +1216,11 @@ function Sidebar({ user, boards, onOpen, onSignOut }) {
         );
       })}
       <div style={{ flex:1 }} />
-      <div style={{ borderTop:"1px solid rgba(196,150,60,0.08)", paddingTop:12 }}>
+      <div style={{ borderTop:"1px solid rgba(232,82,0,0.10)", paddingTop:12 }}>
         <div style={{ display:"flex", alignItems:"center", gap:9, padding:"4px 10px 10px" }}>
           <div style={{ width:26, height:26, borderRadius:4,
-            background:`linear-gradient(135deg,rgba(196,150,60,0.22),rgba(196,150,60,0.07))`,
-            border:"1px solid rgba(196,150,60,0.28)",
+            background:`linear-gradient(135deg,rgba(232,82,0,0.22),rgba(232,82,0,0.08))`,
+            border:"1px solid rgba(232,82,0,0.30)",
             display:"flex", alignItems:"center", justifyContent:"center",
             fontFamily:"var(--raj)", fontSize:13, fontWeight:700, color:"var(--mc)", flexShrink:0 }}>
             {user.name[0].toUpperCase()}
@@ -1238,7 +1258,7 @@ function BoardTile({ board, onOpen, onDeleteRequest, onExport, exporting }) {
       role="button" tabIndex={0}
       aria-label={`Abrir proyecto: ${board.name}`}
       onKeyDown={e => (e.key==="Enter"||e.key===" ") && onOpen(board)}
-      style={{ background:"rgba(14,12,18,0.88)", border:`1px solid ${cat.color}38`,
+      style={{ background:"rgba(20,18,16,0.90)", border:`1px solid ${cat.color}38`,
         borderRadius:10, padding:"16px 18px 14px",
         position:"relative", overflow:"hidden",
         boxShadow:`0 2px 16px rgba(0,0,0,.4), 0 0 0 1px ${cat.color}10`,
@@ -1260,7 +1280,7 @@ function BoardTile({ board, onOpen, onDeleteRequest, onExport, exporting }) {
             className="hud-btn"
             style={{ padding:"2px 7px", fontSize:10, letterSpacing:".08em" }}
             onMouseEnter={e => { e.currentTarget.style.color=T.green; e.currentTarget.style.borderColor=T.green+"55"; }}
-            onMouseLeave={e => { e.currentTarget.style.color="var(--ink1)"; e.currentTarget.style.borderColor="rgba(196,150,60,0.22)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color="var(--ink1)"; e.currentTarget.style.borderColor="rgba(232,82,0,0.18)"; }}
           >{exporting === board.id ? "…" : "↓"}</button>
           <button
             onClick={e => { e.stopPropagation(); onDeleteRequest(board); }}
@@ -1268,7 +1288,7 @@ function BoardTile({ board, onOpen, onDeleteRequest, onExport, exporting }) {
             className="hud-btn"
             style={{ padding:"2px 7px", fontSize:10, letterSpacing:".08em" }}
             onMouseEnter={e => { e.currentTarget.style.color=T.rose; e.currentTarget.style.borderColor=T.rose+"55"; }}
-            onMouseLeave={e => { e.currentTarget.style.color="var(--ink1)"; e.currentTarget.style.borderColor="rgba(196,150,60,0.22)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color="var(--ink1)"; e.currentTarget.style.borderColor="rgba(232,82,0,0.18)"; }}
           >✕</button>
         </div>
       </div>
@@ -1301,15 +1321,15 @@ function SideItem({ icon, label, active }) {
   return (
     <button style={{
       background: active
-        ? "linear-gradient(90deg,rgba(196,150,60,0.10),transparent)"
+        ? "linear-gradient(90deg,rgba(232,82,0,0.12),transparent)"
         : "transparent",
-      border: active ? "1px solid rgba(196,150,60,0.18)" : "1px solid transparent",
+      border: active ? "1px solid rgba(232,82,0,0.20)" : "1px solid transparent",
       textAlign:"left", padding:"8px 12px", borderRadius:6, cursor:"pointer",
       color: active ? "var(--mc)" : "var(--ink2)", fontFamily:"var(--raj)",
       fontSize:13, fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase",
       display:"flex", alignItems:"center", gap:10, width:"100%", transition:"all .15s",
       boxShadow: active ? "inset 3px 0 0 var(--mc)" : "none" }}
-      onMouseEnter={e => { if(!active){ e.currentTarget.style.background="rgba(196,150,60,0.06)"; e.currentTarget.style.color="var(--ink0)"; } }}
+      onMouseEnter={e => { if(!active){ e.currentTarget.style.background="rgba(232,82,0,0.07)"; e.currentTarget.style.color="var(--ink0)"; } }}
       onMouseLeave={e => { if(!active){ e.currentTarget.style.background="transparent"; e.currentTarget.style.color="var(--ink2)"; } }}>
       <span style={{ fontFamily:"var(--mono)", fontSize:11, opacity:.7, width:14, textAlign:"center" }}>{icon}</span>
       <span>{label}</span>
@@ -1588,27 +1608,27 @@ function CreateBoardModal({ onClose, onCreate }) {
   }
 
   const selectStyle = {
-    background:"rgba(255,255,255,0.04)", border:"1.5px solid rgba(255,255,255,0.12)",
+    background:T.bgCard, border:`1.5px solid ${T.border2}`,
     color:T.ink, padding:"10px 13px", borderRadius:10, fontFamily:"var(--sans)",
     fontSize:13, width:"100%", outline:"none", cursor:"pointer",
   };
 
   return (
     <OOverlay onClose={onClose}>
-      <div style={{ background:"rgba(14,14,32,0.95)", border:"1px solid rgba(255,255,255,0.1)",
+      <div style={{ background:T.bgPanel, border:`1px solid ${T.border2}`,
         borderRadius:18, width:"100%", maxWidth:560, maxHeight:"92vh", overflowY:"auto",
-        boxShadow:"0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(196,150,60,0.08)",
+        boxShadow:`0 30px 80px rgba(0,0,0,.5), 0 0 0 1px ${T.accent}08`,
         backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)",
         animation:"scaleIn .22s ease" }}>
 
         {/* Header */}
-        <div style={{ padding:"22px 26px 18px", borderBottom:"1px solid rgba(255,255,255,0.07)",
+        <div style={{ padding:"22px 26px 18px", borderBottom:`1px solid ${T.border}`,
           display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <div>
-            <h2 style={{ fontFamily:"var(--raj)", fontWeight:700, fontSize:22, letterSpacing:"0.06em", textTransform:"uppercase", color:"var(--ink0)", marginBottom:2 }}>Nuevo proyecto</h2>
+            <h2 style={{ fontFamily:"var(--raj)", fontWeight:700, fontSize:22, letterSpacing:"0.06em", textTransform:"uppercase", color:T.ink, marginBottom:2 }}>Nuevo proyecto</h2>
             <p style={{ color:T.ink4, fontSize:12, fontFamily:"var(--mono)" }}>Completa los campos y lanza</p>
           </div>
-          <button onClick={onClose} style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", color:T.ink3, width:32, height:32, borderRadius:8, cursor:"pointer", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center", transition:"all .15s" }}
+          <button onClick={onClose} style={{ background:T.bgHover, border:`1px solid ${T.border}`, color:T.ink3, width:32, height:32, borderRadius:8, cursor:"pointer", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center", transition:"all .15s" }}
             onMouseEnter={e=>e.currentTarget.style.color=T.rose}
             onMouseLeave={e=>e.currentTarget.style.color=T.ink3}>×</button>
         </div>
@@ -1954,12 +1974,12 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
         <div className="toast" style={{ position:"fixed", bottom:28, left:"50%", transform:"translateX(-50%)",
           background:"rgba(10,10,24,0.97)", color:T.ink, padding:"14px 22px", borderRadius:14, display:"flex",
           gap:14, alignItems:"center", zIndex:999,
-          boxShadow:"0 16px 48px rgba(0,0,0,.6), 0 0 0 1px rgba(196,150,60,0.20), inset 0 1px 0 rgba(255,255,255,0.07)",
-          backdropFilter:"blur(14px)", border:"1px solid rgba(196,150,60,0.15)", fontSize:13 }}>
+          boxShadow:"0 16px 48px rgba(0,0,0,.5), 0 0 0 1px rgba(232,82,0,0.18), inset 0 1px 0 rgba(255,255,255,0.06)",
+          backdropFilter:"blur(14px)", border:"1px solid rgba(232,82,0,0.14)", fontSize:13 }}>
           <span>{toast.msg}</span>
           {toast.undoFn && (
             <button onClick={() => { toast.undoFn(); setToast(null); }}
-              style={{ background:"linear-gradient(135deg,#D8A848,#B07828)", border:"none", color:"#1A1208",
+              style={{ background:"linear-gradient(135deg,#F06020,#CC4000)", border:"none", color:"#FFFFFF",
                 padding:"5px 14px", borderRadius:7, cursor:"pointer", fontSize:12, fontWeight:700 }}>
               Deshacer
             </button>
@@ -2038,7 +2058,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               ←
             </button>
 
-            <div style={{ width:24, height:1, background:"rgba(200,170,100,0.10)", margin:"4px 0" }} />
+            <div style={{ width:24, height:1, background:"rgba(232,82,0,0.10)", margin:"4px 0" }} />
 
             <button onClick={() => setViewMode("kanban")} title="Vista Kanban"
               style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
@@ -2062,7 +2082,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               ◯
             </button>
 
-            <div style={{ width:24, height:1, background:"rgba(200,170,100,0.10)", margin:"4px 0" }} />
+            <div style={{ width:24, height:1, background:"rgba(232,82,0,0.10)", margin:"4px 0" }} />
 
             <button onClick={() => setConnPanel(true)} title={`Conexiones${pendingConns.length>0?" ("+pendingConns.length+" pendientes)":""}`}
               style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer", position:"relative",
@@ -2085,16 +2105,16 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
             <button onClick={() => setAiPanel(true)} title="Análisis IA"
               className="ai-glow"
               style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
-                background:"linear-gradient(135deg,rgba(196,150,60,0.18),rgba(60,184,122,0.08))",
+                background:"linear-gradient(135deg,rgba(232,82,0,0.16),rgba(61,170,108,0.08))",
                 color:T.accent,
                 fontSize:15, display:"flex", alignItems:"center", justifyContent:"center",
                 transition:"all .15s" }}
-              onMouseEnter={e => { e.currentTarget.style.background="rgba(196,150,60,0.25)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background="linear-gradient(135deg,rgba(196,150,60,0.18),rgba(60,184,122,0.08))"; }}>
+              onMouseEnter={e => { e.currentTarget.style.background="rgba(232,82,0,0.24)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background="linear-gradient(135deg,rgba(232,82,0,0.16),rgba(61,170,108,0.08))"; }}>
               ✦
             </button>
 
-            <div style={{ width:24, height:1, background:"rgba(200,170,100,0.10)", margin:"4px 0" }} />
+            <div style={{ width:24, height:1, background:"rgba(232,82,0,0.10)", margin:"4px 0" }} />
 
             <button onClick={() => setDocPanel(true)} title="Documento"
               style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
@@ -2134,7 +2154,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
             )}
 
             <div style={{ flex:1 }} />
-            <div style={{ width:24, height:1, background:"rgba(200,170,100,0.10)", margin:"4px 0" }} />
+            <div style={{ width:24, height:1, background:"rgba(232,82,0,0.10)", margin:"4px 0" }} />
 
             <button onClick={() => setKeyModal(true)} title={getAIKey() ? "IA conectada — cambiar clave" : "Conectar IA"}
               style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
@@ -2286,7 +2306,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                       onDragLeave={() => setDragOver(null)}
                       onDrop={async e => { e.preventDefault(); if (dragCard) await moveCard(dragCard, col.id); setDragOver(null); setDragCard(null); }}
                       style={{ width:isMobile?"100%":258, flexShrink:0,
-                        background:isOver?`rgba(196,150,60,0.05)`:T.bgPanel,
+                        background:isOver?T.accentBg:T.bgPanel,
                         borderRadius:12,
                         border:`1px solid ${isOver?col.color+"55":col.color+"20"}`,
                         boxShadow:isOver?`0 0 0 1px ${col.color}30, 0 8px 24px rgba(0,0,0,.25)`:`0 2px 12px rgba(0,0,0,.20)`,
@@ -2951,8 +2971,8 @@ function AddForm({ col, onAdd, onCancel }) {
   }
 
   return (
-    <div style={{ background:"rgba(14,12,18,0.92)", border:"1.5px solid rgba(196,150,60,0.30)",
-      borderRadius:12, padding:"14px", boxShadow:"0 8px 32px rgba(0,0,0,.4), 0 0 0 1px rgba(196,150,60,0.08)",
+    <div style={{ background:T.bgPanel, border:`1.5px solid ${T.accent}30`,
+      borderRadius:12, padding:"14px", boxShadow:`0 8px 32px rgba(0,0,0,.3), 0 0 0 1px ${T.accent}08`,
       backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)" }}>
       <OInput placeholder="Título *" value={title} onChange={e=>setTitle(e.target.value)} style={{ marginBottom:9 }} autoFocus />
       <OTextarea placeholder="Descripción…" value={body} onChange={e=>setBody(e.target.value)} rows={2} style={{ marginBottom:9 }} />
@@ -3574,9 +3594,9 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
 
   return (
     <div style={{ position:"fixed", inset:0, background:"rgba(0,0,5,.65)", display:"flex", alignItems:"flex-end", justifyContent:"flex-end", zIndex:200, WebkitBackdropFilter:"blur(8px)", backdropFilter:"blur(8px)", padding:20 }}>
-      <div style={{ background:"rgba(12,10,15,0.95)", border:"1px solid rgba(196,150,60,0.18)",
+      <div style={{ background:T.bgPanel, border:`1px solid rgba(232,82,0,0.18)`,
         borderRadius:16, width:"100%", maxWidth:530, maxHeight:"90vh", display:"flex", flexDirection:"column",
-        boxShadow:"0 30px 80px rgba(0,0,0,.6), 0 0 40px rgba(196,150,60,0.06)",
+        boxShadow:"0 30px 80px rgba(0,0,0,.55), 0 0 40px rgba(232,82,0,0.06)",
         backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)",
         animation:"slideIn .3s cubic-bezier(.16,1,.3,1)" }}>
         <div style={{ padding:"17px 20px 14px", borderBottom:"1px solid rgba(255,255,255,0.07)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
@@ -3591,7 +3611,7 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
           </div>
           <OGhostBtn small onClick={onClose}>× Cerrar</OGhostBtn>
         </div>
-        <div style={{ background:"rgba(196,150,60,0.05)", borderBottom:"1px solid rgba(196,150,60,0.10)", padding:"10px 18px", display:"flex", gap:8 }}>
+        <div style={{ background:T.accentBg, borderBottom:`1px solid ${T.accent}14`, padding:"10px 18px", display:"flex", gap:8 }}>
           <span style={{ color:T.accent, fontSize:13, flexShrink:0 }}>ℹ</span>
           <p style={{ color:T.ink3, fontSize:12, lineHeight:1.5 }}>Las conexiones se guardan permanentemente. Las aprobadas muestran 🔗 en las tarjetas.</p>
         </div>
@@ -3612,7 +3632,7 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
           )}
           {status==="none" && <div style={{ background:T.amberBg, border:"1px solid "+T.amber+"44", borderRadius:8, padding:"12px", color:T.amber, fontSize:13, marginBottom:14 }}>No se encontraron conexiones nuevas significativas.</div>}
           {status==="rate_limit" && (
-            <div style={{ background:"rgba(196,150,60,0.08)", border:"1px solid rgba(196,150,60,0.30)", borderRadius:8, padding:"12px 14px", marginBottom:14, display:"flex", alignItems:"center", gap:10 }}>
+            <div style={{ background:T.amberBg, border:`1px solid ${T.amber}44`, borderRadius:8, padding:"12px 14px", marginBottom:14, display:"flex", alignItems:"center", gap:10 }}>
               <div style={{ flex:1 }}>
                 <div style={{ color:T.amber, fontSize:13, fontWeight:600, marginBottom:3 }}>⏳ Límite por minuto alcanzado</div>
                 <div style={{ color:T.ink3, fontFamily:"var(--mono)", fontSize:11 }}>El botón se reactiva automáticamente en {countdown}s.</div>
@@ -3747,7 +3767,7 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
             </div>
           )}
           {status==="rate_limit" && (
-            <div style={{ background:"rgba(196,150,60,0.08)", border:"1px solid rgba(196,150,60,0.30)", borderRadius:12, padding:"20px", textAlign:"center", marginBottom:14 }}>
+            <div style={{ background:T.amberBg, border:`1px solid ${T.amber}44`, borderRadius:12, padding:"20px", textAlign:"center", marginBottom:14 }}>
               <div style={{ color:T.accent, fontWeight:700, fontSize:14, marginBottom:6 }}>⏳ Límite por minuto</div>
               <div style={{ color:T.ink3, fontSize:12, lineHeight:1.55, marginBottom:16 }}>El botón se reactiva automáticamente.</div>
               <div style={{ color:T.accent, fontFamily:"var(--mono)", fontSize:28, fontWeight:900, marginBottom:4 }}>{countdown}</div>
@@ -4157,7 +4177,7 @@ const NODE_GOLD_BRIGHT = "#FDE68A";   // bright center glow
 const NODE_GOLD_DIM    = "#92400E";   // subtle border when idle
 // Per-type accent — Navigator palette family
 const NODE_PASTEL_BG = { tarea:"#0C1020", idea:"#121008", pregunta:"#090E1A", referencia:"#081410", bloqueo:"#130810" };
-const NODE_PASTEL_BD = { tarea:"#7C6AE8", idea:"#C88838", pregunta:"#C4963C", referencia:"#3CB87A", bloqueo:"#C04870" };
+const NODE_PASTEL_BD = { tarea:"#7C6AE8", idea:"#C88838", pregunta:"#E85200", referencia:"#3CB87A", bloqueo:"#C04870" };
 const NODE_PASTEL_IC = { tarea:"#A898F0", idea:"#E0AB60", pregunta:"#84AEF8", referencia:"#68D4A0", bloqueo:"#DC7898" };
 const NODE_ICONS     = { tarea:"✦", idea:"💡", pregunta:"?", referencia:"◎", bloqueo:"⚡" };
 
@@ -4620,7 +4640,7 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
     <div ref={containerRef}
       style={{position:"relative",flex:1,overflow:"hidden",cursor:"grab",touchAction:"none",
         background: isMicelioMode
-          ? "radial-gradient(circle at 50% 50%, rgba(196,150,60,0.06), transparent 65%), #0A0908"
+          ? "radial-gradient(circle at 50% 50%, rgba(232,82,0,0.06), transparent 65%), #141210"
           : T.bg,
         backgroundImage: isMicelioMode
           ? "linear-gradient(rgba(255,255,255,0.055) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.055) 1px,transparent 1px)"
@@ -4651,7 +4671,7 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
         fontFamily:"var(--mono)",fontSize:10,letterSpacing:".13em",
         color: isMicelioMode ? "#7d8e99" : "#64748B",
         background: isMicelioMode ? "rgba(15,22,28,0.92)" : "rgba(255,255,255,0.82)",
-        border: isMicelioMode ? "1px solid rgba(196,150,60,0.18)" : "1px solid rgba(0,0,0,0.1)",
+        border: isMicelioMode ? "1px solid rgba(232,82,0,0.16)" : "1px solid rgba(0,0,0,0.1)",
         backdropFilter:"blur(8px)",padding:"8px 12px",lineHeight:1.7,pointerEvents:"none"}}>
         <div style={{color: isMicelioMode ? "var(--mc)" : T.accent,fontWeight:700}}>
           ZOOM · {zoomPct}%
@@ -4703,7 +4723,7 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
             const mcColor = conn.type==="contraste" ? "#C88838"
               : conn.type==="refuerza" ? "#3CB87A"
               : conn.type==="secuencia" ? "#C88838"
-              : "#C4963C"; // complementa + default = navigator blue
+              : "#E85200"; // complementa + default = orange
             const isMicelio = layoutMode==="micelio";
             return (
               <g key={conn.id}>
@@ -4859,7 +4879,7 @@ function CanvasCardNode({ card, p, tc, col, cc, sc, isOwner, onEditCard, onMouse
 // ── Micelio card node — Mycelium rectangular sci-fi style ─────────────────────
 function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchStart }) {
   const [expanded, setExpanded] = useState(false);
-  const pbd = NODE_PASTEL_BD[card.type] || "#C4963C";
+  const pbd = NODE_PASTEL_BD[card.type] || "#E85200";
   const ico = NODE_ICONS[card.type] || "◈";
   const colColor = col?.color || "#6B7280";
   const isBase = card.col === "listo"; // visually highlight finished cards
@@ -4911,7 +4931,7 @@ function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchSta
       {/* Collapsed badge row */}
       {!expanded && (cc > 0 || sc > 0) && (
         <div style={{ display:"flex", gap:4, padding:"3px 10px 5px",
-          borderTop:"1px dashed rgba(196,150,60,0.08)" }}>
+          borderTop:"1px dashed rgba(232,82,0,0.08)" }}>
           {cc > 0 && (
             <span style={{ fontFamily:"var(--mono)", fontSize:9,
               color:"var(--ink3)", letterSpacing:".06em" }}>💬 {cc}</span>
@@ -5312,48 +5332,46 @@ function FamilyTreeSVG({ personajes, relaciones }) {
 function OInput({ style, ...props }) {
   return (
     <input {...props}
-      style={{ background:"rgba(255,255,255,0.04)", border:"1.5px solid rgba(255,255,255,0.1)", color:T.ink,
+      style={{ background:T.bgCard, border:`1.5px solid ${T.border2}`, color:T.ink,
         padding:"11px 14px", borderRadius:10, fontFamily:"var(--sans)", fontSize:14, width:"100%",
-        outline:"none", transition:"border-color .2s, box-shadow .2s",
-        boxShadow:"inset 0 2px 4px rgba(0,0,0,.2)", ...style }}
-      onFocus={e => { e.target.style.borderColor = T.accent; e.target.style.boxShadow = `0 0 0 3px rgba(196,150,60,0.18), inset 0 2px 4px rgba(0,0,0,.15)`; }}
-      onBlur={e  => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; e.target.style.boxShadow = "inset 0 2px 4px rgba(0,0,0,.2)"; }}
+        outline:"none", transition:"border-color .2s, box-shadow .2s", ...style }}
+      onFocus={e => { e.target.style.borderColor = T.accent; e.target.style.boxShadow = `0 0 0 3px ${T.accentBg}`; }}
+      onBlur={e  => { e.target.style.borderColor = T.border2; e.target.style.boxShadow = "none"; }}
     />
   );
 }
 function OTextarea({ style, ...props }) {
   return (
     <textarea {...props}
-      style={{ background:"rgba(255,255,255,0.04)", border:"1.5px solid rgba(255,255,255,0.12)", color:T.ink,
+      style={{ background:T.bgCard, border:`1.5px solid ${T.border2}`, color:T.ink,
         padding:"11px 14px", borderRadius:10, fontFamily:"var(--mono)", fontSize:13, width:"100%",
         outline:"none", resize:"vertical", lineHeight:1.55, transition:"border-color .2s, box-shadow .2s", ...style }}
-      onFocus={e => { e.target.style.borderColor = T.accent; e.target.style.boxShadow = `0 0 0 3px rgba(196,150,60,0.18)`; }}
-      onBlur={e  => { e.target.style.borderColor = "rgba(255,255,255,0.12)"; e.target.style.boxShadow = "none"; }}
+      onFocus={e => { e.target.style.borderColor = T.accent; e.target.style.boxShadow = `0 0 0 3px ${T.accentBg}`; }}
+      onBlur={e  => { e.target.style.borderColor = T.border2; e.target.style.boxShadow = "none"; }}
     />
   );
 }
 function OBtn({ children, full, small, disabled, onClick }) {
   const base = {
-    background: disabled ? "rgba(255,255,255,0.04)" : "linear-gradient(135deg,#D8A848 0%,#B07828 100%)",
-    color: disabled ? T.ink4 : "#1A1208",
-    border: disabled ? "1px solid rgba(200,170,100,0.12)" : "none",
+    background: disabled ? "rgba(255,255,255,0.06)" : "linear-gradient(135deg,#F06020 0%,#CC4000 100%)",
+    color: disabled ? T.ink4 : "#FFFFFF",
+    border: disabled ? "1px solid rgba(255,255,255,0.10)" : "none",
     padding: small ? "7px 14px" : "11px 22px",
     borderRadius: 8,
     fontFamily: "var(--raj)",
     fontWeight: 700,
     fontSize: small ? 12 : 14,
-    letterSpacing: "0.06em",
+    letterSpacing: "0.01em",
     textTransform: "uppercase",
     cursor: disabled ? "default" : "pointer",
-    boxShadow: disabled ? "none" : "0 4px 18px rgba(196,150,60,0.40), inset 0 1px 0 rgba(255,255,255,0.18)",
+    boxShadow: disabled ? "none" : "0 4px 18px rgba(232,82,0,0.38), inset 0 1px 0 rgba(255,255,255,0.15)",
     width: full ? "100%" : "auto",
     transition: "opacity .15s, box-shadow .2s, transform .15s",
-    letterSpacing: "0.01em",
   };
   return (
     <button onClick={onClick} disabled={disabled} style={base}
-      onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background="linear-gradient(135deg,#E8BC60 0%,#C48A30 100%)"; e.currentTarget.style.boxShadow="0 8px 28px rgba(196,150,60,0.55), 0 0 20px rgba(196,150,60,0.20), inset 0 1px 0 rgba(255,255,255,0.22)"; e.currentTarget.style.transform="translateY(-2px)"; }}}
-      onMouseLeave={e => { e.currentTarget.style.background=disabled?"rgba(255,255,255,0.04)":"linear-gradient(135deg,#D8A848 0%,#B07828 100%)"; e.currentTarget.style.boxShadow=disabled?"none":"0 4px 18px rgba(196,150,60,0.40), inset 0 1px 0 rgba(255,255,255,0.18)"; e.currentTarget.style.transform="translateY(0)"; }}>
+      onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background="linear-gradient(135deg,#FF7030 0%,#E05000 100%)"; e.currentTarget.style.boxShadow="0 8px 28px rgba(232,82,0,0.52), 0 0 20px rgba(232,82,0,0.18), inset 0 1px 0 rgba(255,255,255,0.22)"; e.currentTarget.style.transform="translateY(-2px)"; }}}
+      onMouseLeave={e => { e.currentTarget.style.background=disabled?"rgba(255,255,255,0.06)":"linear-gradient(135deg,#F06020 0%,#CC4000 100%)"; e.currentTarget.style.boxShadow=disabled?"none":"0 4px 18px rgba(232,82,0,0.38), inset 0 1px 0 rgba(255,255,255,0.15)"; e.currentTarget.style.transform="translateY(0)"; }}>
       {children}
     </button>
   );
@@ -5361,12 +5379,12 @@ function OBtn({ children, full, small, disabled, onClick }) {
 function OGhostBtn({ children, small, full, onClick }) {
   return (
     <button onClick={onClick}
-      style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.13)", color:T.ink3,
+      style={{ background:T.bgHover, border:`1px solid ${T.border2}`, color:T.ink3,
         padding:small?"6px 12px":"9px 18px", borderRadius:10, fontFamily:"var(--sans)",
         fontSize:small?12:13, cursor:"pointer", width:full?"100%":"auto", transition:"all .15s",
         fontWeight:500 }}
-      onMouseEnter={e => { e.currentTarget.style.background="rgba(255,255,255,0.09)"; e.currentTarget.style.color=T.ink; e.currentTarget.style.borderColor="rgba(255,255,255,0.25)"; e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,.2)"; }}
-      onMouseLeave={e => { e.currentTarget.style.background="rgba(255,255,255,0.04)"; e.currentTarget.style.color=T.ink3; e.currentTarget.style.borderColor="rgba(255,255,255,0.13)"; e.currentTarget.style.boxShadow="none"; }}>
+      onMouseEnter={e => { e.currentTarget.style.background=T.bgCard; e.currentTarget.style.color=T.ink; e.currentTarget.style.borderColor=T.border2; e.currentTarget.style.boxShadow=`0 2px 8px rgba(0,0,0,.12)`; }}
+      onMouseLeave={e => { e.currentTarget.style.background=T.bgHover; e.currentTarget.style.color=T.ink3; e.currentTarget.style.borderColor=T.border2; e.currentTarget.style.boxShadow="none"; }}>
       {children}
     </button>
   );
