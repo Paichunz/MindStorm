@@ -238,63 +238,65 @@ async function callAI(system, userMessages, maxTokens = 1200) {
     ? (userMessages[userMessages.length - 1]?.content || "")
     : userMessages;
 
-  // Model pool — tried in order. On 429 rate limit, each model gets one
-  // retry after a short pause before moving to the next fallback.
+  // Model pool — only models confirmed available on v1beta/generateContent.
+  // On 429, wait and retry the same model once before moving to the next.
   const models = [
-    GEMINI_MODEL,             // gemini-2.0-flash       — primary
-    "gemini-2.0-flash-lite",  // lighter, higher RPM limit
-    "gemini-1.5-flash-8b",    // 8B, separate quota pool
-    "gemini-1.5-flash",       // classic flash, separate quota
+    GEMINI_MODEL,            // gemini-2.0-flash       — primary (15 RPM free)
+    "gemini-2.0-flash-lite", // lighter, higher RPM (30 RPM free)
   ];
   let lastErr = null;
 
   for (const model of models) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-    let res;
-    try {
-      res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: system }] },
-          contents: [{ role:"user", parts:[{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 },
-        }),
-      });
-    } catch (networkErr) {
-      // fetch() threw — real network/CORS failure
-      throw Object.assign(new Error("CONNECTION_ERROR"), { code:"API_ERROR",
-        detail: "Sin conexión a internet o error de red." });
-    }
 
-    if (res.ok) {
-      const d = await res.json();
-      return d.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("") || "";
-    }
+    // Each model gets up to 2 attempts (immediate + one retry after pause)
+    for (let attempt = 0; attempt < 2; attempt++) {
+      let res;
+      try {
+        res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: system }] },
+            contents: [{ role:"user", parts:[{ text: prompt }] }],
+            generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 },
+          }),
+        });
+      } catch {
+        throw Object.assign(new Error("CONNECTION_ERROR"), { code:"API_ERROR",
+          detail: "Sin conexión a internet o error de red." });
+      }
 
-    const errBody = await res.json().catch(() => ({}));
-    const msg = errBody?.error?.message || "";
+      if (res.ok) {
+        const d = await res.json();
+        return d.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("") || "";
+      }
 
-    if (res.status === 403 || (res.status === 400 && /api.key|invalid.key/i.test(msg))) {
-      throw Object.assign(new Error("INVALID_KEY"), { code:"INVALID_KEY" });
-    }
-    // 429 = rate limited → brief pause, then try next model in pool
-    if (res.status === 429) {
-      lastErr = "rate_limit";
-      await new Promise(r => setTimeout(r, 1500));
-      continue;
-    }
-    // 404 = model not found → try fallback
-    if (res.status === 404) { lastErr = msg || "model_not_found"; continue; }
+      const errBody = await res.json().catch(() => ({}));
+      const msg = errBody?.error?.message || "";
 
-    throw Object.assign(new Error("API_ERROR"), { code:"API_ERROR",
-      detail: msg || `Error ${res.status}` });
+      if (res.status === 403 || (res.status === 400 && /api.key|invalid.key/i.test(msg))) {
+        throw Object.assign(new Error("INVALID_KEY"), { code:"INVALID_KEY" });
+      }
+      if (res.status === 429) {
+        lastErr = "rate_limit";
+        // On first attempt: wait 8s and retry same model
+        if (attempt === 0) { await new Promise(r => setTimeout(r, 8000)); continue; }
+        // On second attempt: move to next model
+        break;
+      }
+      // Any other error (404, 500…): move to next model immediately
+      lastErr = msg || `error_${res.status}`;
+      break;
+    }
   }
 
-  const detail = lastErr === "rate_limit"
-    ? "Límite de peticiones en todos los modelos. Espera unos segundos e intenta de nuevo."
-    : lastErr || "Modelo no disponible.";
-  throw Object.assign(new Error("API_ERROR"), { code:"API_ERROR", detail });
+  if (lastErr === "rate_limit") {
+    throw Object.assign(new Error("RATE_LIMIT"), { code:"RATE_LIMIT",
+      detail: "Cupo del minuto agotado. Espera unos segundos e intenta de nuevo — la IA sigue funcionando." });
+  }
+  throw Object.assign(new Error("API_ERROR"), { code:"API_ERROR",
+    detail: lastErr || "Modelo no disponible." });
 }
 
 // Small reusable key-setup widget rendered inside AI panels when no key exists
