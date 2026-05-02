@@ -364,12 +364,7 @@ function getThemeCSS(id) {
       background:rgba(255,255,255,0.65) !important;
       border-color:${t.border} !important;
     }
-    .grad-text {
-      background:linear-gradient(135deg,${t.accent},${t.blue}) !important;
-      -webkit-background-clip:text !important;
-      -webkit-text-fill-color:transparent !important;
-      background-clip:text !important;
-    }
+    /* .grad-text removed */
     .ai-glow {
       animation:none !important;
       border-color:${t.accent}55 !important;
@@ -581,13 +576,7 @@ const GLOBAL_CSS = `
     border: 1px solid rgba(255,255,255,0.08);
   }
 
-  /* Gradient text */
-  .grad-text {
-    background: linear-gradient(135deg,#9B6DFF 0%,#5AAFFF 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
+  /* .grad-text removed — gradient text is decorative and not meaningful */
   .grad-accent {
     background: linear-gradient(135deg,#9B6DFF,#7C3AED);
     background-size: 200% 200%;
@@ -1009,7 +998,7 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
         <div style={{ maxWidth: isMobile ? "100%" : 860 }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18, flexWrap:"wrap", gap:10 }}>
             <div>
-              <h2 className="grad-text" style={{ fontWeight:900, fontSize:isMobile?22:26, marginBottom:3, letterSpacing:"-0.03em" }}>Proyectos</h2>
+              <h2 style={{ fontFamily:"var(--raj)", fontWeight:700, fontSize:isMobile?22:26, marginBottom:3, letterSpacing:"0.06em", textTransform:"uppercase", color:"var(--ink0)" }}>Proyectos</h2>
               <p style={{ color:T.ink4, fontSize:13, fontFamily:"var(--mono)" }}>{allBoards.length} proyecto{allBoards.length!==1?"s":""}</p>
             </div>
             <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
@@ -1087,12 +1076,12 @@ function Sidebar({ user, boards, onOpen, onSignOut }) {
         const cat = CATEGORIES.find(c => c.id===b.categoryId) || CATEGORIES[6];
         return (
           <button key={b.id} onClick={() => onOpen(b)}
-            style={{ background:"transparent", border:"none", borderLeft:"2px solid transparent",
+            style={{ background:"transparent", border:"none", borderRadius:5,
               textAlign:"left", padding:"6px 10px 6px 8px", cursor:"pointer",
               color:"var(--ink2)", fontFamily:"var(--raj)", fontSize:12, fontWeight:500,
               letterSpacing:"0.04em", display:"flex", alignItems:"center", gap:8, width:"100%", transition:"all .13s" }}
-            onMouseEnter={e => { e.currentTarget.style.borderLeftColor=cat.color+"88"; e.currentTarget.style.color="var(--ink0)"; e.currentTarget.style.background="rgba(255,255,255,0.03)"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderLeftColor="transparent"; e.currentTarget.style.color="var(--ink2)"; e.currentTarget.style.background="transparent"; }}>
+            onMouseEnter={e => { e.currentTarget.style.background=cat.color+"18"; e.currentTarget.style.color="var(--ink0)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="var(--ink2)"; }}>
             <span style={{ width:6, height:6, borderRadius:"50%", background:cat.color, flexShrink:0, boxShadow:`0 0 6px ${cat.color}88` }} />
             <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", flex:1 }}>{b.name}</span>
             {b.password && <span style={{ color:"var(--ink3)", fontFamily:"var(--mono)", fontSize:9 }}>⚿</span>}
@@ -1140,10 +1129,10 @@ function BoardTile({ board, onOpen, onDeleteRequest, onExport, exporting }) {
       role="button" tabIndex={0}
       aria-label={`Abrir proyecto: ${board.name}`}
       onKeyDown={e => (e.key==="Enter"||e.key===" ") && onOpen(board)}
-      style={{ background:"rgba(11,16,20,0.88)", border:`1px solid ${cat.color}20`,
-        borderLeft:`3px solid ${cat.color}`, borderRadius:10, padding:"16px 18px 14px",
+      style={{ background:"rgba(11,16,20,0.88)", border:`1px solid ${cat.color}38`,
+        borderRadius:10, padding:"16px 18px 14px",
         position:"relative", overflow:"hidden",
-        boxShadow:`0 2px 16px rgba(0,0,0,.4), 0 0 0 1px ${cat.color}08`,
+        boxShadow:`0 2px 16px rgba(0,0,0,.4), 0 0 0 1px ${cat.color}10`,
         backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}>
       {/* Ambient top-right glow */}
       <div style={{ position:"absolute", top:-40, right:-40, width:120, height:120, borderRadius:"50%",
@@ -1507,7 +1496,7 @@ function CreateBoardModal({ onClose, onCreate }) {
         <div style={{ padding:"22px 26px 18px", borderBottom:"1px solid rgba(255,255,255,0.07)",
           display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <div>
-            <h2 className="grad-text" style={{ fontSize:22, fontWeight:900, letterSpacing:"-0.03em", marginBottom:2 }}>Nuevo proyecto</h2>
+            <h2 style={{ fontFamily:"var(--raj)", fontWeight:700, fontSize:22, letterSpacing:"0.06em", textTransform:"uppercase", color:"var(--ink0)", marginBottom:2 }}>Nuevo proyecto</h2>
             <p style={{ color:T.ink4, fontSize:12, fontFamily:"var(--mono)" }}>Completa los campos y lanza</p>
           </div>
           <button onClick={onClose} style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", color:T.ink3, width:32, height:32, borderRadius:8, cursor:"pointer", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center", transition:"all .15s" }}
@@ -2266,7 +2255,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                     </div>
                     {colTasks.map(task => (
                       <div key={task.id} onClick={() => setEditCard(task)}
-                        style={{ background:T.bgCard, border:"1px solid "+T.border, borderLeft:"3px solid "+col.color, borderRadius:7, padding:"8px 10px", marginBottom:5, cursor:"pointer", transition:"box-shadow .15s" }}
+                        style={{ background:T.bgCard, border:"1px solid "+col.color+"30", borderRadius:7, padding:"8px 10px", marginBottom:5, cursor:"pointer", transition:"box-shadow .15s, border-color .15s" }}
                         onMouseEnter={e => e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,.08)"}
                         onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}
                       >
@@ -2684,7 +2673,7 @@ function CardReaderModal({ card, cardComments, connections, allCards, user, onEd
           {card.body ? (
             <div style={{ color:T.ink2, fontSize:15, lineHeight:1.8,
               fontFamily:"var(--sans)", whiteSpace:"pre-wrap", marginBottom:28,
-              borderLeft:"3px solid "+tc+"44", paddingLeft:18 }}>
+              background:tc+"0d", border:"1px solid "+tc+"22", borderRadius:8, padding:"14px 18px" }}>
               {card.body}
             </div>
           ) : (
@@ -2906,7 +2895,7 @@ function EditCardModal({ card, cardComments, user, onSave, onDelete, onClose, on
 
       {/* READ-ONLY view of card content for non-owners */}
       {!isOwner && (
-        <div style={{ background:T.bgPanel, border:"1px solid "+T.border, borderLeft:"3px solid "+TYPE_COLOR[card.type], borderRadius:8, padding:"12px 14px", marginBottom:16 }}>
+        <div style={{ background:TYPE_BG[card.type], border:"1px solid "+TYPE_COLOR[card.type]+"30", borderRadius:8, padding:"12px 14px", marginBottom:16 }}>
           <div style={{ color:T.ink, fontWeight:700, fontSize:15, marginBottom:card.body?8:0 }}>{card.title}</div>
           {card.body && <div style={{ color:T.ink3, fontSize:13, lineHeight:1.6, fontFamily:"var(--sans)" }}>{card.body}</div>}
         </div>
@@ -3003,7 +2992,7 @@ function StickerTree({ card, user, onAdd, onUpdate }) {
       </div>
 
       {/* Card summary (what this is attached to) */}
-      <div style={{ background:T.bgPanel, border:"1px solid "+T.border, borderLeft:"3px solid "+TYPE_COLOR[card.type], borderRadius:8, padding:"10px 14px", marginBottom:16 }}>
+      <div style={{ background:TYPE_BG[card.type], border:"1px solid "+TYPE_COLOR[card.type]+"30", borderRadius:8, padding:"10px 14px", marginBottom:16 }}>
         <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10, marginBottom:3 }}>TARJETA ORIGINAL · @{card.author}</div>
         <div style={{ color:T.ink, fontWeight:700, fontSize:14 }}>{card.title}</div>
         {card.body && <div style={{ color:T.ink3, fontSize:12, marginTop:3, lineHeight:1.4 }}>{card.body}</div>}
@@ -3054,7 +3043,6 @@ function StickerNode({ sticker, allStickers, user, onAdd, onUpdate, depth }) {
       <div style={{
         border:"1px solid "+borderColor,
         background:bgColor,
-        borderLeft:"3px solid "+(isDiscarded ? T.border2 : color),
         borderRadius:8,
         padding:"10px 12px",
         opacity: isDiscarded ? 0.5 : 1,
@@ -3310,7 +3298,7 @@ function ConnCard({ conn, cards, connections, onUpdate, onAddAsTask }) {
             onFocus={e=>e.target.style.borderColor=T.accent} onBlur={e=>e.target.style.borderColor=T.border2}/>
         </div>
       ) : (
-        <div style={{ color:T.ink3, fontSize:12, lineHeight:1.4, marginBottom:conn.note?8:10, padding:"8px", background:T.bgPanel, borderRadius:6, borderLeft:"3px solid "+color }}>{conn.reason}</div>
+        <div style={{ color:T.ink3, fontSize:12, lineHeight:1.4, marginBottom:conn.note?8:10, padding:"8px 10px", background:T.bgPanel, border:"1px solid "+color+"28", borderRadius:6 }}>{conn.reason}</div>
       )}
 
       {/* Note / Complement */}
@@ -3328,7 +3316,7 @@ function ConnCard({ conn, cards, connections, onUpdate, onAddAsTask }) {
           </div>
         </div>
       ) : conn.note ? (
-        <div style={{ color:T.ink2, fontSize:12, lineHeight:1.5, marginBottom:10, padding:"8px 10px", background:T.accentBg, borderRadius:6, borderLeft:"3px solid "+T.accent, fontStyle:"italic" }}>
+        <div style={{ color:T.ink2, fontSize:12, lineHeight:1.5, marginBottom:10, padding:"8px 10px", background:T.accentBg, border:"1px solid "+T.accent+"30", borderRadius:6, fontStyle:"italic" }}>
           <span style={{ color:T.accent, fontFamily:"var(--mono)", fontSize:9, letterSpacing:1, display:"block", marginBottom:3, fontStyle:"normal" }}>COMPLEMENTO</span>
           {conn.note}
         </div>
@@ -3603,7 +3591,7 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
                     const isH = line.startsWith("##")||(line.startsWith("**")&&line.endsWith("**"));
                     const clean = line.replace(/\*\*/g,"").replace(/^#+\s*/,"");
                     if (isH) return <div key={i} style={{ color:T.ink, fontWeight:700, fontSize:14, marginTop:18, marginBottom:5, paddingTop:12, borderTop:"1px solid "+T.border }}>{clean}</div>;
-                    if (line.startsWith("- ")||line.startsWith("• ")) return <div key={i} style={{ paddingLeft:12, marginBottom:5, color:T.ink3, borderLeft:`2px solid ${T.accent}44`, marginLeft:4, background:T.accentBg, borderRadius:"0 5px 5px 0", paddingTop:3, paddingBottom:3 }}>{line.slice(2)}</div>;
+                    if (line.startsWith("- ")||line.startsWith("• ")) return <div key={i} style={{ paddingLeft:12, marginBottom:5, color:T.ink3, marginLeft:4, background:T.accentBg, border:`1px solid ${T.accent}22`, borderRadius:5, paddingTop:3, paddingBottom:3 }}>{line.slice(2)}</div>;
                     if (!line.trim()) return <div key={i} style={{ height:8 }} />;
                     return <div key={i} style={{ marginBottom:3 }}>{line}</div>;
                   })}
