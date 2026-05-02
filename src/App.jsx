@@ -86,9 +86,9 @@ const CATEGORIES = [
 ];
 
 const COLUMNS = [
-  { id:"concepto",   label:"Concepto",   icon:"◈", color:"#7068A8", desc:"Ideas nuevas sin desarrollar" },
+  { id:"concepto",   label:"Concepto",   icon:"◈", color:"#6090C0", desc:"Ideas nuevas sin desarrollar" },
   { id:"desarrollo", label:"Desarrollo", icon:"◉", color:"#C4963C", desc:"En proceso activo de trabajo" },
-  { id:"revision",   label:"Revisión",   icon:"◎", color:"#A07040", desc:"Listo, esperando revisión" },
+  { id:"revision",   label:"Revisión",   icon:"◎", color:"#C07848", desc:"Listo, esperando revisión" },
   { id:"listo",      label:"Listo",      icon:"◆", color:"#4AAA70", desc:"Completado y aprobado" },
 ];
 
@@ -514,34 +514,20 @@ const GLOBAL_CSS = `
   :root { --sans:'Outfit',sans-serif; --mono:'JetBrains Mono',monospace; }
   html, body { background:#0A0908; min-height:100vh; }
 
-  /* ── Atmospheric overlay — CRT scan-line texture + edge vignette ── */
-  /* Subtle: adds physical depth without competing with content */
-  html::after {
-    content: '';
-    position: fixed; inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent 0px, transparent 2px,
-      rgba(0,0,0,0.038) 2px, rgba(0,0,0,0.038) 3px
-    );
-    pointer-events: none;
-    z-index: 9999;
-  }
+  /* ── Edge vignette — subtle depth, not game-UI darkness ── */
   body::before {
     content: '';
     position: fixed; inset: 0;
-    background: radial-gradient(ellipse 110% 110% at 50% 50%,
-      transparent 50%, rgba(0,0,0,0.45) 100%);
+    background: radial-gradient(ellipse 120% 120% at 50% 50%,
+      transparent 55%, rgba(0,0,0,0.22) 100%);
     pointer-events: none;
     z-index: 9998;
   }
 
-  /* ── Board content area — subtle grid ── */
+  /* ── Board canvas — dot grid (workspace signal, ref: Project Collaboration Space) ── */
   .board-area {
-    background-image:
-      linear-gradient(rgba(196,150,60,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(196,150,60,0.04) 1px, transparent 1px);
-    background-size: 48px 48px;
+    background-image: radial-gradient(circle, rgba(196,150,60,0.14) 1px, transparent 1px);
+    background-size: 28px 28px;
   }
 
   /* Dark-theme base — overridden per-theme by getThemeCSS() */
@@ -2261,12 +2247,11 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 onDragLeave={() => setDragOver(null)}
                 onDrop={async e => { e.preventDefault(); if (dragCard) await moveCard(dragCard, col.id); setDragOver(null); setDragCard(null); }}
                 style={{ width:isMobile?"100%":268, flexShrink:0,
-                  background:isOver?`rgba(196,150,60,0.07)`:"rgba(10,9,8,0.65)",
-                  borderRadius:15,
-                  border:`1px solid ${isOver?"rgba(196,150,60,0.38)":col.color+"18"}`,
-                  boxShadow:isOver?`0 0 0 2px rgba(196,150,60,0.22), 0 0 30px ${col.color}12`:`0 0 0 1px ${col.color}10`,
-                  transition:"all .18s", padding:"14px 12px",
-                  backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)" }}>
+                  background:isOver?`rgba(196,150,60,0.05)`:T.bgPanel,
+                  borderRadius:12,
+                  border:`1px solid ${isOver?col.color+"55":col.color+"20"}`,
+                  boxShadow:isOver?`0 0 0 1px ${col.color}30, 0 8px 24px rgba(0,0,0,.25)`:`0 2px 12px rgba(0,0,0,.20)`,
+                  transition:"all .18s", padding:"14px 12px" }}>
                 {/* Column header */}
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center",
                   paddingBottom:12, marginBottom:12,
@@ -2573,53 +2558,62 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
 
   return (
     <div className="wcard" draggable onDragStart={onDragStart}
-      style={{ background:T.bgCard, border:`1px solid rgba(200,170,100,0.22)`,
-        borderRadius:11, overflow:"hidden", cursor:"grab",
-        boxShadow:`0 2px 14px rgba(0,0,0,.35), inset 3px 0 0 ${tc}66`,
-        backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)" }}>
-      <div style={{ height:3, background:`linear-gradient(90deg,${tc} 0%,${tc}55 60%,transparent 100%)`,
-        boxShadow:`0 0 10px ${tc}55` }} />
+      style={{ background:T.bgCard,
+        border:`1px solid rgba(200,170,100,0.16)`,
+        borderLeft:`3px solid ${tc}`,
+        borderRadius:10, overflow:"hidden", cursor:"grab",
+        boxShadow:`0 2px 10px rgba(0,0,0,.30)` }}>
 
-      {/* Tab header — always visible */}
-      <div style={{ padding:"10px 12px 9px", display:"flex", alignItems:"center", gap:7 }}>
-        <span
-          onClick={e => { e.stopPropagation(); setExpanded(p => !p); }}
-          title={expanded ? "Colapsar" : "Expandir"}
-          style={{ color:tc, fontSize:9, flexShrink:0, cursor:"pointer", padding:"3px 4px",
-            borderRadius:4, transition:"all .12s", background:tc+"18", border:`1px solid ${tc}33` }}
-          onMouseEnter={e => e.currentTarget.style.background = tc+"33"}
-          onMouseLeave={e => e.currentTarget.style.background = tc+"18"}
-        >{expanded ? "▼" : "▶"}</span>
+      {/* Card header — always visible, click to expand */}
+      <div
+        onClick={e => { e.stopPropagation(); setExpanded(p => !p); }}
+        style={{ padding:"9px 10px 9px 11px", display:"flex", alignItems:"flex-start", gap:8, cursor:"pointer" }}>
+
+        {/* Type badge */}
+        <span style={{ background:tc+"15", color:tc, fontFamily:"var(--mono)", fontSize:8,
+          padding:"2px 5px", borderRadius:3, border:`1px solid ${tc}28`,
+          letterSpacing:"0.1em", textTransform:"uppercase", flexShrink:0, marginTop:2, lineHeight:1.4 }}>
+          {card.type || "idea"}
+        </span>
+
+        {/* Title */}
         <div
           onClick={e => { e.stopPropagation(); onOpen(); }}
           title="Leer tarjeta completa"
-          style={{ color:T.ink, fontWeight:700, fontSize:13, lineHeight:1.35, flex:1,
-            overflow:"hidden", textOverflow:"ellipsis", whiteSpace: expanded?"normal":"nowrap",
-            cursor:"pointer", letterSpacing:"-0.01em" }}
+          style={{ color:T.ink, fontWeight:600, fontSize:13, lineHeight:1.4, flex:1,
+            overflow:"hidden", textOverflow:"ellipsis", whiteSpace:expanded?"normal":"nowrap",
+            cursor:"pointer" }}
           onMouseEnter={e => e.currentTarget.style.color = tc}
           onMouseLeave={e => e.currentTarget.style.color = T.ink}
         >{card.title}</div>
+
+        {/* Indicators + edit */}
         <div style={{ display:"flex", gap:4, alignItems:"center", flexShrink:0 }}>
           {commentCount > 0 && (
-            <span style={{ color:T.ink3, fontFamily:"var(--mono)", fontSize:9, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:5, padding:"1px 5px", display:"flex", alignItems:"center", gap:2 }}>
-              💬 {commentCount}
+            <span style={{ color:T.ink3, fontFamily:"var(--mono)", fontSize:9,
+              background:"rgba(255,255,255,0.05)", borderRadius:4, padding:"1px 4px" }}>
+              💬{commentCount}
             </span>
           )}
           {connCount > 0 && (
-            <span style={{ color:T.accent, fontFamily:"var(--mono)", fontSize:9, background:T.accentBg, border:`1px solid ${T.accent}33`, borderRadius:5, padding:"1px 5px", display:"flex", alignItems:"center", gap:2 }}>
-              ◈ {connCount}
+            <span style={{ color:T.accent, fontFamily:"var(--mono)", fontSize:9,
+              background:T.accentBg, border:`1px solid ${T.accent}28`, borderRadius:4, padding:"1px 4px" }}>
+              ◈{connCount}
             </span>
           )}
           {sc > 0 && (
-            <span style={{ color:T.blue, fontFamily:"var(--mono)", fontSize:9, background:T.blueBg, border:`1px solid ${T.blue}33`, borderRadius:5, padding:"1px 5px" }}>
-              ◎ {sc}
+            <span style={{ color:T.blue, fontFamily:"var(--mono)", fontSize:9,
+              background:T.blueBg, borderRadius:4, padding:"1px 4px" }}>
+              ◎{sc}
             </span>
           )}
           <button onClick={e => { e.stopPropagation(); onEdit(); }} className="edit-ico"
             title={isOwner ? "Editar" : "Ver · Comentar · Sticker"}
-            style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.09)", color:T.ink4, cursor:"pointer", fontSize:12, padding:"2px 5px", borderRadius:5, flexShrink:0, transition:"all .12s" }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = T.ink2; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = T.ink4; }}>
+            style={{ background:"transparent", border:"none", color:T.ink4, cursor:"pointer",
+              fontSize:12, padding:"1px 4px", borderRadius:4, flexShrink:0, transition:"all .12s",
+              lineHeight:1 }}
+            onMouseEnter={e => { e.currentTarget.style.color = T.ink; e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = T.ink4; e.currentTarget.style.background = "transparent"; }}>
             {isOwner ? "✎" : "👁"}
           </button>
         </div>
@@ -2627,21 +2621,21 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
 
       {/* Expanded body */}
       {expanded && (
-        <div style={{ padding:"0 12px 11px", borderTop:"1px solid "+T.border+"55" }}>
+        <div style={{ padding:"0 11px 10px 14px", borderTop:`1px solid rgba(200,170,100,0.10)` }}>
           {/* Images */}
           {imgs.length > 0 && (
             <div style={{ display:"flex", gap:4, marginTop:8, marginBottom:6 }}>
               {imgs.slice(0,3).map((img,i) => (
-                <div key={i} style={{ flex:1, height:56, borderRadius:5, overflow:"hidden", background:T.bgPanel }}>
+                <div key={i} style={{ flex:1, height:52, borderRadius:5, overflow:"hidden", background:T.bgPanel }}>
                   {img.data && <img src={img.data} alt="" loading="lazy" style={{ width:"100%", height:"100%", objectFit:"cover" }} />}
                 </div>
               ))}
-              {imgs.length>3 && <div style={{ width:36, height:56, borderRadius:5, background:T.bgPanel, display:"flex", alignItems:"center", justifyContent:"center", color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>+{imgs.length-3}</div>}
+              {imgs.length>3 && <div style={{ width:32, height:52, borderRadius:5, background:T.bgPanel, display:"flex", alignItems:"center", justifyContent:"center", color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>+{imgs.length-3}</div>}
             </div>
           )}
           {/* Body text */}
           {card.body && (
-            <div style={{ color:T.ink3, fontSize:12, marginTop:6, lineHeight:1.55, fontFamily:"var(--sans)" }}>
+            <div style={{ color:T.ink2, fontSize:12, marginTop:6, lineHeight:1.6, fontFamily:"var(--sans)" }}>
               {card.body}
             </div>
           )}
@@ -2649,7 +2643,7 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
           {files.length > 0 && (
             <div style={{ display:"flex", flexWrap:"wrap", gap:4, marginTop:8 }}>
               {files.map((f,i) => (
-                <div key={i} style={{ background:T.bgPanel, border:"1px solid "+T.border, borderRadius:5, padding:"3px 8px", display:"flex", gap:4, alignItems:"center" }}>
+                <div key={i} style={{ background:T.bgPanel, border:"1px solid "+T.border, borderRadius:4, padding:"2px 7px", display:"flex", gap:4, alignItems:"center" }}>
                   <span style={{ fontSize:10 }}>{fileIcon(f.name)}</span>
                   <span style={{ color:T.ink3, fontFamily:"var(--mono)", fontSize:10 }}>{f.name.length>16?f.name.slice(0,14)+"…":f.name}</span>
                 </div>
@@ -2657,16 +2651,15 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
             </div>
           )}
           {/* Footer */}
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginTop:9, flexWrap:"wrap", gap:4 }}>
-            <div style={{ display:"flex", gap:5, alignItems:"center" }}>
-              <OTag color={tc} bg={tbg} small>{NODE_ICONS[card.type] || ""} {card.type}</OTag>
-              <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>@{card.author}</span>
-            </div>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginTop:10, flexWrap:"wrap", gap:4 }}>
+            <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>@{card.author}</span>
             <div style={{ display:"flex", gap:3 }}>
               {COLUMNS.filter(c => c.id!==currentCol).map(c => (
                 <button key={c.id} onClick={e => { e.stopPropagation(); onMove(c.id); }} title={c.label} className="mv-btn"
-                  style={{ background:T.bgPanel, border:"1px solid "+T.border, color:T.ink4, cursor:"pointer", fontSize:11, padding:"3px 6px", borderRadius:5, transition:"all .15s" }}>
-                  {c.icon}
+                  style={{ background:"rgba(255,255,255,0.04)", border:`1px solid ${c.color}30`,
+                    color:c.color, cursor:"pointer", fontSize:10, padding:"2px 7px", borderRadius:4,
+                    transition:"all .15s", fontFamily:"var(--mono)", letterSpacing:"0.04em" }}>
+                  {c.icon} {c.label}
                 </button>
               ))}
             </div>
