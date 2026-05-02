@@ -618,12 +618,28 @@ const GLOBAL_CSS = `
     animation: gradShift 4s ease infinite;
   }
 
+  /* ── Tablet (768–1023px): 2-col grid, condensed sidebar ── */
+  @media (max-width:1023px) and (min-width:681px) {
+    .hide-tablet { display:none !important; }
+    .stack-tablet { flex-direction:column !important; }
+    .full-tablet  { width:100% !important; }
+  }
+
+  /* ── Mobile (≤680px) ── */
   @media (max-width:680px) {
     .hide-mobile { display:none !important; }
     .stack-mobile { flex-direction:column !important; }
     .full-mobile  { width:100% !important; min-width:0 !important; flex-shrink:1 !important; }
     .pad-mobile   { padding:14px !important; }
     .gap-mobile   { gap:10px !important; }
+  }
+
+  /* ── Touch targets: ensure minimum 44px tap area on touch devices ── */
+  @media (hover:none) and (pointer:coarse) {
+    button, [role="button"] { min-height:44px; min-width:44px; }
+    /* Exception: icon-only tiny buttons get padding boost instead */
+    .hud-btn { min-height:36px; padding-top:8px !important; padding-bottom:8px !important; }
+    .mcard-btns button { min-height:36px; padding:6px 12px !important; }
   }
 `;
 
@@ -636,6 +652,16 @@ function useIsMobile() {
     return () => window.removeEventListener("resize", fn);
   }, []);
   return mobile;
+}
+
+function useIsTablet() {
+  const [tablet, setTablet] = useState(() => typeof window !== "undefined" && window.innerWidth > 680 && window.innerWidth <= 1023);
+  useEffect(() => {
+    const fn = () => setTablet(window.innerWidth > 680 && window.innerWidth <= 1023);
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
+  }, []);
+  return tablet;
 }
 
 // ─── PASSWORD INPUT WITH SHOW/HIDE ───────────────────────────────────────────
@@ -925,6 +951,7 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
   const [exportAll, setExportAll]     = useState(false);
   const importRef = useRef();
   const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
   const seen = new Set(); const allBoards = boards.filter(b => { if (seen.has(b.id)) return false; seen.add(b.id); return true; });
   function filtered(list) { if (!search) return list; const q = search.toLowerCase(); return list.filter(b => (b.name+" "+(b.conceptTitle||"")+" "+b.categoryId).toLowerCase().includes(q)); }
   async function handleOpen(board) { if (!board.password || myIds.includes(board.id)) { await onOpen(board, board.password); } else { setPwdModal(board); } }
@@ -1019,7 +1046,7 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
       <style>{GLOBAL_CSS}</style>
       <style>{getThemeCSS(themeId)}</style>
       {!isMobile && <Sidebar user={user} boards={allBoards} onOpen={handleOpen} onSignOut={onSignOut} />}
-      <div className="board-area" style={{ flex:1, padding: isMobile ? "16px 14px" : "32px 36px", overflowY:"auto", position:"relative", zIndex:1 }}>
+      <div className="board-area" style={{ flex:1, padding: isMobile ? "16px 14px" : isTablet ? "24px 20px" : "32px 36px", overflowY:"auto", position:"relative", zIndex:1 }}>
         {/* Mobile top bar */}
         {isMobile && (
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16, paddingBottom:14, borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
@@ -1149,9 +1176,11 @@ function Sidebar({ user, boards, onOpen, onSignOut }) {
 }
 
 function BoardGrid({ boards, onOpen, isMobile, onDeleteRequest, onExport, exporting }) {
+  const isTablet = useIsTablet();
   if (!boards.length) return <EmptyMsg>Sin proyectos</EmptyMsg>;
+  const cols = isMobile ? "1fr" : isTablet ? "repeat(2,1fr)" : "repeat(auto-fill,minmax(230px,1fr))";
   return (
-    <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"repeat(auto-fill,minmax(230px,1fr))", gap:16 }}>
+    <div style={{ display:"grid", gridTemplateColumns:cols, gap:16 }}>
       {boards.map(b => <BoardTile key={b.id} board={b} onOpen={onOpen} onDeleteRequest={onDeleteRequest} onExport={onExport} exporting={exporting} />)}
     </div>
   );
