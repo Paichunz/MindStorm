@@ -5241,10 +5241,9 @@ Incluye TODOS los personajes mencionados, aunque sea brevemente. Infiere relacio
   const tabData = data?.[tab];
 
   return (
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,5,.65)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,WebkitBackdropFilter:"blur(8px)",backdropFilter:"blur(8px)",padding:16}}>
-      <div style={{background:"rgba(13,13,30,0.95)",border:`1px solid ${T.amber}33`,borderRadius:18,width:"100%",maxWidth:790,maxHeight:"92vh",display:"flex",flexDirection:"column",
-        boxShadow:`0 30px 80px rgba(0,0,0,.65), 0 0 40px ${T.amber}08`,
-        backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",animation:"scaleIn .25s ease"}}>
+    <div style={{position:"fixed",inset:0,background:"rgba(26,24,20,0.50)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:16}}>
+      <div style={{background:"var(--card-soft)",border:`1px solid ${T.amber}44`,borderRadius:18,width:"100%",maxWidth:790,maxHeight:"92vh",display:"flex",flexDirection:"column",
+        boxShadow:"var(--shadow-3)",animation:"scaleIn .25s ease"}}>
 
         {/* Header */}
         <div style={{padding:"16px 20px 0",borderBottom:"1px solid "+T.border}}>
