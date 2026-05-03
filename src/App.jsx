@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, createContext, useContext, memo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, createContext, useContext, memo } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 // ─── THEMES ──────────────────────────────────────────────────────────────────
@@ -146,13 +146,23 @@ function fmtCountdownHM(ms) {
 }
 function fmtDate(t) {
   if (!t) return "";
-  const d = new Date(typeof t === "object" && t.toDate ? t.toDate() : t);
-  return isNaN(d) ? "" : d.toLocaleDateString("es", { day:"numeric", month:"short" });
+  try {
+    const raw = (typeof t === "object" && t.toDate) ? t.toDate()
+              : (typeof t === "object" && t.seconds)  ? new Date(t.seconds * 1000)
+              : t;
+    const d = new Date(raw);
+    return isNaN(d.getTime()) ? "" : d.toLocaleDateString("es", { day:"numeric", month:"short" });
+  } catch { return ""; }
 }
 function fmtTime(t) {
   if (!t) return "";
-  const d = new Date(typeof t === "object" && t.toDate ? t.toDate() : t);
-  return isNaN(d) ? "" : d.toLocaleTimeString("es", { hour:"2-digit", minute:"2-digit" });
+  try {
+    const raw = (typeof t === "object" && t.toDate) ? t.toDate()
+              : (typeof t === "object" && t.seconds)  ? new Date(t.seconds * 1000)
+              : t;
+    const d = new Date(raw);
+    return isNaN(d.getTime()) ? "" : d.toLocaleTimeString("es", { hour:"2-digit", minute:"2-digit" });
+  } catch { return ""; }
 }
 function fmtSize(b) { return b < 1024 ? b+"B" : b < 1048576 ? Math.round(b/1024)+"KB" : (b/1048576).toFixed(1)+"MB"; }
 function fileIcon(name) {
@@ -922,12 +932,15 @@ const SK = {
 };
 
 export default function App() {
+  // Detect ?board=ID in URL (shared link)
+  const sharedBoardId = useMemo(() => new URLSearchParams(window.location.search).get("board"), []);
+
   const [user, setUser]               = useState(() => getL(SK.user, null));
   const [screen, setScreen]           = useState(() => getL(SK.activeBoard, null) ? "board" : "lobby");
   const [boards, setBoards]           = useState([]);
   const [activeBoard, setActiveBoard] = useState(null);
   const [boardData, setBoardData]     = useState(null);
-  const [restoring, setRestoring]     = useState(() => !!getL(SK.activeBoard, null));
+  const [restoring, setRestoring]     = useState(() => !!getL(SK.activeBoard, null) || false);
   const [themeId, setThemeIdRaw]      = useState(() => {
     const stored = getL("mindstorm-theme", "estudio");
     // Reject dark themes — estudio is the only active theme
@@ -946,28 +959,53 @@ export default function App() {
   // Apply theme on first load
   useEffect(() => { Object.assign(T, THEMES[themeId]); }, []);
 
-  const loadBoards = useCallback(async () => {
-    const list = await dbGetBoards();
-    setBoards(list);
-    return list;
+  const loadBoards = useCallback(async (userName) => {
+    const allBoards = await dbGetBoards();
+    // Filter: show only boards owned by current user
+    const currentUser = userName || getL(SK.user, null);
+    const mine = currentUser
+      ? allBoards.filter(b => !b.createdBy || b.createdBy === currentUser.name)
+      : allBoards;
+    setBoards(mine);
+    return { mine, all: allBoards };
+  }, []);
+
+  // Open a board by ID (used for shared links and normal navigation)
+  const openBoardById = useCallback(async (boardId, allBoards) => {
+    const board = allBoards.find(b => b.id === boardId);
+    if (!board) return false;
+    const d = await dbGetBoardData(board.id);
+    const data = d || { cards:[], comments:{}, connections:[], canvasPositions:{cards:{},stickers:{}}, lastUpdated:Date.now() };
+    setActiveBoard(board);
+    setBoardData(data);
+    setL(SK.activeBoard, board.id);
+    setScreen("board");
+    return true;
   }, []);
 
   // Initial load — also restores active board after F5/refresh
   useEffect(() => {
-    loadBoards().then(list => {
+    if (!user) return; // Wait for user to join
+    loadBoards(user).then(({ mine, all }) => {
+      // Priority 1: shared link with ?board=ID
+      if (sharedBoardId) {
+        openBoardById(sharedBoardId, all).then(ok => {
+          if (!ok) { setScreen("lobby"); }
+          setRestoring(false);
+          // Clean the URL param without reload
+          window.history.replaceState({}, "", window.location.pathname);
+        });
+        return;
+      }
+      // Priority 2: restore previously active board
       const savedId = getL(SK.activeBoard, null);
       if (!savedId) { setRestoring(false); return; }
-      const board = list.find(b => b.id === savedId);
-      if (!board) { setL(SK.activeBoard, null); setScreen("lobby"); setRestoring(false); return; }
-      dbGetBoardData(board.id).then(d => {
-        const data = d || { cards:[], comments:{}, connections:[], canvasPositions:{cards:{},stickers:{}}, lastUpdated:Date.now() };
-        setActiveBoard(board);
-        setBoardData(data);
-        setScreen("board");
+      openBoardById(savedId, all).then(ok => {
+        if (!ok) { setL(SK.activeBoard, null); setScreen("lobby"); }
         setRestoring(false);
       });
     });
-  }, [loadBoards]);
+  }, [user, loadBoards, openBoardById, sharedBoardId]);
 
   // Real-time subscription for active board
   useEffect(() => {
@@ -1047,9 +1085,9 @@ export default function App() {
   const themeCtxVal = { themeId, setThemeId };
   return (
     <ThemeCtx.Provider value={themeCtxVal}>
-      {!user && <JoinScreen onJoin={u => { setL(SK.user, u); setUser(u); }} />}
-      {user && screen === "lobby" && <LobbyScreen user={user} boards={boards} myIds={getL(SK.myboards,[])} onOpen={openBoard} onCreate={createBoard} onDelete={deleteBoard} onImport={importBoard} onRefresh={loadBoards} onSignOut={() => { setL(SK.user,null); setUser(null); }} />}
-      {user && screen === "board" && activeBoard && boardData && <BoardScreen user={user} board={activeBoard} data={boardData} onSave={saveBoardData} onBack={() => { setL(SK.activeBoard, null); setScreen("lobby"); setActiveBoard(null); loadBoards(); }} />}
+      {!user && <JoinScreen sharedBoardId={sharedBoardId} onJoin={u => { setL(SK.user, u); setUser(u); }} />}
+      {user && screen === "lobby" && <LobbyScreen user={user} boards={boards} myIds={getL(SK.myboards,[])} onOpen={openBoard} onCreate={createBoard} onDelete={deleteBoard} onImport={importBoard} onRefresh={loadBoards} onSignOut={() => { setL(SK.user,null); setUser(null); setBoards([]); }} />}
+      {user && screen === "board" && activeBoard && boardData && <BoardScreen user={user} board={activeBoard} data={boardData} onSave={saveBoardData} onBack={() => { setL(SK.activeBoard, null); setScreen("lobby"); setActiveBoard(null); loadBoards(user); }} />}
       {user && restoring && <div style={{ position:"fixed", inset:0, background:"var(--paper)", zIndex:999, display:"flex", alignItems:"center", justifyContent:"center" }}><div className="spinner" style={{ width:28, height:28, border:"3px solid var(--paper-3)", borderTop:"3px solid var(--laton)", borderRadius:"50%" }}/></div>}
     </ThemeCtx.Provider>
   );
@@ -1168,16 +1206,16 @@ function MindStormLogo({ size = "md", light = true }) {
 }
 
 // ─── JOIN ─────────────────────────────────────────────────────────────────────
-function JoinScreen({ onJoin }) {
+function JoinScreen({ onJoin, sharedBoardId }) {
   const [name, setName] = useState("");
   const { themeId } = useTheme();
   const inputRef = useRef(null);
+  const isInvite = !!sharedBoardId;
   useEffect(() => { const t = setTimeout(() => inputRef.current?.focus(), 80); return () => clearTimeout(t); }, []);
   return (
     <div className="orb-bg" style={{ minHeight:"100vh", background:T.bg, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"var(--sans)", position:"relative" }}>
       <style>{GLOBAL_CSS}</style>
       <style>{getThemeCSS(themeId)}</style>
-      {/* Extra orb */}
       <div style={{ position:"absolute", width:400, height:400, top:"50%", left:"50%", transform:"translate(-50%,-50%)",
         background:"radial-gradient(circle, rgba(0,0,0,0.03) 0%, transparent 70%)",
         borderRadius:"50%", pointerEvents:"none", animation:"orb3 15s ease-in-out infinite" }} />
@@ -1185,14 +1223,25 @@ function JoinScreen({ onJoin }) {
         <div style={{ display:"flex", justifyContent:"center", marginBottom:36 }}>
           <MindStormLogo size="md" />
         </div>
+        {isInvite && (
+          <div style={{ background:T.accentBg, border:`1px solid ${T.accent}44`, borderRadius:12,
+            padding:"12px 16px", marginBottom:16, textAlign:"left" }}>
+            <div style={{ color:T.accent, fontFamily:"var(--mono)", fontSize:10, letterSpacing:1, marginBottom:4 }}>HAS SIDO INVITADO</div>
+            <p style={{ color:T.ink2, fontSize:13, lineHeight:1.5, margin:0 }}>
+              Alguien te compartió un tablero de MindStorm. Elige tu nombre para entrar como colaborador — podrás leer las tarjetas, dejar comentarios y agregar stickers.
+            </p>
+          </div>
+        )}
         <div style={{ background:"rgba(20,18,16,0.94)", border:`1px solid rgba(255,255,255,0.08)`,
           borderRadius:22, padding:"34px 30px", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)",
           boxShadow:"0 40px 100px rgba(0,0,0,.50), 0 0 0 1px rgba(255,255,255,0.05)" }}>
           <p style={{ color:T.ink3, fontSize:14, marginBottom:20, lineHeight:1.5 }}>
-            Elige tu nombre para comenzar
+            {isInvite ? "Elige tu nombre para entrar al tablero compartido" : "Elige tu nombre para comenzar"}
           </p>
           <OInput ref={inputRef} placeholder="Tu nombre…" aria-label="Tu nombre de usuario" value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key==="Enter" && name.trim() && onJoin({name:name.trim()})} autoFocus style={{ marginBottom:12, textAlign:"center", fontSize:16 }} />
-          <OBtn full onClick={() => name.trim() && onJoin({name:name.trim()})}>Entrar al espacio →</OBtn>
+          <OBtn full onClick={() => name.trim() && onJoin({name:name.trim()})}>
+            {isInvite ? "Entrar como colaborador →" : "Entrar al espacio →"}
+          </OBtn>
         </div>
         <p style={{ color:T.ink4, fontSize:10, marginTop:16, fontFamily:"var(--mono)", letterSpacing:"0.05em" }}>Tu nombre se guarda en este dispositivo</p>
       </div>
@@ -2168,7 +2217,9 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
   }
 
   function copyShareLink() {
-    navigator.clipboard.writeText(window.location.href).then(() => {
+    const base = window.location.origin + window.location.pathname;
+    const url = `${base}?board=${board.id}`;
+    navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     });
@@ -2248,7 +2299,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, background:T.bgCard, border:"1px solid "+T.border, borderRadius:10, padding:"16px", width:280, boxShadow:"0 8px 30px rgba(0,0,0,.5)", zIndex:50 }}>
                 <div style={{ color:T.ink, fontWeight:700, fontSize:13, marginBottom:6 }}>Compartir tablero</div>
                 <p style={{ color:T.ink3, fontSize:12, lineHeight:1.5, marginBottom:10 }}>{board.password ? "Comparte esta URL y la contraseña con tus colaboradores." : "Comparte esta URL — el tablero es abierto."}</p>
-                <div style={{ background:T.bgPanel, border:"1px solid "+T.border, borderRadius:7, padding:"8px 10px", fontFamily:"var(--mono)", fontSize:10, color:T.ink3, wordBreak:"break-all", marginBottom:10 }}>{window.location.href}</div>
+                <div style={{ background:T.bgPanel, border:"1px solid "+T.border, borderRadius:7, padding:"8px 10px", fontFamily:"var(--mono)", fontSize:10, color:T.ink3, wordBreak:"break-all", marginBottom:10 }}>{window.location.origin + window.location.pathname}?board={board.id}</div>
                 {board.password && (
                   <div style={{ background:T.amberBg, border:"1px solid "+T.amber+"44", borderRadius:7, padding:"8px 10px", marginBottom:10 }}>
                     <div style={{ color:T.amber, fontFamily:"var(--mono)", fontSize:10, letterSpacing:1, marginBottom:3 }}>CONTRASEÑA</div>
@@ -2890,8 +2941,8 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
         {/* Title */}
         <div
           onClick={e => { e.stopPropagation(); onOpen(); }}
-          title="Leer tarjeta completa"
-          style={{ color:T.ink, fontWeight:600, fontSize:13, lineHeight:1.4, flex:1,
+          title={card.title}
+          style={{ color:T.ink, fontWeight:600, fontSize:13, lineHeight:1.4, flex:1, minWidth:0,
             overflow:"hidden", textOverflow:"ellipsis", whiteSpace:expanded?"normal":"nowrap",
             cursor:"pointer" }}
           onMouseEnter={e => e.currentTarget.style.color = tc}
@@ -4768,6 +4819,7 @@ const CONN_LABELS = { complementa:"Comp.", causa:"Causa", consecuencia:"Consec."
 const CONN_ICONS  = { complementa:"◈", secuencia:"→", contraste:"⇄", refuerza:"◉" };
 
 function CanvasStickerNode({ s, sp, color, icon, onMouseDown, onTouchStart }) {
+  const [open, setOpen] = useState(false);
   return (
     <div style={{
       position:"absolute", left:sp.x, top:sp.y, width:STKR_W, zIndex:4,
@@ -4779,30 +4831,34 @@ function CanvasStickerNode({ s, sp, color, icon, onMouseDown, onTouchStart }) {
       cursor:"grab", userSelect:"none"
     }}
       onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
-      {/* Header: author + type */}
+      {/* Header: author + type + collapse toggle */}
       <div style={{
-        padding:"5px 10px 4px",
+        padding:"5px 8px 4px",
         display:"flex", alignItems:"center", gap:6,
-        borderBottom:`1px solid ${color}20`
-      }}>
-        <span style={{fontSize:10, lineHeight:1}}>{icon}</span>
+        borderBottom: open ? `1px solid ${color}20` : "none",
+        cursor:"pointer"
+      }} onClick={e => { e.stopPropagation(); setOpen(v => !v); }}>
+        <span style={{fontSize:9, lineHeight:1, color, flexShrink:0}}>{icon}</span>
         <span style={{
           color, fontFamily:"var(--mono)", fontSize:8, fontWeight:700,
           textTransform:"uppercase", letterSpacing:"0.09em",
-          flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"
+          flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", minWidth:0
         }}>
           {s.author} · {s.type}
         </span>
+        <span style={{color, fontSize:8, flexShrink:0, opacity:0.7}}>{open?"▾":"▸"}</span>
       </div>
-      {/* Body: suggestion text — always visible */}
-      <div style={{
-        padding:"7px 10px 8px",
-        color:"var(--ink-2)", fontSize:11, lineHeight:1.45,
-        display:"-webkit-box", WebkitLineClamp:3, WebkitBoxOrient:"vertical",
-        overflow:"hidden"
-      }}>
-        {s.text}
-      </div>
+      {/* Body: collapsible */}
+      {open && (
+        <div style={{
+          padding:"7px 10px 8px",
+          color:"var(--ink-2)", fontSize:11, lineHeight:1.45,
+          display:"-webkit-box", WebkitLineClamp:4, WebkitBoxOrient:"vertical",
+          overflow:"hidden"
+        }}>
+          {s.text}
+        </div>
+      )}
     </div>
   );
 }
@@ -4901,10 +4957,10 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
   function runLayout() {
     if (running) return;
     setRunning(true);
-    const el = containerRef.current;
-    const W  = el ? el.clientWidth  : 1000;
-    const H  = el ? el.clientHeight : 700;
-    setTimeout(() => {
+    const doLayout = () => {
+      const el = containerRef.current;
+      const W  = (el && el.clientWidth  > 100) ? el.clientWidth  : window.innerWidth  - 56;
+      const H  = (el && el.clientHeight > 100) ? el.clientHeight : window.innerHeight - 96;
       const cp = layoutMicelio(cards, connections, W, H);
       const sp = computeStickerPos(cards, cp);
       const np = { cards:cp, stickers:sp };
@@ -4912,8 +4968,10 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
       setPos({ ...np });
       onSavePositions(np);
       setRunning(false);
-      setTimeout(() => fitToView(cp), 30);
-    }, 60);
+      setTimeout(() => fitToView(cp), 60);
+    };
+    // Small delay so React can complete any pending renders first
+    setTimeout(doLayout, 80);
   }
 
   useEffect(() => {
@@ -5204,8 +5262,8 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
           </defs>
           {approvedConns.map(conn=>{
             const pa=pos.cards[conn.cardA], pb=pos.cards[conn.cardB];
-            const acx=pa.x+CARD_W/2+3000, acy=pa.y+CARD_H/2+3000;
-            const bcx=pb.x+CARD_W/2+3000, bcy=pb.y+CARD_H/2+3000;
+            const acx=pa.x+CARD_W/2, acy=pa.y+CARD_H/2;
+            const bcx=pb.x+CARD_W/2, bcy=pb.y+CARD_H/2;
             const ep1=edgePt(acx,acy,bcx,bcy);
             const ep2=edgePt(bcx,bcy,acx,acy);
             const mx=(ep1.x+ep2.x)/2, my=(ep1.y+ep2.y)/2;
@@ -5239,8 +5297,8 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
             const color=STKR_COLOR[s.type]||T.blue;
             // Horizontal connector: card right edge → sticker left edge
             const midY = spp.y + 22; // vertical center of sticker (~half its height)
-            const cx=cp.x+CARD_W+3000, cy=midY+3000;
-            const sx=spp.x+3000,       sy=midY+3000;
+            const cx=cp.x+CARD_W, cy=midY;
+            const sx=spp.x,       sy=midY;
             return (
               <g key={s.id}>
                 <path d={`M${cx},${cy} L${sx},${sy}`}
