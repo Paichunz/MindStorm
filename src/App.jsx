@@ -4371,7 +4371,7 @@ Escribe en español. Usa markdown con headers (##), bullets (-) y énfasis (**).
 }
 
 // ─── CANVAS LAYOUTS ───────────────────────────────────────────────────────────
-const CARD_W = 210, CARD_H = 60; // collapsed card dimensions
+const CARD_W = 250, CARD_H = 60; // collapsed card dimensions — matches .mcard { width:250px }
 const STKR_W = 185, STKR_HH = 20; // sticker card width + half-height of header attachment point
 const NODE_R  = 34; // skill-tree node radius (px)
 
@@ -4509,7 +4509,7 @@ function layoutMicelio(cards, connections, W, H) {
     spiralIdx++;
   });
   // Force iterations
-  const ITER=100, REP=14000, SPK=0.06, SPL=250, DAMP=0.7, GRAV=0.01;
+  const ITER=100, REP=16000, SPK=0.06, SPL=280, DAMP=0.7, GRAV=0.01;
   for (let k=0; k<ITER; k++) {
     const alpha = 1 - k/ITER;
     const ids = Object.keys(pos);
@@ -4617,6 +4617,26 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
   const transformRef = useRef(null); // DOM-only transform layer
   const panRef  = useRef({ x:0, y:0 });
   const zoomRef = useRef(1);
+  const saveTimerRef  = useRef(null);
+  const zoomRafRef    = useRef(null);
+  const pendingZoom   = useRef(null);
+
+  // Debounced save — coalesces rapid drag-end calls into one Supabase write
+  function debouncedSave(np) {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => { onSavePositions(np); }, 800);
+  }
+
+  // RAF-throttled zoom percentage display — avoids React re-render on every wheel tick
+  function scheduleZoomPct(pct) {
+    pendingZoom.current = pct;
+    if (!zoomRafRef.current) {
+      zoomRafRef.current = requestAnimationFrame(() => {
+        setZoomPct(pendingZoom.current);
+        zoomRafRef.current = null;
+      });
+    }
+  }
 
   function applyT(px, py, z) {
     if (transformRef.current)
@@ -4624,6 +4644,33 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
   }
 
   const hasAllPos = cards.length > 0 && cards.every(c => posRef.current.cards[c.id]);
+
+  // Place only cards that lack a position — preserve existing user arrangements
+  function layoutNewCards() {
+    const missing = cards.filter(c => !posRef.current.cards[c.id]);
+    if (!missing.length) return;
+    const existing = Object.values(posRef.current.cards);
+    // Centroid of existing cards (or canvas center)
+    const el = containerRef.current;
+    const CX = el ? el.clientWidth / 2  : 500;
+    const CY = el ? el.clientHeight / 2 : 350;
+    const cx = existing.length ? existing.reduce((s,p)=>s+p.x,0)/existing.length : CX;
+    const cy = existing.length ? existing.reduce((s,p)=>s+p.y,0)/existing.length : CY;
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+    const newCards = { ...posRef.current.cards };
+    missing.forEach((card, i) => {
+      const r = 180 + Math.sqrt(i + 1) * 100;
+      const a = i * goldenAngle;
+      newCards[card.id] = {
+        x: Math.round(cx + r * Math.cos(a) - CARD_W / 2),
+        y: Math.round(cy + r * Math.sin(a) - CARD_H / 2)
+      };
+    });
+    const np = { cards: newCards, stickers: posRef.current.stickers };
+    posRef.current = np;
+    setPos({ ...np });
+    onSavePositions(np);
+  }
 
   function fitToView(cardPositions) {
     const cpMap = cardPositions || posRef.current.cards;
@@ -4668,7 +4715,15 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
     }, 60);
   }
 
-  useEffect(() => { if (!hasAllPos && cards.length > 0) runLayout(); }, []);
+  useEffect(() => {
+    if (!cards.length) return;
+    const missing = cards.filter(c => !posRef.current.cards[c.id]);
+    if (missing.length === cards.length) {
+      runLayout();
+    } else if (missing.length > 0) {
+      layoutNewCards();
+    }
+  }, []);
 
   // Wheel zoom — non-passive
   useEffect(() => {
@@ -4687,10 +4742,24 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
       panRef.current  = { x:npx, y:npy };
       zoomRef.current = nz;
       applyT(npx, npy, nz);
-      setZoomPct(Math.round(nz * 100));
+      scheduleZoomPct(Math.round(nz * 100));
     }
     el.addEventListener("wheel", onWheel, { passive:false });
     return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
+  // Keyboard shortcuts: Cmd/Ctrl += zoom in, -= zoom out, 0 = reset, Shift+L = re-layout
+  useEffect(() => {
+    function onKey(e) {
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
+      if (e.key === "=" || e.key === "+") { e.preventDefault(); zoomStep(1); }
+      else if (e.key === "-") { e.preventDefault(); zoomStep(-1); }
+      else if (e.key === "0") { e.preventDefault(); fitToView(posRef.current.cards); }
+      else if (e.shiftKey && e.key === "L") { e.preventDefault(); runLayout(); }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   const ZOOM_STEPS = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
@@ -4773,7 +4842,7 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
       setPos({...np});
     }
     function onUp() {
-      onSavePositions(posRef.current);
+      debouncedSave(posRef.current);
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup",   onUp);
     }
@@ -4853,7 +4922,7 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
       setPos({...np});
     }
     function onEnd() {
-      onSavePositions(posRef.current);
+      debouncedSave(posRef.current);
       containerRef.current.removeEventListener("touchmove", onMove);
       containerRef.current.removeEventListener("touchend",  onEnd);
     }
@@ -4926,7 +4995,7 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
         onMouseDown={e=>{ e.stopPropagation(); startPan(e); }}>
 
         {/* SVG: connections + sticker strings */}
-        <svg style={{position:"absolute",left:"-3000px",top:"-3000px",width:"9000px",height:"9000px",pointerEvents:"none",zIndex:2}}>
+        <svg style={{position:"absolute",left:0,top:0,width:0,height:0,overflow:"visible",pointerEvents:"none",zIndex:2}}>
           <defs>
             <marker id="cv-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
               <path d="M1 1L9 5L1 9" fill="none" stroke="context-stroke" strokeWidth="1.8" strokeLinecap="round"/>
@@ -4939,17 +5008,20 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
             const ep1=edgePt(acx,acy,bcx,bcy);
             const ep2=edgePt(bcx,bcy,acx,acy);
             const mx=(ep1.x+ep2.x)/2, my=(ep1.y+ep2.y)/2;
-            const dx=ep2.x-ep1.x;
-            const organicD=`M${ep1.x},${ep1.y} C${ep1.x+dx*0.5},${ep1.y} ${ep2.x-dx*0.5},${ep2.y} ${ep2.x},${ep2.y}`;
+            const dx=ep2.x-ep1.x, dy=ep2.y-ep1.y;
+            const connColor = CONN_COLORS[conn.type] || "var(--line)";
+            const organicD = Math.abs(dx) >= Math.abs(dy)
+              ? `M${ep1.x},${ep1.y} C${ep1.x+dx*0.45},${ep1.y} ${ep2.x-dx*0.45},${ep2.y} ${ep2.x},${ep2.y}`
+              : `M${ep1.x},${ep1.y} C${ep1.x},${ep1.y+dy*0.45} ${ep2.x},${ep2.y-dy*0.45} ${ep2.x},${ep2.y}`;
             return (
               <g key={conn.id}>
-                <path d={organicD} stroke="var(--line)" strokeWidth="1.5" fill="none" opacity="0.55"/>
-                <circle cx={ep1.x} cy={ep1.y} r="2.5" fill="var(--laton)" opacity="0.6"/>
-                <circle cx={ep2.x} cy={ep2.y} r="2.5" fill="var(--laton)" opacity="0.6"/>
-                <circle cx={mx} cy={my} r="3.5" fill="var(--laton)" opacity="0.45"/>
+                <path d={organicD} stroke={connColor} strokeWidth="1.5" fill="none" opacity="0.50"/>
+                <circle cx={ep1.x} cy={ep1.y} r="2.5" fill={connColor} opacity="0.55"/>
+                <circle cx={ep2.x} cy={ep2.y} r="2.5" fill={connColor} opacity="0.55"/>
+                <circle cx={mx} cy={my} r="3.5" fill={connColor} opacity="0.40"/>
                 <text x={mx} y={my-7} textAnchor="middle" fontSize="7"
                   fontFamily="'Quicksand',system-ui" fontWeight="600"
-                  fill="var(--ink-3)" letterSpacing="0.05em" opacity="0.7">
+                  fill={connColor} letterSpacing="0.05em" opacity="0.65">
                   {CONN_LABELS[conn.type]}
                 </text>
               </g>
