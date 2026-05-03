@@ -144,8 +144,16 @@ function fmtCountdownHM(ms) {
   if (m > 0) return `${m}m ${s}s`;
   return `${s}s`;
 }
-function fmtDate(t) { return new Date(t).toLocaleDateString("es", { day:"numeric", month:"short" }); }
-function fmtTime(t) { return new Date(t).toLocaleTimeString("es", { hour:"2-digit", minute:"2-digit" }); }
+function fmtDate(t) {
+  if (!t) return "";
+  const d = new Date(typeof t === "object" && t.toDate ? t.toDate() : t);
+  return isNaN(d) ? "" : d.toLocaleDateString("es", { day:"numeric", month:"short" });
+}
+function fmtTime(t) {
+  if (!t) return "";
+  const d = new Date(typeof t === "object" && t.toDate ? t.toDate() : t);
+  return isNaN(d) ? "" : d.toLocaleTimeString("es", { hour:"2-digit", minute:"2-digit" });
+}
 function fmtSize(b) { return b < 1024 ? b+"B" : b < 1048576 ? Math.round(b/1024)+"KB" : (b/1048576).toFixed(1)+"MB"; }
 function fileIcon(name) {
   const ext = (name||"").split(".").pop().toLowerCase();
@@ -2984,7 +2992,7 @@ function CardReaderModal({ card, cardComments, connections, allCards, user, onEd
               </div>
               <span style={{ color:T.ink3, fontSize:13, fontWeight:600 }}>@{card.author}</span>
             </div>
-            <span style={{ color:T.ink4, fontSize:12 }}>{fmtDate(card.createdAt)}</span>
+            <span style={{ color:T.ink4, fontSize:12 }}>{fmtDate(card.ts || card.createdAt)}</span>
             {(cardComments||[]).length > 0 && (
               <span style={{ color:T.ink4, fontSize:12 }}>◇ {cardComments.length} comentarios</span>
             )}
@@ -3085,7 +3093,7 @@ function CardReaderModal({ card, cardComments, connections, allCards, user, onEd
                       <span style={{ color:T.accent, fontWeight:700, fontSize:13 }}>
                         @{c.author}
                       </span>
-                      <span style={{ color:T.ink4, fontSize:11 }}>{fmtDate(c.createdAt)}</span>
+                      <span style={{ color:T.ink4, fontSize:11 }}>{fmtDate(c.ts || c.createdAt)}</span>
                     </div>
                     <div style={{ color:T.ink2, fontSize:14, lineHeight:1.6 }}>{c.text}</div>
                   </div>
@@ -3550,9 +3558,9 @@ function TrashPanel({ cards, onRestore, onDelete, onClose }) {
 
 // ─── CONNECTIONS PANEL ───────────────────────────────────────────────────────
 // Module-level constants (not inside any component)
-const CONN_TYPE_LABELS  = { complementa:"Complementa", secuencia:"Secuencia", contraste:"Contraste", refuerza:"Refuerza" };
-const CONN_TYPE_COLORS  = { complementa:T.accent, secuencia:T.green, contraste:T.orange, refuerza:T.blue };
-const CONN_ALL_TYPES    = ["complementa","secuencia","contraste","refuerza"];
+const CONN_TYPE_LABELS  = { complementa:"Complementa", causa:"Causa", consecuencia:"Consecuencia", contraste:"Contrasta", refuerza:"Refuerza", secuencia:"Secuencia" };
+const CONN_TYPE_COLORS  = { complementa:T.accent, causa:T.amber, consecuencia:T.rose, contraste:T.orange, refuerza:T.blue, secuencia:T.green };
+const CONN_ALL_TYPES    = ["complementa","causa","consecuencia","contraste","refuerza","secuencia"];
 
 // ConnCard is a standalone component — NOT nested inside ConnectionsPanel
 function ConnCard({ conn, cards, connections, onUpdate, onAddAsTask }) {
@@ -3748,9 +3756,9 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
     if (cards.length < 2) { setError("Necesitas al menos 2 tarjetas."); return; }
     setStatus("loading"); setError(""); setCountdown(0);
     const cardTexts = cards.map(c => `ID:${c.id} | [${c.col}][${c.type}] TÍTULO: "${c.title}"${c.body?" | DESC: "+c.body:""}`).join("\n");
-    const prompt = `Eres un analista de ideas. Analiza las tarjetas del proyecto "${concept.title||"sin nombre"}" y detecta conexiones conceptuales reales entre pares.\n\nTARJETAS:\n${cardTexts}\n\nResponde SOLO con JSON válido:\n{"connections":[{"cardA":"id1","cardB":"id2","type":"complementa|secuencia|contraste|refuerza","reason":"Explicación breve (máx 120 caracteres)","strength":8}]}\n\nstrength de 1-10. Solo incluye conexiones con strength >= 6. Máximo 8.`;
+    const prompt = `Eres un editor experto y analista de worldbuilding. Analiza las tarjetas del proyecto "${concept.title||"sin nombre"}" y detecta conexiones conceptuales reales entre pares de tarjetas.\n\nTARJETAS:\n${cardTexts}\n\nTIPOS DE CONEXIÓN:\n- complementa: relación aditiva, uno enriquece al otro\n- causa: una tarjeta genera o provoca a la otra\n- consecuencia: una tarjeta resulta de la otra\n- contraste: tensión, contradicción o conflicto entre ambas\n- refuerza: misma función o patrón en contextos distintos\n- secuencia: orden narrativo o cronológico\n\nResponde SOLO con JSON válido:\n{"connections":[{"cardA":"id1","cardB":"id2","type":"complementa|causa|consecuencia|contraste|refuerza|secuencia","reason":"2-3 oraciones que expliquen: (1) qué tienen en común o cómo se relacionan estas dos tarjetas específicamente, (2) cómo una enriquece o transforma a la otra, (3) qué consecuencia narrativa o creativa tiene esta conexión para el proyecto.","strength":8}]}\n\nIMPORTANTE: El campo reason debe mencionar elementos CONCRETOS del contenido de cada tarjeta, no generalizaciones. strength de 1-10. Solo incluye conexiones con strength >= 6. Máximo 8 conexiones.`;
     try {
-      const txt = await callAI("Detectas conexiones conceptuales entre ideas. Respondes ÚNICAMENTE con JSON válido.", prompt, 800);
+      const txt = await callAI("Eres un editor experto en worldbuilding y análisis narrativo. Detectas conexiones profundas entre ideas creativas. Respondes ÚNICAMENTE con JSON válido, sin texto adicional.", prompt, 1400);
       const clean = txt.trim().replace(/```json|```/g,"").trim();
       const parsed = JSON.parse(clean);
       const findCard = (id) => cards.find(c => c.id===id);
@@ -3917,10 +3925,12 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
 
   async function run() {
     setStatus("loading"); setResult(""); setScores(null); setCountdown(0);
-    const cardText = cards.length ? cards.map(c => `- [${c.col}][${c.type}] ${c.title}${c.body?": "+c.body:""}`).join("\n") : "Sin tarjetas.";
-    const prompt = `Analiza este proyecto con criterio profesional y honesto.\n\nPROYECTO: "${board.name}"\nCATEGORÍA: ${cat.label}${board.subcategories?.length?" > "+board.subcategories.join(", "):""}\n\nCONCEPTO BASE:\n${concept.title||"Sin definir"}\n${concept.desc||""}\n\nTARJETAS:\n${cardText}\n\nAnaliza: 1) Potencial real 2) Debilidades 3) Viabilidad 4) Oportunidad 5) Mejoras 6) Recomendación.\n\nTermina con:\n\`\`\`json\n{"potencial":7,"viabilidad":6,"diferenciacion":5,"madurez":4,"recomendacion":"seguir"}\n\`\`\``;
+    const cardText = cards.length ? cards.map(c => `- [${c.col.toUpperCase()}][${c.type}] ${c.title}${c.body?"\n  └ "+c.body:""}`).join("\n") : "Sin tarjetas.";
+    const subcat = board.subcategories?.length ? " › " + board.subcategories.join(", ") : "";
+    const sysPrompt = cat.expert + " REGLAS CRÍTICAS: (1) Cita elementos CONCRETOS y ESPECÍFICOS del proyecto — nombres propios, conceptos únicos, tensiones narrativas reales. Nunca hagas observaciones genéricas del género. (2) Formula al menos 3 preguntas editoriales abiertas que el autor debe responder. (3) Si detectas contradicciones entre tarjetas, señálalas explícitamente. (4) El análisis de oportunidad debe mencionar el nicho ESPECÍFICO de este proyecto, no el mercado en general.";
+    const prompt = `PROYECTO: "${board.name}" [${cat.label}${subcat}]\n\nCONCEPTO BASE:\n${concept.title||"Sin definir"}\n${concept.desc||"(sin descripción)"}\n\nCONTENIDO DEL PROYECTO (${cards.length} tarjetas):\n${cardText}\n\nAnálisis requerido (6 secciones, en español):\n\n1. POTENCIAL REAL — Evalúa el potencial citando elementos específicos de ESTE proyecto, no del género. ¿Qué tiene de único que justifique su existencia?\n\n2. DEBILIDADES — Lista los problemas concretos de ESTE proyecto: elementos subdesarrollados, riesgos narrativos o de viabilidad específicos de esta premisa y género.\n\n3. VIABILIDAD — Evalúa si el equipo/autor puede ejecutar lo que el concepto requiere, basándote en la complejidad que revelan las tarjetas.\n\n4. OPORTUNIDAD DE MERCADO — Describe el nicho ESPECÍFICO de este proyecto (no del género en general). ¿Hay algo genuinamente escaso en el mercado que esto llena?\n\n5. PREGUNTAS EDITORIALES — Formula exactamente 3 preguntas abiertas y específicas que el creador DEBE responder para que el proyecto avance. Las preguntas deben ser imposibles de responder con un sí/no.\n\n6. RECOMENDACIÓN — Una recomendación concreta, accionable, sin complacencia.\n\nAl final, incluye EXACTAMENTE este JSON (sin texto extra después):\n\`\`\`json\n{"potencial":0,"viabilidad":0,"diferenciacion":0,"madurez":0,"recomendacion":"seguir"}\n\`\`\`\n(recomendacion: "seguir"|"rediseñar"|"simplificar"|"pivotar"|"pausar"|"descartar")`;
     try {
-      const txt = await callAI(cat.expert, prompt, 1000);
+      const txt = await callAI(sysPrompt, prompt, 1400);
       const jm = txt.match(/```json\s*([\s\S]*?)```/);
       if (jm) { try { setScores(JSON.parse(jm[1])); } catch {} }
       setResult(txt.replace(/```json[\s\S]*?```/g,"").trim());
@@ -4562,8 +4572,8 @@ function computeStickerPos(cards, cardPos) {
 // ─── CANVAS STICKER NODE ──────────────────────────────────────────────────────
 const STKR_COLOR = { "opinión":T.blue, "complemento":T.green, "pregunta":T.amber, "objeción":T.rose, "referencia":T.accent };
 const STKR_ICON  = { "opinión":"◇", "complemento":"+", "pregunta":"?", "objeción":"◆", "referencia":"◎" };
-const CONN_COLORS = { complementa:T.accent, secuencia:T.green, contraste:T.orange, refuerza:T.blue };
-const CONN_LABELS = { complementa:"Complementa", secuencia:"Secuencia", contraste:"Contraste", refuerza:"Refuerza" };
+const CONN_COLORS = { complementa:T.accent, causa:T.amber, consecuencia:T.rose, contraste:T.orange, refuerza:T.blue, secuencia:T.green };
+const CONN_LABELS = { complementa:"Comp.", causa:"Causa", consecuencia:"Consec.", contraste:"Contr.", refuerza:"Refuerza", secuencia:"Secu." };
 const CONN_ICONS  = { complementa:"◈", secuencia:"→", contraste:"⇄", refuerza:"◉" };
 
 function CanvasStickerNode({ s, sp, color, icon, onMouseDown, onTouchStart }) {
