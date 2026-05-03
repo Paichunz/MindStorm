@@ -5,17 +5,18 @@ import { createClient } from "@supabase/supabase-js";
 const THEMES = {
   estudio: {
     id:"estudio", label:"Estudio", icon:"◆",
-    // Cardiology tone — warm canvas, white cards, charcoal structure, no color noise
-    bg:"#EAE8E3", bgReal:"#EAE8E3", bgPanel:"#F4F2EE", bgCard:"#FFFFFF", bgHover:"#E2DFD9",
-    border:"rgba(0,0,0,0.07)", border2:"rgba(0,0,0,0.12)",
-    ink:"#1A1816", ink2:"#5A5450", ink3:"#8A8480", ink4:"#B4B0AC",
-    accent:"#2C2826", accentBg:"rgba(44,40,38,0.06)", accentHover:"#3E3A38",
-    green:"#2A9960",  greenBg:"rgba(42,153,96,0.10)",
-    amber:"#B07830",  amberBg:"rgba(176,120,48,0.10)",
-    rose:"#C03858",   roseBg:"rgba(192,56,88,0.10)",
-    blue:"#3868B8",   blueBg:"rgba(56,104,184,0.10)",
-    orange:"#CC5500", orangeBg:"rgba(204,85,0,0.10)",
-    cyan:"#1888A8",   cyanBg:"rgba(24,136,168,0.10)",
+    // Editorial Cream — papel bitácora, tinta oscura, neón solo donde importa
+    bg:"#EFEBE3", bgReal:"#EFEBE3", bgPanel:"#E5E0D5", bgCard:"#FFFFFF", bgHover:"#E5E0D5",
+    border:"rgba(58,50,38,0.08)", border2:"#D8D2C5",
+    ink:"#1a1814", ink2:"#3a352d", ink3:"#6a6258", ink4:"#9a9286",
+    accent:"#1a1814", accentBg:"rgba(26,24,20,0.07)", accentHover:"#2a2620",
+    neon:"#E8F062",   neonSoft:"#F2F4C8",
+    green:"#7A8A4F",  greenBg:"#DCE2C8",
+    amber:"#C97D5C",  amberBg:"#F0DDD2",
+    rose:"#C97D5C",   roseBg:"#F0DDD2",
+    blue:"#6B91B3",   blueBg:"#D5DFE8",
+    orange:"#C97D5C", orangeBg:"#F0DDD2",
+    cyan:"#6B91B3",   cyanBg:"#D5DFE8",
   },
   dark: {
     id:"dark", label:"Noche", icon:"◈", isDark:true,
@@ -468,39 +469,77 @@ function getThemeCSS(id) {
     /* Add-btn in light themes */
     .add-btn { border-color:${t.accent}33 !important; }
     ${id === "estudio" ? `
-    /* Cardiology mode — structural elements neutral, color only in data */
-    .tile:hover { background:#FFFFFF !important; box-shadow:0 20px 48px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,0.08) !important; border-color:rgba(0,0,0,0.10) !important; }
-    .board-area { background-image: radial-gradient(circle, rgba(0,0,0,0.10) 1px, transparent 1px) !important; }
-    .hud-btn { background:#FFFFFF !important; border-color:rgba(0,0,0,0.10) !important; color:#5A5450 !important; border-radius:99px !important; text-transform:none !important; letter-spacing:0 !important; font-family:var(--sans) !important; }
-    .hud-btn:hover { background:#F0EEEA !important; border-color:rgba(0,0,0,0.18) !important; color:#1A1816 !important; box-shadow:none !important; }
-    .hud-btn-active { background:#1A1816 !important; border-color:#1A1816 !important; color:#FFFFFF !important; box-shadow:none !important; }
-    .add-btn { background:rgba(0,0,0,0.02) !important; border-color:rgba(0,0,0,0.14) !important; color:rgba(0,0,0,0.30) !important; }
-    .add-btn:hover { background:rgba(0,0,0,0.04) !important; border-color:rgba(0,0,0,0.28) !important; color:rgba(0,0,0,0.55) !important; }
-    .ai-glow { box-shadow:0 0 0 1px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.10) !important; }
+    /* Editorial Cream — full token override */
+    html,body { background:var(--paper) !important; color:var(--ink-0) !important; }
+    .tile { background:var(--card) !important; border-color:var(--card-border) !important; box-shadow:var(--shadow-1) !important; }
+    .tile:hover { box-shadow:var(--shadow-2) !important; transform:translateY(-2px) !important; }
+    .board-area { background-image:radial-gradient(circle, var(--line-dot) 1px, transparent 1px) !important; background-size:22px 22px !important; }
+    .hud-btn { background:var(--card) !important; border-color:var(--card-border) !important; color:var(--ink-2) !important; box-shadow:var(--shadow-1) !important; }
+    .hud-btn:hover { box-shadow:var(--shadow-2) !important; transform:translateY(-1px) !important; color:var(--ink-0) !important; }
+    .hud-btn-active { background:var(--noir) !important; border-color:var(--noir) !important; color:var(--paper) !important; box-shadow:none !important; transform:none !important; }
+    .add-btn { background:transparent !important; border-color:var(--paper-3) !important; color:var(--ink-3) !important; }
+    .add-btn:hover { background:rgba(26,24,20,0.04) !important; border-color:var(--ink-3) !important; color:var(--ink-1) !important; }
+    .ai-glow { box-shadow:var(--shadow-1) !important; }
     .ai-glow::after { box-shadow:none !important; animation:none !important; }
     .orb-bg::before, .orb-bg::after { opacity:0 !important; }
+    .glass { background:rgba(255,255,255,0.88) !important; border-color:var(--card-border) !important; box-shadow:var(--shadow-2) !important; }
+    .wcard { background:var(--card) !important; border-color:var(--card-border) !important; box-shadow:var(--shadow-1) !important; }
+    .wcard:hover { box-shadow:var(--shadow-2) !important; transform:translateY(-1px) !important; }
     ` : ""}
   `;
 }
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const GLOBAL_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@300;400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300..900;1,300..900&family=Quicksand:wght@300..700&family=JetBrains+Mono:wght@400;500&display=swap');
   :root {
-    --raj: 'Rajdhani', system-ui, sans-serif;
-    --serif: 'DM Serif Display', Georgia, serif;
-    /* Studio dark palette — default (overridden per theme via getThemeCSS) */
-    --mc: #E85200;   /* primary accent — deep orange */
-    --ma: #E85200;   /* AI accent */
-    --mg: #3DAA6C;   /* positive / resolved */
-    --mr: #D04060;   /* conflict / warning */
-    --mb0: #141210;  /* void — deepest background */
-    --mb1: #1C1A18;  /* panel background */
-    --mb2: #242220;  /* card surface */
-    --ink0: #F0EDE8; /* primary text */
-    --ink1: #9C9488; /* secondary text */
-    --ink2: #60584E; /* tertiary text */
-    --ink3: #38342E; /* barely visible */
+    --serif: 'Fraunces', Georgia, serif;
+    /* Editorial Cream tokens */
+    --paper:      #EFEBE3;
+    --paper-2:    #E5E0D5;
+    --paper-3:    #D8D2C5;
+    --ink-0:      #1a1814;
+    --ink-1:      #3a352d;
+    --ink-2:      #6a6258;
+    --ink-3:      #9a9286;
+    --ink-4:      #c8c1b3;
+    --card:       #ffffff;
+    --card-soft:  #faf7f0;
+    --card-border: rgba(58,50,38,0.08);
+    --noir:       #1a1814;
+    --noir-2:     #2a2620;
+    --neon:       #E8F062;
+    --neon-soft:  #F2F4C8;
+    --neon-glow:  rgba(232,240,98,0.5);
+    --terra:      #C97D5C;
+    --terra-soft: #F0DDD2;
+    --olive:      #7A8A4F;
+    --olive-soft: #DCE2C8;
+    --sky:        #6B91B3;
+    --sky-soft:   #D5DFE8;
+    --line:       #2a2620;
+    --line-soft:  rgba(42,38,32,0.18);
+    --line-dot:   rgba(42,38,32,0.10);
+    --shadow-1: 0 1px 0 rgba(58,50,38,0.06), 0 2px 8px rgba(58,50,38,0.06);
+    --shadow-2: 0 1px 0 rgba(58,50,38,0.08), 0 8px 24px rgba(58,50,38,0.08);
+    --shadow-3: 0 2px 0 rgba(58,50,38,0.10), 0 16px 40px rgba(58,50,38,0.12);
+    --r-sm:  10px;
+    --r-md:  16px;
+    --r-lg:  22px;
+    --r-pill: 999px;
+    /* Legacy dark vars — still used by dark theme components */
+    --raj: 'Quicksand', system-ui, sans-serif;
+    --mc: #E85200;
+    --ma: #E85200;
+    --mg: #3DAA6C;
+    --mr: #D04060;
+    --mb0: #141210;
+    --mb1: #1C1A18;
+    --mb2: #242220;
+    --ink0: #F0EDE8;
+    --ink1: #9C9488;
+    --ink2: #60584E;
+    --ink3: #38342E;
   }
 
   /* ── Autofill override — Chrome replaces bg+text color on saved inputs ── */
@@ -508,28 +547,28 @@ const GLOBAL_CSS = `
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
   input:-webkit-autofill:active {
-    -webkit-text-fill-color: var(--ink0) !important;
-    -webkit-box-shadow: 0 0 0 1000px #242220 inset !important;
-    caret-color: var(--ink0) !important;
+    -webkit-text-fill-color: var(--ink-0) !important;
+    -webkit-box-shadow: 0 0 0 1000px var(--card) inset !important;
+    caret-color: var(--ink-0) !important;
     transition: background-color 9999s ease-in-out 0s;
   }
 
-  /* ── Mycelium card — Cardiology tone: white, clean, shadows only ── */
-  .mcard { position:absolute; width:240px; background:#FFFFFF; border:1px solid rgba(0,0,0,0.08); border-radius:10px; box-shadow:0 2px 12px rgba(0,0,0,0.08),0 1px 3px rgba(0,0,0,0.05); font-family:var(--sans); user-select:none; z-index:5; transition:border-color .15s, box-shadow .18s, width .2s; cursor:grab; }
-  .mcard:hover { border-color:rgba(0,0,0,0.14); box-shadow:0 8px 28px rgba(0,0,0,0.13),0 2px 6px rgba(0,0,0,0.07); }
-  .mcard-exp { width:300px !important; z-index:8 !important; box-shadow:0 16px 48px rgba(0,0,0,0.16),0 4px 12px rgba(0,0,0,0.08) !important; }
-  .mcard-head { display:flex; align-items:center; gap:8px; padding:9px 12px; border-bottom:1px solid rgba(0,0,0,0.06); }
-  .mcard-glyph { flex:none; color:rgba(0,0,0,0.28); font-size:11px; width:14px; }
-  .mcard-title { flex:1; font-size:13px; font-weight:600; letter-spacing:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#1A1816; }
-  .mcard-dot { width:7px; height:7px; border-radius:50%; flex:none; }
-  .mcard-body { padding:10px 12px; font-size:12px; line-height:1.55; color:#5A5450; }
+  /* ── Mycelium card — Editorial Cream: papel blanco, tinta, Fraunces italic ── */
+  .mcard { position:absolute; width:250px; background:var(--card); border:1px solid var(--card-border); border-radius:var(--r-md); box-shadow:var(--shadow-1); font-family:var(--sans); user-select:none; z-index:5; transition:box-shadow .18s, transform .18s, width .2s; cursor:grab; }
+  .mcard:hover { box-shadow:var(--shadow-2); transform:translateY(-1px); }
+  .mcard-exp { width:300px !important; z-index:8 !important; box-shadow:var(--shadow-3) !important; }
+  .mcard-head { display:flex; align-items:center; gap:8px; padding:10px 13px; border-bottom:1px solid var(--card-border); cursor:grab; }
+  .mcard-glyph { flex:none; color:var(--ink-3); font-size:10px; width:12px; }
+  .mcard-title { flex:1; font-family:var(--serif); font-style:italic; font-size:14px; font-weight:500; letter-spacing:-0.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink-0); }
+  .mcard-dot { width:7px; height:7px; border-radius:50%; flex:none; opacity:0.85; }
+  .mcard-body { padding:10px 13px; font-size:12px; line-height:1.6; color:var(--ink-1); font-family:var(--sans); }
   .mcard-body p { margin-bottom:8px; }
   .mcard-tags { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px; }
-  .mtag { font-size:10px; padding:2px 8px; border-radius:99px; border:1px solid rgba(0,0,0,0.10); color:#8A8480; font-family:var(--sans); }
-  .mmuted { color:#B4B0AC; font-size:10px; margin-bottom:8px; }
+  .mtag { font-size:10px; font-weight:600; padding:2px 8px; border-radius:var(--r-pill); border:1px solid var(--paper-3); color:var(--ink-2); font-family:var(--sans); letter-spacing:0.04em; }
+  .mmuted { color:var(--ink-3); font-size:10px; font-family:var(--mono); letter-spacing:0.06em; margin-bottom:8px; }
   .mcard-btns { display:flex; gap:6px; flex-wrap:wrap; }
-  .mcard-btns button { font-family:var(--sans); background:transparent; border:1px solid rgba(0,0,0,0.12); color:#5A5450; padding:4px 12px; border-radius:99px; font-size:11px; cursor:pointer; transition:.13s; }
-  .mcard-btns button:hover { border-color:rgba(0,0,0,0.28); color:#1A1816; background:rgba(0,0,0,0.03); }
+  .mcard-btns button { font-family:var(--sans); background:var(--card); border:1px solid var(--card-border); color:var(--ink-1); padding:5px 12px; border-radius:var(--r-pill); font-size:11px; font-weight:500; cursor:pointer; transition:.13s; box-shadow:var(--shadow-1); }
+  .mcard-btns button:hover { box-shadow:var(--shadow-2); transform:translateY(-1px); }
 
   /* ── HUD corner brackets — invisible in Cardiology tone ── */
   .hud-c { position:relative; }
@@ -539,28 +578,29 @@ const GLOBAL_CSS = `
   .mcard:hover .hud-c::before, .mcard:hover .hud-c::after,
   .mcard-exp .hud-c::before, .mcard-exp .hud-c::after { opacity:0; }
 
-  /* ── Mycelium HUD toolbar buttons ── */
-  .hud-btn { font-family:var(--sans); background:var(--mb2); border:1px solid rgba(0,0,0,0.10); color:var(--ink1); padding:5px 12px; text-transform:none; letter-spacing:0; font-size:12px; font-weight:500; cursor:pointer; transition:.14s; border-radius:99px; }
-  .hud-btn:hover { border-color:rgba(0,0,0,0.22); color:var(--ink0); background:var(--mb1); }
-  .hud-btn-active { border-color:rgba(0,0,0,0.30) !important; color:var(--ink0) !important; background:var(--mb0) !important; }
+  /* ── HUD toolbar buttons — pill blanca + sombra ── */
+  .hud-btn { font-family:var(--sans); background:var(--card); border:1px solid var(--card-border); color:var(--ink-2); padding:6px 14px; text-transform:none; letter-spacing:0; font-size:12px; font-weight:500; cursor:pointer; transition:.15s; border-radius:var(--r-pill); box-shadow:var(--shadow-1); display:inline-flex; align-items:center; gap:5px; }
+  .hud-btn:hover { box-shadow:var(--shadow-2); transform:translateY(-1px); color:var(--ink-0); }
+  .hud-btn-active { background:var(--noir) !important; border-color:var(--noir) !important; color:var(--paper) !important; box-shadow:none !important; transform:none !important; }
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-  :root { --sans:'Outfit',sans-serif; --mono:'JetBrains Mono',monospace; }
-  html, body { background:#141210; min-height:100vh; }
+  :root { --sans:'Quicksand',sans-serif; --mono:'JetBrains Mono',monospace; }
+  html, body { background:var(--paper); color:var(--ink-0); font-family:var(--sans); min-height:100vh; }
 
-  /* ── Edge vignette — subtle depth, not game-UI darkness ── */
+  /* ── Dot grid — referencia n8n, tenue como papel punteado ── */
   body::before {
     content: '';
     position: fixed; inset: 0;
-    background: radial-gradient(ellipse 120% 120% at 50% 50%,
-      transparent 70%, rgba(0,0,0,0.06) 100%);
+    background-image: radial-gradient(circle, var(--line-dot) 1px, transparent 1px);
+    background-size: 22px 22px;
     pointer-events: none;
-    z-index: 9998;
+    z-index: 0;
+    opacity: 0.7;
   }
 
-  /* ── Board canvas — dot grid (workspace signal, ref: Project Collaboration Space) ── */
+  /* ── Board canvas — dot grid, same token as body::before ── */
   .board-area {
-    background-image: radial-gradient(circle, rgba(0,0,0,0.10) 1px, transparent 1px);
-    background-size: 28px 28px;
+    background-image: radial-gradient(circle, var(--line-dot) 1px, transparent 1px);
+    background-size: 22px 22px;
   }
 
   /* Dark-theme base — overridden per-theme by getThemeCSS() */
@@ -617,16 +657,16 @@ const GLOBAL_CSS = `
   @keyframes popIn     { from{opacity:0;transform:scale(.88)} to{opacity:1;transform:scale(1)} }
 
   .tile {
-    /* ease-out-quart — no bounce/elastic */
-    transition: transform .22s cubic-bezier(.25,.46,.45,.94), box-shadow .22s, border-color .22s, background .22s;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    box-shadow: var(--shadow-1);
+    transition: transform .2s cubic-bezier(.25,.46,.45,.94), box-shadow .2s;
     cursor:pointer;
     position: relative;
   }
   .tile:hover {
-    transform: translateY(-4px) scale(1.012);
-    box-shadow: 0 20px 48px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.08) !important;
-    border-color: rgba(0,0,0,.10) !important;
-    background: #FFFFFF !important;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-2) !important;
   }
   .wcard {
     transition: transform .16s cubic-bezier(.25,.46,.45,.94), box-shadow .16s, border-color .16s;
@@ -4721,26 +4761,26 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
             const color=CONN_COLORS[conn.type]||T.accent;
             const str=conn.strength||7;
             const bx=mx+ox, by=my+oy;
-            // Mycelium connection colors
-            const mcColor = conn.type==="contraste" ? "#B07830"
-              : conn.type==="refuerza" ? "#2A9960"
-              : conn.type==="secuencia" ? "#3868B8"
-              : "#3A3632"; // complementa + default = warm charcoal
             const isMicelio = layoutMode==="micelio";
+            // Organic curve path for micelio — spec §9b
+            const dx = ep2.x - ep1.x;
+            const organicD = `M${ep1.x},${ep1.y} C${ep1.x+dx*0.5},${ep1.y} ${ep2.x-dx*0.5},${ep2.y} ${ep2.x},${ep2.y}`;
             return (
               <g key={conn.id}>
                 {isMicelio ? (
-                  /* Mycelium style — clean line + endpoint dots + label */
+                  /* Organic curve — noir dots + neon midpoint — spec §9 */
                   <>
-                    <line x1={ep1.x} y1={ep1.y} x2={ep2.x} y2={ep2.y}
-                      stroke={mcColor} strokeWidth="1.5"
-                      strokeDasharray={conn.type==="contraste" ? "6 4" : "0"}
-                      opacity="0.75"/>
-                    <circle cx={ep1.x} cy={ep1.y} r="3.5" fill={mcColor} opacity="0.9"/>
-                    <circle cx={ep2.x} cy={ep2.y} r="3.5" fill={mcColor} opacity="0.9"/>
-                    <text x={mx+ox} y={my+oy-7} textAnchor="middle" fontSize="9"
-                      fontFamily="'JetBrains Mono',monospace" fontWeight="500"
-                      fill={mcColor} opacity="0.85">
+                    <path d={organicD}
+                      stroke="var(--line)" strokeWidth="1.4" fill="none" opacity="0.7"/>
+                    {/* Endpoint dots — always noir sólido */}
+                    <circle cx={ep1.x} cy={ep1.y} r="3.5" fill="var(--noir)"/>
+                    <circle cx={ep2.x} cy={ep2.y} r="3.5" fill="var(--noir)"/>
+                    {/* Midpoint neon dot — firma del sistema */}
+                    <circle cx={mx} cy={my} r="4" fill="var(--neon)" stroke="var(--noir)" strokeWidth="1"/>
+                    {/* Type label — tenue, por encima del dot */}
+                    <text x={mx} y={my-9} textAnchor="middle" fontSize="8"
+                      fontFamily="'Quicksand',system-ui" fontWeight="600"
+                      fill="var(--ink-3)" letterSpacing="0.04em">
                       {CONN_LABELS[conn.type]}
                     </text>
                   </>
@@ -4779,9 +4819,13 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
             const sx=spp.x+55+3000, sy=spp.y+30+3000;
             const ep=edgePt(cx,cy,sx,sy);
             return (
-              <path key={s.id}
-                d={`M${ep.x} ${ep.y} C${ep.x} ${(ep.y+sy)/2} ${sx} ${(ep.y+sy)/2} ${sx} ${sy}`}
-                fill="none" stroke={color} strokeWidth="1.5" strokeDasharray="4 3" opacity="0.45"/>
+              <g key={s.id}>
+                <path
+                  d={`M${ep.x} ${ep.y} C${ep.x} ${(ep.y+sy)/2} ${sx} ${(ep.y+sy)/2} ${sx} ${sy}`}
+                  fill="none" stroke="var(--line-soft)" strokeWidth="1.4" strokeDasharray="4 4"/>
+                <circle cx={ep.x} cy={ep.y} r="2.5" fill="var(--noir)" opacity="0.45"/>
+                <circle cx={sx} cy={sy} r="2.5" fill={color} opacity="0.7"/>
+              </g>
             );
           })}
         </svg>
@@ -4888,10 +4932,7 @@ function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchSta
 
   return (
     <div className={`mcard hud-c${expanded ? " mcard-exp" : ""}`}
-      style={{ left:p.x, top:p.y,
-        borderColor:"rgba(0,0,0,0.08)",
-        borderLeft:`3px solid ${pbd}`,
-        cursor:"grab", userSelect:"none" }}
+      style={{ left:p.x, top:p.y, cursor:"grab", userSelect:"none" }}
       onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
 
       {/* Header row — click to expand/collapse */}
