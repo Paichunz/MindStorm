@@ -2398,7 +2398,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 transition:"all .15s" }}
               onMouseEnter={e => { e.currentTarget.style.background="var(--paper-2)"; e.currentTarget.style.color=T.ink; }}
               onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color=T.ink4; }}>
-              ◻
+              ▤
             </button>
 
             {deletedCards.length > 0 && (
@@ -2424,7 +2424,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                   background:T.amberBg, color:T.amber,
                   fontSize:14, display:"flex", alignItems:"center", justifyContent:"center",
                   transition:"all .15s" }}>
-                ◻
+                ◎
               </button>
             )}
 
@@ -2586,7 +2586,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 canvasPositions={data.canvasPositions || { cards:{}, stickers:{} }}
                 onSavePositions={saveCanvasPositions}
                 cat={cat}
-                onAddCard={() => setAddingTo("concepto")}
+                onAddCard={() => { setViewMode("kanban"); setAddingTo("concepto"); }}
               />
             : <div style={{ display:"flex", flex:1, overflow:"hidden", position:"relative" }}>
               <div style={{ display:"flex", flexDirection:isMobile?"column":"row", gap:isMobile?12:14,
@@ -4623,7 +4623,7 @@ Escribe en español. Usa markdown con headers (##), bullets (-) y énfasis (**).
 }
 
 // ─── CANVAS LAYOUTS ───────────────────────────────────────────────────────────
-const CARD_W = 250, CARD_H = 60; // collapsed card dimensions — matches .mcard { width:250px }
+const CARD_W = 250, CARD_H = 44; // collapsed .mcard: 1px border + 10px padding + ~22px text + 10px padding + 1px border
 const STKR_W = 185, STKR_HH = 20; // sticker card width + half-height of header attachment point
 const NODE_R  = 34; // skill-tree node radius (px)
 
@@ -4943,7 +4943,7 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
     const pad = 80;
     const scaleX = (vw - pad * 2) / Math.max(1, maxX - minX);
     const scaleY = (vh - pad * 2) / Math.max(1, maxY - minY);
-    const nz = Math.min(1.4, Math.max(0.15, Math.min(scaleX, scaleY)));
+    const nz = Math.min(1.0, Math.max(0.15, Math.min(scaleX, scaleY)));
     const pw = (maxX - minX) * nz;
     const ph = (maxY - minY) * nz;
     const px = (vw - pw) / 2 - minX * nz;
@@ -5400,15 +5400,30 @@ function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchSta
   const ico = NODE_ICONS[card.type] || "◈";
   const colColor = col?.color || "#6B7280";
   const isBase = card.col === "listo"; // visually highlight finished cards
+  const didDragRef = useRef(false);
+
+  function handleMouseDown(e) {
+    didDragRef.current = false;
+    onMouseDown(e);
+    const sx = e.clientX, sy = e.clientY;
+    function detectMove(ev) {
+      if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 5) {
+        didDragRef.current = true;
+      }
+    }
+    function cleanUp() { document.removeEventListener("mousemove", detectMove); }
+    document.addEventListener("mousemove", detectMove);
+    document.addEventListener("mouseup", cleanUp, { once: true });
+  }
 
   return (
     <div className={`mcard hud-c${expanded ? " mcard-exp" : ""}`}
       style={{ left:p.x, top:p.y, cursor:"grab", userSelect:"none" }}
-      onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
+      onMouseDown={handleMouseDown} onTouchStart={onTouchStart}>
 
-      {/* Header row — click to expand/collapse */}
+      {/* Header row — click to expand/collapse (skipped if drag occurred) */}
       <div className="mcard-head"
-        onClick={e => { e.stopPropagation(); setExpanded(v => !v); }}>
+        onClick={e => { if (didDragRef.current) return; e.stopPropagation(); setExpanded(v => !v); }}>
         <span className="mcard-glyph">{expanded ? "◢" : "▸"}</span>
         <span className="mcard-title">{card.title}</span>
         <span className="mcard-dot" style={{ background:colColor,
@@ -5479,11 +5494,18 @@ const WORLD_CATS = [
   { key:"otros",      label:"Otros",       icon:"◈",   examples:[] },
 ];
 
+const WB_VER_KEY = (boardId) => `ms-wb-versions-${boardId}`;
+const MAX_WB_VERSIONS = 5;
+
 function WorldbuildingPanel({ board, concept, cards, cat, onClose }) {
-  const [tab, setTab]     = useState("world");
-  const [status, setStatus] = useState("idle");
-  const [data, setData]   = useState(null);
-  const [error, setError] = useState("");
+  const [tab, setTab]         = useState("world");
+  const [status, setStatus]   = useState("idle");
+  const [data, setData]       = useState(null);
+  const [error, setError]     = useState("");
+  const [wbVersions, setWbVersions] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(WB_VER_KEY(board.id)) || "[]"); } catch { return []; }
+  });
+  const [showWbVersions, setShowWbVersions] = useState(false);
 
   const cardText = cards.map(c =>
     `TARJETA [${c.type}] "${c.title}":\n${c.body || "(sin descripción)"}`
@@ -5561,7 +5583,15 @@ Incluye TODOS los personajes mencionados, aunque sea brevemente. Infiere relacio
       const raw = await callAI("Eres un asistente experto en worldbuilding literario. Extraes información estructurada de textos creativos. Respondes ÚNICAMENTE con JSON válido, sin texto adicional, sin comentarios, sin markdown.", PROMPTS[tab], 2000);
       const txt = raw.trim().replace(/```json|```/g,"").trim();
       const parsed = JSON.parse(txt);
-      setData(prev => ({ ...(prev||{}), [tab]: parsed }));
+      const newData = { ...(data||{}), [tab]: parsed };
+      setData(newData);
+      // Save snapshot to version history
+      const entry = { ts: Date.now(), tab, tabLabel: WB_TABS.find(t=>t.id===tab)?.label || tab, data: newData };
+      setWbVersions(prev => {
+        const updated = [entry, ...prev].slice(0, MAX_WB_VERSIONS);
+        try { localStorage.setItem(WB_VER_KEY(board.id), JSON.stringify(updated)); } catch {}
+        return updated;
+      });
       setStatus("done");
     } catch(e) {
       if (e.code==="NO_KEY"||e.code==="INVALID_KEY") { setStatus("no_key"); }
@@ -5580,7 +5610,7 @@ Incluye TODOS los personajes mencionados, aunque sea brevemente. Infiere relacio
         <div style={{padding:"16px 20px 0",borderBottom:"1px solid "+T.border}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
             <div style={{display:"flex",gap:9,alignItems:"center"}}>
-              <span style={{fontSize:20}}>◻</span>
+              <span style={{fontSize:20}}>◎</span>
               <div>
                 <div style={{color:T.ink,fontWeight:800,fontSize:17}}>Mundo de {concept.title||board.name}</div>
                 <div style={{color:T.ink4,fontFamily:"var(--mono)",fontSize:11}}>Extracción automática con IA · {cards.length} tarjetas analizadas</div>
@@ -5638,9 +5668,49 @@ Incluye TODOS los personajes mencionados, aunque sea brevemente. Infiere relacio
           )}
           {status==="done" && tabData && (
             <div>
-              <div style={{display:"flex",gap:8,marginBottom:16}}>
+              <div style={{display:"flex",gap:8,marginBottom:16,alignItems:"center",flexWrap:"wrap"}}>
                 <OGhostBtn small onClick={()=>setStatus("idle")}>↻ Re-analizar</OGhostBtn>
+                {wbVersions.length > 1 && (
+                  <OGhostBtn small onClick={()=>setShowWbVersions(v=>!v)}>
+                    {showWbVersions ? "▾ Ocultar historial" : `▸ Historial (${wbVersions.length - 1})`}
+                  </OGhostBtn>
+                )}
               </div>
+              {showWbVersions && (
+                <div style={{background:T.bgPanel,border:"1px solid "+T.border,borderRadius:10,
+                  padding:"12px 14px",marginBottom:16}}>
+                  <div style={{color:T.ink4,fontFamily:"var(--mono)",fontSize:10,
+                    letterSpacing:".08em",marginBottom:8}}>ANÁLISIS ANTERIORES</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                    {wbVersions.slice(1).map((v,i) => (
+                      <div key={i} style={{display:"flex",alignItems:"center",gap:8,
+                        padding:"7px 10px",borderRadius:7,background:T.bgCard,
+                        border:"1px solid "+T.border}}>
+                        <span style={{color:T.amber,fontSize:12,flexShrink:0}}>▤</span>
+                        <span style={{color:T.ink3,fontSize:12,flex:1}}>
+                          {v.tabLabel} · {new Date(v.ts).toLocaleDateString("es",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}
+                        </span>
+                        <button onClick={()=>{
+                          setData(v.data);
+                          const restored = v.data[tab];
+                          if (restored) setStatus("done");
+                          setShowWbVersions(false);
+                        }} style={{background:"none",border:"none",cursor:"pointer",
+                          color:T.accent,fontFamily:"var(--mono)",fontSize:11,padding:"2px 8px",
+                          borderRadius:5,transition:"all .12s"}}
+                          onMouseEnter={e=>e.currentTarget.style.background=T.accentBg}
+                          onMouseLeave={e=>e.currentTarget.style.background="none"}>
+                          Restaurar
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          {status==="done" && tabData && (
+            <div>
 
               {/* WORLD ATLAS */}
               {tab==="world" && (
@@ -5681,7 +5751,7 @@ Incluye TODOS los personajes mencionados, aunque sea brevemente. Infiere relacio
                   <div>
                     {tabData.sistema_temporal && (
                       <div style={{background:T.amberBg,border:"1px solid "+T.amber+"44",borderRadius:8,padding:"10px 14px",marginBottom:16,display:"flex",gap:8}}>
-                        <span style={{color:T.amber,fontSize:14,flexShrink:0}}>◻</span>
+                        <span style={{color:T.amber,fontSize:14,flexShrink:0}}>▤</span>
                         <div>
                           <div style={{color:T.amber,fontWeight:700,fontSize:13}}>Sistema temporal</div>
                           <div style={{color:T.amber,fontSize:12,marginTop:2}}>{tabData.sistema_temporal}</div>
@@ -5932,11 +6002,10 @@ function OOverlay({ children, onClose }) {
 }
 function OModalBox({ children, wide }) {
   return (
-    <div style={{ background:"rgba(10,9,8,0.96)", border:"1px solid rgba(196,150,60,0.14)",
+    <div style={{ background:T.bgCard, border:`1px solid ${T.border}`,
       borderRadius:18, padding:"28px", width:"100%", maxWidth:wide?510:430,
       maxHeight:"90vh", overflowY:"auto",
-      boxShadow:"0 40px 100px rgba(0,0,0,.7), 0 0 0 1px rgba(196,150,60,0.10), inset 0 1px 0 rgba(255,255,255,0.06)",
-      backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)",
+      boxShadow:"var(--shadow-3)",
       animation:"scaleIn .22s cubic-bezier(.16,1,.3,1)" }}>
       {children}
     </div>
