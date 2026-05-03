@@ -1168,6 +1168,8 @@ function MindStormLogo({ size = "md", light = true }) {
 function JoinScreen({ onJoin }) {
   const [name, setName] = useState("");
   const { themeId } = useTheme();
+  const inputRef = useRef(null);
+  useEffect(() => { const t = setTimeout(() => inputRef.current?.focus(), 80); return () => clearTimeout(t); }, []);
   return (
     <div className="orb-bg" style={{ minHeight:"100vh", background:T.bg, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"var(--sans)", position:"relative" }}>
       <style>{GLOBAL_CSS}</style>
@@ -1186,7 +1188,7 @@ function JoinScreen({ onJoin }) {
           <p style={{ color:T.ink3, fontSize:14, marginBottom:20, lineHeight:1.5 }}>
             Elige tu nombre para comenzar
           </p>
-          <OInput placeholder="Tu nombre…" aria-label="Tu nombre de usuario" value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key==="Enter" && name.trim() && onJoin({name:name.trim()})} autoFocus style={{ marginBottom:12, textAlign:"center", fontSize:16 }} />
+          <OInput ref={inputRef} placeholder="Tu nombre…" aria-label="Tu nombre de usuario" value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key==="Enter" && name.trim() && onJoin({name:name.trim()})} autoFocus style={{ marginBottom:12, textAlign:"center", fontSize:16 }} />
           <OBtn full onClick={() => name.trim() && onJoin({name:name.trim()})}>Entrar al espacio →</OBtn>
         </div>
         <p style={{ color:T.ink4, fontSize:10, marginTop:16, fontFamily:"var(--mono)", letterSpacing:"0.05em" }}>Tu nombre se guarda en este dispositivo</p>
@@ -1199,6 +1201,8 @@ function JoinScreen({ onJoin }) {
 function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefresh, onSignOut, onImport }) {
   const [creating, setCreating]       = useState(false);
   const [search, setSearch]           = useState("");
+  const [filterCat, setFilterCat]     = useState("");  // "" = all categories
+  const [sortBy, setSortBy]           = useState("recent"); // "recent" | "name"
   const [pwdModal, setPwdModal]       = useState(null);
   const [deleteModal, setDeleteModal] = useState(null);
   const [importing, setImporting]     = useState(false);
@@ -1210,7 +1214,16 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
   const seen = new Set(); const allBoards = boards.filter(b => { if (seen.has(b.id)) return false; seen.add(b.id); return true; });
-  function filtered(list) { if (!search) return list; const q = search.toLowerCase(); return list.filter(b => (b.name+" "+(b.conceptTitle||"")+" "+b.categoryId).toLowerCase().includes(q)); }
+  function filtered(list) {
+    let result = list;
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(b => (b.name+" "+(b.conceptTitle||"")+" "+b.categoryId).toLowerCase().includes(q));
+    }
+    if (filterCat) result = result.filter(b => b.categoryId === filterCat);
+    if (sortBy === "name") result = [...result].sort((a,b) => a.name.localeCompare(b.name, "es"));
+    return result;
+  }
   async function handleOpen(board) { if (!board.password || myIds.includes(board.id)) { await onOpen(board, board.password); } else { setPwdModal(board); } }
 
   // Export single board
@@ -1360,9 +1373,30 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
             </div>
           )}
 
-          <div style={{ position:"relative", marginBottom:20 }}>
-            <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:T.ink4, fontSize:14, pointerEvents:"none" }}>◎</span>
-            <OInput placeholder="Buscar proyectos…" aria-label="Buscar proyectos" value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft:36 }} />
+          <div style={{ display:"flex", gap:8, marginBottom:20, flexWrap:"wrap" }}>
+            {/* Search */}
+            <div style={{ position:"relative", flex:"1 1 180px", minWidth:140 }}>
+              <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:T.ink4, fontSize:14, pointerEvents:"none" }}>◎</span>
+              <OInput placeholder="Buscar proyectos…" aria-label="Buscar proyectos" value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft:36 }} />
+            </div>
+            {/* Category filter */}
+            <select value={filterCat} onChange={e => setFilterCat(e.target.value)}
+              style={{ background:T.bgCard, border:`1.5px solid ${T.border2}`, color:filterCat?T.ink:T.ink4,
+                padding:"11px 12px", borderRadius:10, fontFamily:"var(--sans)", fontSize:13,
+                cursor:"pointer", outline:"none", flexShrink:0 }}>
+              <option value="">Todas las categorías</option>
+              {CATEGORIES.map(c => (
+                <option key={c.id} value={c.id}>{c.label.replace(/^[^A-Za-záéíóúàèìòùñÁÉÍÓÚÀÈÌÒÙÑ]+/, "").trim()}</option>
+              ))}
+            </select>
+            {/* Sort */}
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)}
+              style={{ background:T.bgCard, border:`1.5px solid ${T.border2}`, color:T.ink3,
+                padding:"11px 12px", borderRadius:10, fontFamily:"var(--mono)", fontSize:11,
+                cursor:"pointer", outline:"none", flexShrink:0, letterSpacing:"0.04em" }}>
+              <option value="recent">Más reciente</option>
+              <option value="name">A → Z</option>
+            </select>
           </div>
           {creating && <CreateBoardModal onClose={() => setCreating(false)} onCreate={onCreate} />}
           {pwdModal && <PasswordModal board={pwdModal} onClose={() => setPwdModal(null)} onSubmit={async pwd => { const r = await onOpen(pwdModal, pwd); if (r==="wrong") return false; setPwdModal(null); return true; }} />}
@@ -3581,6 +3615,16 @@ function ConnCard({ conn, cards, connections, onUpdate, onAddAsTask }) {
     await onUpdate(connections.map(c => c.id===connId ? {...c, status:newStatus} : c));
   }
 
+  function tryDiscard(connId) {
+    if (conn.strength >= 8) {
+      const ok = window.confirm(
+        `Esta conexión tiene una relevancia de ${conn.strength}/10.\n\n¿Estás seguro de que quieres descartarla? Puedes recuperarla después.`
+      );
+      if (!ok) return;
+    }
+    doUpdateStatus(connId, "discarded");
+  }
+
   async function saveEdit() {
     await onUpdate(connections.map(c =>
       c.id === conn.id
@@ -3684,11 +3728,11 @@ function ConnCard({ conn, cards, connections, onUpdate, onAddAsTask }) {
           {conn.status==="pending" && <>
             <button onClick={()=>doUpdateStatus(conn.id,"approved")} style={{ flex:1, background:T.greenBg, border:"1px solid "+T.green+"44", color:T.green, padding:"7px", borderRadius:7, cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"var(--sans)" }}>✓ Aprobar</button>
             <button onClick={()=>doUpdateStatus(conn.id,"review")}   style={{ flex:1, background:T.amberBg, border:"1px solid "+T.amber+"44", color:T.amber, padding:"7px", borderRadius:7, cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"var(--sans)" }}>◯ Revisar</button>
-            <button onClick={()=>doUpdateStatus(conn.id,"discarded")} style={{ flex:1, background:T.roseBg, border:"1px solid "+T.rose+"44", color:T.rose, padding:"7px", borderRadius:7, cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"var(--sans)" }}>✕ Descartar</button>
+            <button onClick={()=>tryDiscard(conn.id)} style={{ flex:1, background:T.roseBg, border:"1px solid "+T.rose+"44", color:T.rose, padding:"7px", borderRadius:7, cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"var(--sans)" }}>✕ Descartar</button>
           </>}
           {conn.status==="review" && <>
             <button onClick={()=>doUpdateStatus(conn.id,"approved")}  style={{ background:T.greenBg, border:"1px solid "+T.green+"44", color:T.green, padding:"6px 12px", borderRadius:7, cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"var(--sans)" }}>✓ Aprobar</button>
-            <button onClick={()=>doUpdateStatus(conn.id,"discarded")} style={{ background:T.roseBg, border:"1px solid "+T.rose+"44", color:T.rose, padding:"6px 12px", borderRadius:7, cursor:"pointer", fontSize:12, fontFamily:"var(--sans)" }}>✕ Descartar</button>
+            <button onClick={()=>tryDiscard(conn.id)} style={{ background:T.roseBg, border:"1px solid "+T.rose+"44", color:T.rose, padding:"6px 12px", borderRadius:7, cursor:"pointer", fontSize:12, fontFamily:"var(--sans)" }}>✕ Descartar</button>
             <span style={{ background:T.amberBg, color:T.amber, fontFamily:"var(--mono)", fontSize:10, padding:"3px 10px", borderRadius:99, alignSelf:"center" }}>◯ En revisión</span>
           </>}
           {conn.status==="approved" && <>
@@ -5347,8 +5391,11 @@ Incluye TODOS los personajes mencionados, aunque sea brevemente. Infiere relacio
                   borderBottom:"3px solid "+(tab===t.id?T.amber:"transparent"),
                   color:tab===t.id?T.amber:T.ink3,padding:"9px 18px",cursor:"pointer",
                   fontSize:13,fontWeight:tab===t.id?700:400,fontFamily:"var(--sans)",
-                  marginBottom:-1,transition:"all .15s",display:"flex",gap:6,alignItems:"center"}}>
+                  marginBottom:-1,transition:"all .15s",display:"flex",gap:6,alignItems:"center",position:"relative"}}>
                 {t.icon} {t.label}
+                <span style={{fontSize:8,fontFamily:"var(--mono)",background:T.amberBg,color:T.amber,
+                  borderRadius:99,padding:"1px 5px",fontWeight:600,letterSpacing:"0.06em",
+                  lineHeight:"14px",opacity:0.85,flexShrink:0}}>BETA</span>
               </button>
             ))}
           </div>
@@ -5357,6 +5404,17 @@ Incluye TODOS los personajes mencionados, aunque sea brevemente. Infiere relacio
         {/* Body */}
         <div style={{flex:1,overflow:"auto",padding:"18px 20px"}}>
           {status==="no_key" && <AIKeySetup onSaved={() => setStatus("idle")} />}
+          {/* Beta notice */}
+          <div style={{background:T.amberBg,border:`1px solid ${T.amber}44`,borderRadius:8,
+            padding:"10px 14px",marginBottom:16,display:"flex",gap:10,alignItems:"flex-start"}}>
+            <span style={{color:T.amber,fontSize:13,flexShrink:0}}>◆</span>
+            <div>
+              <span style={{color:T.amber,fontWeight:700,fontSize:12,fontFamily:"var(--mono)"}}>Módulo en desarrollo</span>
+              <p style={{color:T.ink3,fontSize:12,margin:"3px 0 0",lineHeight:1.5}}>
+                {WB_TABS.find(t=>t.id===tab)?.label} es una funcionalidad experimental. Los resultados pueden ser incompletos o requerir corrección manual.
+              </p>
+            </div>
+          </div>
           {/* Analyze button */}
           {(status==="idle"||status==="error") && (
             <div style={{marginBottom:18}}>
@@ -5594,17 +5652,17 @@ function FamilyTreeSVG({ personajes, relaciones }) {
 }
 
 // ─── DESIGN SYSTEM ────────────────────────────────────────────────────────────
-function OInput({ style, ...props }) {
+const OInput = React.forwardRef(function OInput({ style, ...props }, ref) {
   return (
-    <input {...props}
+    <input ref={ref} {...props}
       style={{ background:T.bgCard, border:`1.5px solid ${T.border2}`, color:T.ink,
         padding:"11px 14px", borderRadius:10, fontFamily:"var(--sans)", fontSize:14, width:"100%",
         outline:"none", transition:"border-color .2s, box-shadow .2s", ...style }}
-      onFocus={e => { e.target.style.borderColor = T.accent; e.target.style.boxShadow = `0 0 0 3px ${T.accentBg}`; }}
-      onBlur={e  => { e.target.style.borderColor = T.border2; e.target.style.boxShadow = "none"; }}
+      onFocus={e => { e.target.style.borderColor = T.accent; e.target.style.boxShadow = `0 0 0 3px ${T.accentBg}`; props.onFocus?.(e); }}
+      onBlur={e  => { e.target.style.borderColor = T.border2; e.target.style.boxShadow = "none"; props.onBlur?.(e); }}
     />
   );
-}
+});
 function OTextarea({ style, ...props }) {
   return (
     <textarea {...props}
