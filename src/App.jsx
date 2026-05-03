@@ -4222,10 +4222,17 @@ function AttachZone({ atts, onRemove, onAdd, loading }) {
 }
 
 // ─── DOC PANEL ────────────────────────────────────────────────────────────────
+const DOC_VER_KEY = (boardId) => `ms-doc-versions-${boardId}`;
+const MAX_DOC_VERSIONS = 5;
+
 function DocPanel({ board, concept, cards, comments, connections, cat, onClose }) {
   const [status, setStatus] = useState("idle"); // idle | loading | done | error
   const [docContent, setDocContent] = useState("");
   const [docTitle, setDocTitle] = useState("");
+  const [versions, setVersions] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(DOC_VER_KEY(board.id)) || "[]"); } catch { return []; }
+  });
+  const [showVersions, setShowVersions] = useState(false);
 
   const approvedConns = connections.filter(c => c.status === "approved");
   const taskCards = cards.filter(c => c.type === "tarea");
@@ -4288,6 +4295,13 @@ Escribe en español. Usa markdown con headers (##), bullets (-) y énfasis (**).
   }
 
   async function generate() {
+    // Archive current doc as a version before regenerating
+    if (docContent) {
+      const entry = { ts: Date.now(), content: docContent, title: docTitle };
+      const updated = [entry, ...versions].slice(0, MAX_DOC_VERSIONS);
+      setVersions(updated);
+      try { localStorage.setItem(DOC_VER_KEY(board.id), JSON.stringify(updated)); } catch {}
+    }
     setStatus("loading");
     setDocContent("");
     try {
@@ -4299,6 +4313,13 @@ Escribe en español. Usa markdown con headers (##), bullets (-) y énfasis (**).
       if (e.code==="NO_KEY"||e.code==="INVALID_KEY") setStatus("no_key");
       else setStatus("error");
     }
+  }
+
+  function restoreVersion(ver) {
+    setDocContent(ver.content);
+    setDocTitle(ver.title);
+    setStatus("done");
+    setShowVersions(false);
   }
 
   function downloadHTML() {
@@ -4468,7 +4489,7 @@ Escribe en español. Usa markdown con headers (##), bullets (-) y énfasis (**).
           {status === "done" && (
             <div>
               {/* Download buttons */}
-              <div style={{ display:"flex", gap:10, marginBottom:20 }}>
+              <div style={{ display:"flex", gap:10, marginBottom:12 }}>
                 <button onClick={downloadHTML}
                   style={{ flex:1, background:T.green, border:"none", color:"#fff", padding:"11px 16px", borderRadius:9, cursor:"pointer", fontFamily:"var(--sans)", fontWeight:700, fontSize:14, display:"flex", alignItems:"center", justifyContent:"center", gap:7, transition:"opacity .15s" }}
                   onMouseEnter={e => e.currentTarget.style.opacity = ".85"}
@@ -4483,6 +4504,41 @@ Escribe en español. Usa markdown con headers (##), bullets (-) y énfasis (**).
                 </button>
                 <OGhostBtn small onClick={generate}>↻ Regenerar</OGhostBtn>
               </div>
+              {/* Version history row */}
+              {versions.length > 0 && (
+                <div style={{ marginBottom:16 }}>
+                  <button onClick={() => setShowVersions(v => !v)}
+                    style={{ background:"none", border:"none", cursor:"pointer", display:"flex", alignItems:"center", gap:6, color:T.ink4, fontSize:12, fontFamily:"var(--mono)", padding:"4px 0", transition:"color .15s" }}
+                    onMouseEnter={e => e.currentTarget.style.color = T.ink2}
+                    onMouseLeave={e => e.currentTarget.style.color = T.ink4}>
+                    <span>{showVersions ? "▾" : "▸"}</span>
+                    <span>{versions.length} versión{versions.length !== 1 ? "es" : ""} anterior{versions.length !== 1 ? "es" : ""}</span>
+                  </button>
+                  {showVersions && (
+                    <div style={{ marginTop:8, border:"1px solid "+T.border, borderRadius:8, overflow:"hidden" }}>
+                      {versions.map((ver, i) => (
+                        <button key={i} onClick={() => restoreVersion(ver)}
+                          style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between",
+                            padding:"10px 14px", background:i%2===0?T.bgPanel:T.bgCard, border:"none",
+                            borderBottom:i<versions.length-1?"1px solid "+T.border:"none",
+                            cursor:"pointer", textAlign:"left", gap:12, transition:"background .12s" }}
+                          onMouseEnter={e => e.currentTarget.style.background = T.bgHover}
+                          onMouseLeave={e => e.currentTarget.style.background = i%2===0?T.bgPanel:T.bgCard}>
+                          <div>
+                            <div style={{ color:T.ink2, fontSize:13, fontWeight:500, marginBottom:2 }}>
+                              Generado el {new Date(ver.ts).toLocaleDateString("es", { day:"numeric", month:"short", year:"numeric" })}
+                            </div>
+                            <div style={{ color:T.ink4, fontSize:11, fontFamily:"var(--mono)" }}>
+                              {new Date(ver.ts).toLocaleTimeString("es", { hour:"2-digit", minute:"2-digit" })} · {Math.ceil(ver.content.length / 5)} palabras aprox.
+                            </div>
+                          </div>
+                          <span style={{ color:T.accent, fontSize:12, fontFamily:"var(--mono)", flexShrink:0 }}>Restaurar →</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               <div style={{ background:T.amberBg, border:"1px solid "+T.amber+"33", borderRadius:8, padding:"10px 14px", marginBottom:16, display:"flex", gap:8 }}>
                 <span style={{ color:T.amber, fontSize:13, flexShrink:0 }}>◎</span>
                 <p style={{ color:T.amber, fontSize:12, lineHeight:1.4 }}>El HTML se puede abrir en Word (Archivo → Abrir) o imprimir a PDF desde el navegador con Ctrl+P / ⌘+P.</p>
