@@ -4527,9 +4527,8 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
   const initPos = { cards:{...canvasPositions.cards}, stickers:{...canvasPositions.stickers} };
   const posRef      = useRef(initPos);
   const [pos, setPos] = useState(initPos);
-  const [running, setRunning]       = useState(false);
-  const [zoomPct, setZoomPct]       = useState(100);
-  const [layoutMode, setLayoutMode] = useState("micelio");
+  const [running, setRunning] = useState(false);
+  const [zoomPct, setZoomPct] = useState(100);
   const containerRef = useRef(null);
   const transformRef = useRef(null); // DOM-only transform layer
   const panRef  = useRef({ x:0, y:0 });
@@ -4567,25 +4566,20 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
     setZoomPct(Math.round(nz * 100));
   }
 
-  function runLayout(mode) {
+  function runLayout() {
     if (running) return;
-    const m = mode || layoutMode;
     setRunning(true);
     const el = containerRef.current;
     const W  = el ? el.clientWidth  : 1000;
     const H  = el ? el.clientHeight : 700;
     setTimeout(() => {
-      let cp;
-      if (m === "stack")  cp = layoutStack(cards);
-      else if (m === "tree") cp = layoutTree(cards, connections);
-      else               cp = layoutMicelio(cards, connections, W, H);
+      const cp = layoutMicelio(cards, connections, W, H);
       const sp = computeStickerPos(cards, cp);
       const np = { cards:cp, stickers:sp };
       posRef.current = np;
       setPos({ ...np });
       onSavePositions(np);
       setRunning(false);
-      // Fit all cards into view after layout — small extra delay lets DOM settle
       setTimeout(() => fitToView(cp), 30);
     }, 60);
   }
@@ -4788,10 +4782,6 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
   );
   const approvedConns = connections.filter(c => c.status==="approved" && pos.cards[c.cardA] && pos.cards[c.cardB]);
 
-  function stickerRot(id) { return (id.split("").reduce((a,c)=>a+c.charCodeAt(0),0) % 12) - 5; }
-
-  const isMicelioMode = layoutMode === "micelio";
-
   return (
     <div ref={containerRef}
       style={{position:"relative",flex:1,overflow:"hidden",cursor:"grab",touchAction:"none",
@@ -4802,30 +4792,19 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
       onMouseDown={startPan}
       onTouchStart={onTouchStart}
     >
-      {/* ── HUD Toolbar top-left: layout modes ── */}
-      <div style={{position:"absolute",top:14,left:14,zIndex:20,display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
-        {[["stack","▦ Stack"],["tree","⊤ Árbol"],["micelio","◉ Red"]].map(([m,label])=>(
-          <button key={m} className={`hud-btn${layoutMode===m?" hud-btn-active":""}`}
-            onClick={()=>{setLayoutMode(m);runLayout(m);}} disabled={running}>
-            {label}
-          </button>
-        ))}
-        <div style={{width:1,height:16,background:"var(--card-border)",margin:"0 2px"}}/>
-        <button className="hud-btn" title="Centrar vista"
-          onClick={()=>fitToView()} disabled={running || !Object.keys(posRef.current.cards).length}>
+      {/* ── HUD Toolbar top-left ── */}
+      <div style={{position:"absolute",top:14,left:14,zIndex:20,display:"flex",gap:6,alignItems:"center"}}>
+        <button className="hud-btn hud-btn-active" onClick={runLayout} disabled={running} title="Reorganizar">
+          {running ? "Organizando…" : "↺ Reorganizar"}
+        </button>
+        <button className="hud-btn" onClick={()=>fitToView()} title="Centrar vista"
+          disabled={!Object.keys(posRef.current.cards).length}>
           ⊙ Centrar
         </button>
         {onAddCard && (
-          <button className="hud-btn" title="Nueva tarjeta"
-            onClick={onAddCard} style={{fontWeight:600}}>
+          <button className="hud-btn" onClick={onAddCard} style={{fontWeight:600}}>
             + Tarjeta
           </button>
-        )}
-        {running && (
-          <span style={{fontFamily:"var(--mono)",fontSize:10,letterSpacing:".1em",
-            color:"var(--mc)",padding:"6px 0",textTransform:"uppercase",opacity:0.7}}>
-            Organizando…
-          </span>
         )}
       </div>
 
@@ -4872,56 +4851,22 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
             const pa=pos.cards[conn.cardA], pb=pos.cards[conn.cardB];
             const acx=pa.x+CARD_W/2+3000, acy=pa.y+CARD_H/2+3000;
             const bcx=pb.x+CARD_W/2+3000, bcy=pb.y+CARD_H/2+3000;
-            // Both modes use rectangular edge points (micelio nodes are now mcard rectangles)
-            const ep1 = edgePt(acx,acy,bcx,bcy);
-            const ep2 = edgePt(bcx,bcy,acx,acy);
+            const ep1=edgePt(acx,acy,bcx,bcy);
+            const ep2=edgePt(bcx,bcy,acx,acy);
             const mx=(ep1.x+ep2.x)/2, my=(ep1.y+ep2.y)/2;
-            const ox=-(ep2.y-ep1.y)*0.18, oy=(ep2.x-ep1.x)*0.18;
-            const color=CONN_COLORS[conn.type]||T.accent;
-            const str=conn.strength||7;
-            const bx=mx+ox, by=my+oy;
-            const isMicelio = layoutMode==="micelio";
-            // Organic curve path for micelio — spec §9b
-            const dx = ep2.x - ep1.x;
-            const organicD = `M${ep1.x},${ep1.y} C${ep1.x+dx*0.5},${ep1.y} ${ep2.x-dx*0.5},${ep2.y} ${ep2.x},${ep2.y}`;
+            const dx=ep2.x-ep1.x;
+            const organicD=`M${ep1.x},${ep1.y} C${ep1.x+dx*0.5},${ep1.y} ${ep2.x-dx*0.5},${ep2.y} ${ep2.x},${ep2.y}`;
             return (
               <g key={conn.id}>
-                {isMicelio ? (
-                  /* Organic curve — noir dots + neon midpoint — spec §9 */
-                  <>
-                    <path d={organicD}
-                      stroke="var(--line)" strokeWidth="2" fill="none" opacity="0.65"/>
-                    {/* Endpoint dots */}
-                    <circle cx={ep1.x} cy={ep1.y} r="3.5" fill="var(--noir)" opacity="0.8"/>
-                    <circle cx={ep2.x} cy={ep2.y} r="3.5" fill="var(--noir)" opacity="0.8"/>
-                    {/* Midpoint neon dot — firma del sistema */}
-                    <circle cx={mx} cy={my} r="5" fill="var(--neon)" stroke="var(--noir)" strokeWidth="1.2"/>
-                    {/* Type label — tenue, por encima del dot */}
-                    <text x={mx} y={my-9} textAnchor="middle" fontSize="8"
-                      fontFamily="'Quicksand',system-ui" fontWeight="600"
-                      fill="var(--ink-3)" letterSpacing="0.04em">
-                      {CONN_LABELS[conn.type]}
-                    </text>
-                  </>
-                ) : (
-                  /* Default style for stack/tree */
-                  <>
-                    <path d={`M${ep1.x} ${ep1.y} Q${bx} ${by} ${ep2.x} ${ep2.y}`}
-                      fill="none" stroke={color} strokeWidth="2" opacity="0.55"
-                      strokeDasharray={conn.type==="contraste"?"7 4":undefined}
-                      markerEnd="url(#cv-arr)"/>
-                    <rect x={bx-28} y={by-11} width="56" height="22" rx="5"
-                      fill="rgba(0,0,0,0.12)" stroke={color} strokeOpacity="0.45" strokeWidth="1"/>
-                    <text x={bx} y={by-1} textAnchor="middle" fontSize="8"
-                      fontWeight="700" fill={color} fontFamily="system-ui,sans-serif">
-                      {CONN_ICONS[conn.type]} {CONN_LABELS[conn.type]}
-                    </text>
-                    {Array.from({length:10}).map((_,i)=>(
-                      <circle key={i} cx={bx-18+i*4} cy={by+7} r="1.4"
-                        fill={color} fillOpacity={i<str?0.7:0.15}/>
-                    ))}
-                  </>
-                )}
+                <path d={organicD} stroke="var(--line)" strokeWidth="2" fill="none" opacity="0.65"/>
+                <circle cx={ep1.x} cy={ep1.y} r="3.5" fill="var(--noir)" opacity="0.8"/>
+                <circle cx={ep2.x} cy={ep2.y} r="3.5" fill="var(--noir)" opacity="0.8"/>
+                <circle cx={mx} cy={my} r="5" fill="var(--neon)" stroke="var(--noir)" strokeWidth="1.2"/>
+                <text x={mx} y={my-9} textAnchor="middle" fontSize="8"
+                  fontFamily="'Quicksand',system-ui" fontWeight="600"
+                  fill="var(--ink-3)" letterSpacing="0.04em">
+                  {CONN_LABELS[conn.type]}
+                </text>
               </g>
             );
           })}
@@ -4956,26 +4901,16 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
           })}
         </svg>
 
-        {/* Card nodes — skill tree in micelio, rectangular in stack/tree */}
+        {/* Card nodes */}
         {cards.map(card=>{
           const p=pos.cards[card.id];
           if(!p)return null;
-          const tc=TYPE_COLOR[card.type]||T.accent;
           const col=COLUMNS.find(c=>c.id===card.col);
           const cc=(comments[card.id]||[]).length;
           const sc=(card.stickers||[]).filter(s=>s.status!=="discarded").length;
-          const isOwner=card.author===user.name;
-          if (layoutMode === "micelio") {
-            return (
-              <CanvasSkillNode key={card.id} card={card} p={p} col={col} cc={cc} sc={sc}
-                onOpen={onReadCard || onEditCard}
-                onMouseDown={e=>startDrag(e,"card",card.id,null)}
-                onTouchStart={e=>startTouchDrag(e,"card",card.id,null)}/>
-            );
-          }
           return (
-            <CanvasCardNode key={card.id} card={card} p={p} tc={tc} col={col} cc={cc} sc={sc}
-              isOwner={isOwner} onEditCard={onEditCard}
+            <CanvasSkillNode key={card.id} card={card} p={p} col={col} cc={cc} sc={sc}
+              onOpen={onReadCard || onEditCard}
               onMouseDown={e=>startDrag(e,"card",card.id,null)}
               onTouchStart={e=>startTouchDrag(e,"card",card.id,null)}/>
           );
