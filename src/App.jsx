@@ -4289,6 +4289,7 @@ Escribe en español. Usa markdown con headers (##), bullets (-) y énfasis (**).
 
 // ─── CANVAS LAYOUTS ───────────────────────────────────────────────────────────
 const CARD_W = 210, CARD_H = 60; // collapsed card dimensions
+const STKR_W = 185, STKR_HH = 20; // sticker card width + half-height of header attachment point
 const NODE_R  = 34; // skill-tree node radius (px)
 
 // Dark + amber/gold palette for micelio skill-tree nodes (War Legend style)
@@ -4463,11 +4464,11 @@ function computeStickerPos(cards, cardPos) {
     out[card.id] = {};
     (card.stickers||[]).filter(s => s.status!=="discarded").forEach((s, i) => {
       const seed  = s.id.split("").reduce((a,c) => a+c.charCodeAt(0), 0);
-      const angle = (seed/999)*Math.PI*2 + i*1.15;
-      const dist  = 165 + (i%3)*38;
+      const angle = (seed/999)*Math.PI*2 + i*1.20;
+      const dist  = 220 + (i%3)*55; // further from card so strings are visible
       out[card.id][s.id] = {
-        x: Math.round(cp.x + CARD_W/2 + Math.cos(angle)*dist - 55),
-        y: Math.round(cp.y + CARD_H/2 + Math.sin(angle)*dist - 30)
+        x: Math.round(cp.x + CARD_W/2 + Math.cos(angle)*dist - STKR_W/2),
+        y: Math.round(cp.y + CARD_H/2 + Math.sin(angle)*dist - STKR_HH)
       };
     });
   });
@@ -4481,30 +4482,42 @@ const CONN_COLORS = { complementa:T.accent, secuencia:T.green, contraste:T.orang
 const CONN_LABELS = { complementa:"Complementa", secuencia:"Secuencia", contraste:"Contraste", refuerza:"Refuerza" };
 const CONN_ICONS  = { complementa:"◈", secuencia:"→", contraste:"⇄", refuerza:"◉" };
 
-function CanvasStickerNode({ s, sp, color, rot, icon, onMouseDown, onTouchStart }) {
-  const [expanded, setExpanded] = useState(false);
+function CanvasStickerNode({ s, sp, color, icon, onMouseDown, onTouchStart }) {
   return (
-    <div style={{ position:"absolute", left:sp.x, top:sp.y, width:expanded?160:110, zIndex:4,
-      background:color+"15", border:"1.5px solid "+color+"55", borderRadius:8,
-      transform:`rotate(${rot}deg)`, boxShadow:"2px 4px 10px rgba(0,0,0,.1)",
-      cursor:"grab", userSelect:"none", transition:"width .2s" }}
+    <div style={{
+      position:"absolute", left:sp.x, top:sp.y, width:STKR_W, zIndex:4,
+      background:"var(--card)",
+      border:`1px solid ${color}40`,
+      borderTop:`3px solid ${color}`,
+      borderRadius:7,
+      boxShadow:"var(--shadow-2)",
+      cursor:"grab", userSelect:"none"
+    }}
       onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
-      <div onClick={e=>{e.stopPropagation();setExpanded(p=>!p);}}
-        style={{padding:"6px 9px",display:"flex",alignItems:"center",gap:5,cursor:"pointer"}}>
-        <span style={{fontSize:11}}>{icon}</span>
-        <span style={{color,fontFamily:"var(--mono)",fontSize:9,fontWeight:700,flex:1,
-          overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.type}</span>
-        <span style={{color,fontSize:8,opacity:.6}}>{expanded?"▲":"▼"}</span>
+      {/* Header: author + type */}
+      <div style={{
+        padding:"5px 10px 4px",
+        display:"flex", alignItems:"center", gap:6,
+        borderBottom:`1px solid ${color}20`
+      }}>
+        <span style={{fontSize:10, lineHeight:1}}>{icon}</span>
+        <span style={{
+          color, fontFamily:"var(--mono)", fontSize:8, fontWeight:700,
+          textTransform:"uppercase", letterSpacing:"0.09em",
+          flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"
+        }}>
+          {s.author} · {s.type}
+        </span>
       </div>
-      {expanded ? (
-        <div style={{padding:"0 9px 8px",borderTop:"1px solid "+color+"33"}}>
-          <div style={{color:T.ink2,fontSize:11,lineHeight:1.4,marginTop:5}}>{s.text}</div>
-          <div style={{color,fontFamily:"var(--mono)",fontSize:9,marginTop:5,opacity:.8}}>@{s.author}</div>
-        </div>
-      ) : (
-        <div style={{padding:"0 9px 6px",color:T.ink3,fontSize:10,lineHeight:1.3,
-          overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.text}</div>
-      )}
+      {/* Body: suggestion text — always visible */}
+      <div style={{
+        padding:"7px 10px 8px",
+        color:"var(--ink-2)", fontSize:11, lineHeight:1.45,
+        display:"-webkit-box", WebkitLineClamp:3, WebkitBoxOrient:"vertical",
+        overflow:"hidden"
+      }}>
+        {s.text}
+      </div>
     </div>
   );
 }
@@ -4877,12 +4890,12 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
                   /* Organic curve — noir dots + neon midpoint — spec §9 */
                   <>
                     <path d={organicD}
-                      stroke="var(--line)" strokeWidth="1.4" fill="none" opacity="0.7"/>
-                    {/* Endpoint dots — always noir sólido */}
-                    <circle cx={ep1.x} cy={ep1.y} r="3.5" fill="var(--noir)"/>
-                    <circle cx={ep2.x} cy={ep2.y} r="3.5" fill="var(--noir)"/>
+                      stroke="var(--line)" strokeWidth="2" fill="none" opacity="0.65"/>
+                    {/* Endpoint dots */}
+                    <circle cx={ep1.x} cy={ep1.y} r="3.5" fill="var(--noir)" opacity="0.8"/>
+                    <circle cx={ep2.x} cy={ep2.y} r="3.5" fill="var(--noir)" opacity="0.8"/>
                     {/* Midpoint neon dot — firma del sistema */}
-                    <circle cx={mx} cy={my} r="4" fill="var(--neon)" stroke="var(--noir)" strokeWidth="1"/>
+                    <circle cx={mx} cy={my} r="5" fill="var(--neon)" stroke="var(--noir)" strokeWidth="1.2"/>
                     {/* Type label — tenue, por encima del dot */}
                     <text x={mx} y={my-9} textAnchor="middle" fontSize="8"
                       fontFamily="'Quicksand',system-ui" fontWeight="600"
@@ -4912,25 +4925,32 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
               </g>
             );
           })}
-          {/* Sticker strings — borde a borde */}
+          {/* Sticker strings — card edge → sticker top-center */}
           {allStickers.map(s=>{
             const cp=pos.cards[s.cardId];
-            const sp=(pos.stickers[s.cardId]||{})[s.id];
-            const savedPos=sp;
-            const cardPos=cp;
-            const spp=savedPos||(cardPos?{x:cardPos.x+CARD_W/2+Math.cos(s.id.charCodeAt(0))*160-55,y:cardPos.y+CARD_H/2+Math.sin(s.id.charCodeAt(0))*120-30}:null);
+            const seed=s.id.split("").reduce((a,c)=>a+c.charCodeAt(0),0);
+            const angle=(seed/999)*Math.PI*2;
+            const spp=(pos.stickers[s.cardId]||{})[s.id]||(cp?{
+              x:Math.round(cp.x+CARD_W/2+Math.cos(angle)*220-STKR_W/2),
+              y:Math.round(cp.y+CARD_H/2+Math.sin(angle)*150-STKR_HH)
+            }:null);
             if(!cp||!spp)return null;
             const color=STKR_COLOR[s.type]||T.blue;
+            // SVG offset +3000 for all coordinates
             const cx=cp.x+CARD_W/2+3000, cy=cp.y+CARD_H/2+3000;
-            const sx=spp.x+55+3000, sy=spp.y+30+3000;
+            const sx=spp.x+STKR_W/2+3000; // sticker top-center X
+            const sy=spp.y+3000;           // sticker top Y
             const ep=edgePt(cx,cy,sx,sy);
+            // Control points: slightly curved S-shape
+            const midy=(ep.y+sy)/2;
             return (
               <g key={s.id}>
                 <path
-                  d={`M${ep.x} ${ep.y} C${ep.x} ${(ep.y+sy)/2} ${sx} ${(ep.y+sy)/2} ${sx} ${sy}`}
-                  fill="none" stroke="var(--line-soft)" strokeWidth="1.4" strokeDasharray="4 4"/>
-                <circle cx={ep.x} cy={ep.y} r="2.5" fill="var(--noir)" opacity="0.45"/>
-                <circle cx={sx} cy={sy} r="2.5" fill={color} opacity="0.7"/>
+                  d={`M${ep.x},${ep.y} C${ep.x},${midy} ${sx},${midy} ${sx},${sy}`}
+                  fill="none" stroke={color} strokeWidth="1.8" strokeOpacity="0.55"
+                  strokeDasharray="6 4" strokeLinecap="round"/>
+                <circle cx={ep.x} cy={ep.y} r="3" fill={color} opacity="0.7"/>
+                <circle cx={sx} cy={sy} r="2.5" fill={color} opacity="0.45"/>
               </g>
             );
           })}
@@ -4961,16 +4981,20 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
           );
         })}
 
-        {/* Sticker post-its */}
+        {/* Sticker suggestion cards */}
         {allStickers.map(s=>{
-          const savedPos=(pos.stickers[s.cardId]||{})[s.id];
           const cardPos=pos.cards[s.cardId];
-          const sp=savedPos||(cardPos?{x:cardPos.x+CARD_W/2+Math.cos(s.id.charCodeAt(0))*160-55,y:cardPos.y+CARD_H/2+Math.sin(s.id.charCodeAt(0))*120-30}:null);
+          const seed=s.id.split("").reduce((a,c)=>a+c.charCodeAt(0),0);
+          const angle=(seed/999)*Math.PI*2;
+          const sp=(pos.stickers[s.cardId]||{})[s.id]||(cardPos?{
+            x:Math.round(cardPos.x+CARD_W/2+Math.cos(angle)*220-STKR_W/2),
+            y:Math.round(cardPos.y+CARD_H/2+Math.sin(angle)*150-STKR_HH)
+          }:null);
           if(!sp)return null;
           const color=STKR_COLOR[s.type]||T.blue;
           return (
             <CanvasStickerNode key={s.id} s={s} sp={sp} color={color}
-              rot={stickerRot(s.id)} icon={STKR_ICON[s.type]||"💬"}
+              icon={STKR_ICON[s.type]||"💬"}
               onMouseDown={e=>startDrag(e,"sticker",s.id,s.cardId)}
               onTouchStart={e=>startTouchDrag(e,"sticker",s.id,s.cardId)}/>
           );
