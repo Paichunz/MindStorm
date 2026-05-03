@@ -129,6 +129,21 @@ const STICKER_COLOR = { get "opinión"(){return T.blue}, get "complemento"(){ret
 
 function genId()    { return Math.random().toString(36).substr(2, 9); }
 function nowTs()    { return Date.now(); }
+// Returns ms until next midnight UTC (when Gemini free quota resets)
+function msUntilMidnightUTC() {
+  const now = new Date();
+  const midnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+  return midnight.getTime() - now.getTime();
+}
+function fmtCountdownHM(ms) {
+  const total = Math.ceil(ms / 1000);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
 function fmtDate(t) { return new Date(t).toLocaleDateString("es", { day:"numeric", month:"short" }); }
 function fmtTime(t) { return new Date(t).toLocaleTimeString("es", { hour:"2-digit", minute:"2-digit" }); }
 function fmtSize(b) { return b < 1024 ? b+"B" : b < 1048576 ? Math.round(b/1024)+"KB" : (b/1048576).toFixed(1)+"MB"; }
@@ -3611,24 +3626,37 @@ function ConnCard({ conn, cards, connections, onUpdate, onAddAsTask }) {
 function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept, onAddAsTask }) {
   const [status, setStatus]       = useState("idle");
   const [error, setError]         = useState("");
-  const [countdown, setCountdown] = useState(0);
+  const [countdown, setCountdown] = useState(0);       // seconds for rate_limit
+  const [quotaMs, setQuotaMs]     = useState(0);       // ms remaining until midnight UTC
   const countdownRef              = useRef(null);
   const pending   = connections.filter(c => c.status==="pending");
   const approved  = connections.filter(c => c.status==="approved");
   const inReview  = connections.filter(c => c.status==="review");
   const discarded = connections.filter(c => c.status==="discarded");
 
-  // Countdown timer — tick every second, reset to idle at 0
+  // Rate-limit countdown — tick every second, reset to idle at 0
   useEffect(() => {
     if (countdown <= 0) return;
     const id = setInterval(() => setCountdown(n => Math.max(0, n - 1)), 1000);
     return () => clearInterval(id);
   }, [countdown > 0]);
 
-  // When countdown reaches 0 during rate_limit, re-enable button
+  // When rate_limit countdown reaches 0, re-enable button
   useEffect(() => {
     if (countdown === 0 && status === "rate_limit") setStatus("idle");
   }, [countdown]);
+
+  // Daily quota — tick every second until midnight UTC then auto-reset
+  useEffect(() => {
+    if (status !== "daily_quota") return;
+    setQuotaMs(msUntilMidnightUTC());
+    const id = setInterval(() => {
+      const ms = msUntilMidnightUTC();
+      setQuotaMs(ms);
+      if (ms <= 0) setStatus("idle");
+    }, 1000);
+    return () => clearInterval(id);
+  }, [status === "daily_quota"]);
 
   async function findConnections() {
     if (cards.length < 2) { setError("Necesitas al menos 2 tarjetas."); return; }
@@ -3720,10 +3748,11 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
             <div style={{ background:T.roseBg, border:"1px solid "+T.rose+"44", borderRadius:8, padding:"12px 14px", marginBottom:14 }}>
               <div style={{ color:T.rose, fontSize:13, fontWeight:600, marginBottom:4 }}>📊 Cupo diario agotado</div>
               <div style={{ color:T.ink3, fontFamily:"var(--mono)", fontSize:11, lineHeight:1.6 }}>
-                {error}<br/>
-                <span style={{ color:T.amber }}>→ aistudio.google.com/apikey</span> para revisar tu cuota.
+                El cupo gratuito de Gemini se reinicia a medianoche UTC.<br/>
+                <span style={{ color:T.amber, fontWeight:700 }}>Tiempo restante: {fmtCountdownHM(quotaMs)}</span><br/>
+                El botón se reactiva automáticamente al llegar a 0.
               </div>
-              <button onClick={() => setStatus("idle")} style={{ marginTop:8, background:"none", border:"1px solid "+T.rose+"44", color:T.rose, padding:"4px 10px", borderRadius:5, cursor:"pointer", fontSize:11, fontFamily:"var(--mono)" }}>Reintentar de todos modos</button>
+              <button onClick={() => setStatus("idle")} style={{ marginTop:8, background:"none", border:"1px solid "+T.rose+"44", color:T.rose, padding:"4px 10px", borderRadius:5, cursor:"pointer", fontSize:11, fontFamily:"var(--mono)" }}>Reintentar ahora</button>
             </div>
           )}
           {status==="error" && error && <div style={{ background:T.roseBg, border:"1px solid "+T.rose+"44", borderRadius:8, padding:"12px", color:T.rose, fontSize:13, marginBottom:14 }}>{error}</div>}
@@ -3775,8 +3804,10 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
   const [result, setResult]       = useState("");
   const [scores, setScores]       = useState(null);
   const [countdown, setCountdown] = useState(0);
+  const [quotaMs, setQuotaMs]     = useState(0);
   const countdownRef              = useRef(null);
 
+  // Rate-limit countdown
   useEffect(() => {
     if (countdown <= 0) return;
     const id = setInterval(() => setCountdown(n => Math.max(0, n - 1)), 1000);
@@ -3786,6 +3817,18 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
   useEffect(() => {
     if (countdown === 0 && status === "rate_limit") setStatus("idle");
   }, [countdown]);
+
+  // Daily quota — countdown to midnight UTC, auto-reset when it arrives
+  useEffect(() => {
+    if (status !== "daily_quota") return;
+    setQuotaMs(msUntilMidnightUTC());
+    const id = setInterval(() => {
+      const ms = msUntilMidnightUTC();
+      setQuotaMs(ms);
+      if (ms <= 0) setStatus("idle");
+    }, 1000);
+    return () => clearInterval(id);
+  }, [status === "daily_quota"]);
 
   async function run() {
     setStatus("loading"); setResult(""); setScores(null); setCountdown(0);
@@ -3854,9 +3897,10 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
             <div style={{ background:T.roseBg, border:"1px solid "+T.rose+"44", borderRadius:12, padding:"20px", textAlign:"center", marginBottom:14 }}>
               <div style={{ fontSize:28, marginBottom:8 }}>📊</div>
               <div style={{ color:T.rose, fontWeight:700, fontSize:14, marginBottom:8 }}>Cupo diario agotado</div>
-              <div style={{ color:T.ink3, fontSize:12, lineHeight:1.6, marginBottom:14 }}>{result || "El cupo gratuito se reinicia a medianoche (UTC)."}</div>
-              <div style={{ color:T.amber, fontFamily:"var(--mono)", fontSize:11 }}>aistudio.google.com/apikey</div>
-              <button onClick={() => setStatus("idle")} style={{ marginTop:12, background:"none", border:"1px solid "+T.rose+"44", color:T.rose, padding:"5px 12px", borderRadius:6, cursor:"pointer", fontSize:11, fontFamily:"var(--mono)" }}>Reintentar de todos modos</button>
+              <div style={{ color:T.ink3, fontSize:12, lineHeight:1.6, marginBottom:10 }}>El cupo gratuito de Gemini se reinicia a medianoche UTC.</div>
+              <div style={{ color:T.amber, fontFamily:"var(--mono)", fontSize:22, fontWeight:700, marginBottom:4 }}>{fmtCountdownHM(quotaMs)}</div>
+              <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10, marginBottom:14 }}>hasta el reinicio — se activa solo</div>
+              <button onClick={() => setStatus("idle")} style={{ background:"none", border:"1px solid "+T.rose+"44", color:T.rose, padding:"5px 12px", borderRadius:6, cursor:"pointer", fontSize:11, fontFamily:"var(--mono)" }}>Reintentar ahora</button>
             </div>
           )}
           {(status==="done"||status==="error") && (
