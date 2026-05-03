@@ -905,16 +905,18 @@ function PwdInput({ value, onChange, onKeyDown, placeholder, style, autoFocus, i
 // ─── ROOT ─────────────────────────────────────────────────────────────────────
 // localStorage keys (session + recents only — data lives in Supabase)
 const SK = {
-  user:     "creativeboard-user",
-  myboards: "creativeboard-myboards",
+  user:        "creativeboard-user",
+  myboards:    "creativeboard-myboards",
+  activeBoard: "creativeboard-activeboard",
 };
 
 export default function App() {
   const [user, setUser]               = useState(() => getL(SK.user, null));
-  const [screen, setScreen]           = useState("lobby");
+  const [screen, setScreen]           = useState(() => getL(SK.activeBoard, null) ? "board" : "lobby");
   const [boards, setBoards]           = useState([]);
   const [activeBoard, setActiveBoard] = useState(null);
   const [boardData, setBoardData]     = useState(null);
+  const [restoring, setRestoring]     = useState(() => !!getL(SK.activeBoard, null));
   const [themeId, setThemeIdRaw]      = useState(() => {
     const stored = getL("mindstorm-theme", "estudio");
     // Reject dark themes — estudio is the only active theme
@@ -939,8 +941,22 @@ export default function App() {
     return list;
   }, []);
 
-  // Initial load
-  useEffect(() => { loadBoards(); }, [loadBoards]);
+  // Initial load — also restores active board after F5/refresh
+  useEffect(() => {
+    loadBoards().then(list => {
+      const savedId = getL(SK.activeBoard, null);
+      if (!savedId) { setRestoring(false); return; }
+      const board = list.find(b => b.id === savedId);
+      if (!board) { setL(SK.activeBoard, null); setScreen("lobby"); setRestoring(false); return; }
+      dbGetBoardData(board.id).then(d => {
+        const data = d || { cards:[], comments:{}, connections:[], canvasPositions:{cards:{},stickers:{}}, lastUpdated:Date.now() };
+        setActiveBoard(board);
+        setBoardData(data);
+        setScreen("board");
+        setRestoring(false);
+      });
+    });
+  }, [loadBoards]);
 
   // Real-time subscription for active board
   useEffect(() => {
@@ -964,6 +980,7 @@ export default function App() {
     const d = await dbGetBoardData(board.id)
       || { cards:[], comments:{}, connections:[], canvasPositions:{cards:{},stickers:{}}, lastUpdated:nowTs() };
     setBoardData(d); setScreen("board");
+    setL(SK.activeBoard, board.id);
     const mb = getL(SK.myboards, []);
     if (!mb.includes(board.id)) setL(SK.myboards, [board.id, ...mb].slice(0, 30));
     return "ok";
@@ -1021,7 +1038,8 @@ export default function App() {
     <ThemeCtx.Provider value={themeCtxVal}>
       {!user && <JoinScreen onJoin={u => { setL(SK.user, u); setUser(u); }} />}
       {user && screen === "lobby" && <LobbyScreen user={user} boards={boards} myIds={getL(SK.myboards,[])} onOpen={openBoard} onCreate={createBoard} onDelete={deleteBoard} onImport={importBoard} onRefresh={loadBoards} onSignOut={() => { setL(SK.user,null); setUser(null); }} />}
-      {user && screen === "board" && activeBoard && boardData && <BoardScreen user={user} board={activeBoard} data={boardData} onSave={saveBoardData} onBack={() => { setScreen("lobby"); setActiveBoard(null); loadBoards(); }} />}
+      {user && screen === "board" && activeBoard && boardData && <BoardScreen user={user} board={activeBoard} data={boardData} onSave={saveBoardData} onBack={() => { setL(SK.activeBoard, null); setScreen("lobby"); setActiveBoard(null); loadBoards(); }} />}
+      {user && restoring && <div style={{ position:"fixed", inset:0, background:"var(--paper)", zIndex:999, display:"flex", alignItems:"center", justifyContent:"center" }}><div className="spinner" style={{ width:28, height:28, border:"3px solid var(--paper-3)", borderTop:"3px solid var(--laton)", borderRadius:"50%" }}/></div>}
     </ThemeCtx.Provider>
   );
 }
@@ -1382,10 +1400,10 @@ function Sidebar({ user, boards, onOpen, onSignOut }) {
       <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", paddingTop:12 }}>
         <div style={{ display:"flex", alignItems:"center", gap:9, padding:"4px 10px 10px" }}>
           <div style={{ width:26, height:26, borderRadius:4,
-            background:`rgba(255,255,255,0.08)`,
-            border:"1px solid rgba(255,255,255,0.14)",
+            background:"rgba(176,140,90,0.14)",
+            border:"1px solid rgba(176,140,90,0.30)",
             display:"flex", alignItems:"center", justifyContent:"center",
-            fontFamily:"var(--raj)", fontSize:13, fontWeight:700, color:"var(--mc)", flexShrink:0 }}>
+            fontFamily:"var(--raj)", fontSize:13, fontWeight:700, color:"var(--laton)", flexShrink:0 }}>
             {user.name[0].toUpperCase()}
           </div>
           <span style={{ fontFamily:"var(--raj)", color:"var(--ink2)", fontSize:12, fontWeight:500, letterSpacing:".06em" }}>@{user.name}</span>
@@ -1483,15 +1501,13 @@ function BoardTile({ board, onOpen, onDeleteRequest, onExport, exporting }) {
 function SideItem({ icon, label, active }) {
   return (
     <button style={{
-      background: active
-        ? "rgba(255,255,255,0.10)"
-        : "transparent",
-      border: active ? "1px solid rgba(255,255,255,0.14)" : "1px solid transparent",
+      background: active ? "rgba(176,140,90,0.12)" : "transparent",
+      border: active ? "1px solid rgba(176,140,90,0.28)" : "1px solid transparent",
       textAlign:"left", padding:"8px 12px", borderRadius:6, cursor:"pointer",
-      color: active ? "var(--ink0)" : "var(--ink2)", fontFamily:"var(--raj)",
+      color: active ? "var(--laton)" : "var(--ink2)", fontFamily:"var(--raj)",
       fontSize:13, fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase",
       display:"flex", alignItems:"center", gap:10, width:"100%", transition:"all .15s",
-      boxShadow: active ? "inset 3px 0 0 rgba(255,255,255,0.35)" : "none" }}
+      boxShadow: active ? "inset 3px 0 0 var(--laton)" : "none" }}
       onMouseEnter={e => { if(!active){ e.currentTarget.style.background="rgba(255,255,255,0.07)"; e.currentTarget.style.color="var(--ink0)"; } }}
       onMouseLeave={e => { if(!active){ e.currentTarget.style.background="transparent"; e.currentTarget.style.color="var(--ink2)"; } }}>
       <span style={{ fontFamily:"var(--mono)", fontSize:11, opacity:.7, width:14, textAlign:"center" }}>{icon}</span>
@@ -3575,11 +3591,10 @@ function ConnCard({ conn, cards, connections, onUpdate, onAddAsTask }) {
   }
 
   return (
-    <div className="conn-card" style={{ background:"rgba(17,17,40,0.8)",
-      border:`1px solid ${conn.status==="approved"?T.green+"44":"rgba(255,255,255,0.08)"}`,
+    <div className="conn-card" style={{ background:"var(--card)",
+      border:`1px solid ${conn.status==="approved"?T.green+"55":"var(--card-border)"}`,
       borderRadius:12, padding:"15px",
-      boxShadow:conn.status==="approved"?`0 0 0 1px ${T.green}22`:"none",
-      backdropFilter:"blur(6px)", WebkitBackdropFilter:"blur(6px)" }}>
+      boxShadow:conn.status==="approved"?`var(--shadow-1), 0 0 0 1px ${T.green}22`:"var(--shadow-1)" }}>
       {/* Header */}
       <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:10 }}>
         {editing ? (
@@ -3602,14 +3617,14 @@ function ConnCard({ conn, cards, connections, onUpdate, onAddAsTask }) {
 
       {/* Cards */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", gap:8, alignItems:"start", marginBottom:10 }}>
-        <div style={{ background:T.bgPanel, border:"1px solid "+T.border, borderRadius:7, padding:"8px 10px" }}>
-          <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:9, marginBottom:3 }}>@{ca.author}</div>
-          <div style={{ color:T.ink2, fontWeight:600, fontSize:12, lineHeight:1.3 }}>{ca.title}</div>
+        <div style={{ background:"var(--paper-2)", border:"1px solid var(--card-border)", borderRadius:7, padding:"8px 10px" }}>
+          <div style={{ color:"var(--ink-3)", fontFamily:"var(--mono)", fontSize:9, marginBottom:3 }}>@{ca.author}</div>
+          <div style={{ color:"var(--ink-1)", fontWeight:600, fontSize:12, lineHeight:1.3 }}>{ca.title}</div>
         </div>
         <span style={{ color:editing?editColor:color, fontSize:16, alignSelf:"center" }}>⇄</span>
-        <div style={{ background:T.bgPanel, border:"1px solid "+T.border, borderRadius:7, padding:"8px 10px" }}>
-          <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:9, marginBottom:3 }}>@{cb.author}</div>
-          <div style={{ color:T.ink2, fontWeight:600, fontSize:12, lineHeight:1.3 }}>{cb.title}</div>
+        <div style={{ background:"var(--paper-2)", border:"1px solid var(--card-border)", borderRadius:7, padding:"8px 10px" }}>
+          <div style={{ color:"var(--ink-3)", fontFamily:"var(--mono)", fontSize:9, marginBottom:3 }}>@{cb.author}</div>
+          <div style={{ color:"var(--ink-1)", fontWeight:600, fontSize:12, lineHeight:1.3 }}>{cb.title}</div>
         </div>
       </div>
 
@@ -3622,7 +3637,7 @@ function ConnCard({ conn, cards, connections, onUpdate, onAddAsTask }) {
             onFocus={e=>e.target.style.borderColor=T.accent} onBlur={e=>e.target.style.borderColor=T.border2}/>
         </div>
       ) : (
-        <div style={{ color:T.ink3, fontSize:12, lineHeight:1.4, marginBottom:conn.note?8:10, padding:"8px 10px", background:T.bgPanel, border:"1px solid "+color+"28", borderRadius:6 }}>{conn.reason}</div>
+        <div style={{ color:"var(--ink-2)", fontSize:12, lineHeight:1.4, marginBottom:conn.note?8:10, padding:"8px 10px", fontFamily:"var(--body)", background:"var(--paper)", border:"1px solid "+color+"28", borderRadius:6 }}>{conn.reason}</div>
       )}
 
       {/* Note / Complement */}
@@ -3640,8 +3655,8 @@ function ConnCard({ conn, cards, connections, onUpdate, onAddAsTask }) {
           </div>
         </div>
       ) : conn.note ? (
-        <div style={{ color:T.ink2, fontSize:12, lineHeight:1.5, marginBottom:10, padding:"8px 10px", background:T.accentBg, border:"1px solid "+T.accent+"30", borderRadius:6, fontStyle:"italic" }}>
-          <span style={{ color:T.accent, fontFamily:"var(--mono)", fontSize:9, letterSpacing:1, display:"block", marginBottom:3, fontStyle:"normal" }}>COMPLEMENTO</span>
+        <div style={{ color:"var(--ink-1)", fontSize:12, lineHeight:1.5, marginBottom:10, padding:"8px 10px", fontFamily:"var(--body)", background:"var(--paper)", border:"1px solid var(--card-border)", borderRadius:6, fontStyle:"italic" }}>
+          <span style={{ color:"var(--ink-3)", fontFamily:"var(--mono)", fontSize:9, letterSpacing:1, display:"block", marginBottom:3, fontStyle:"normal" }}>COMPLEMENTO</span>
           {conn.note}
         </div>
       ) : null}
