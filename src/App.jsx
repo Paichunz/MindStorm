@@ -87,15 +87,15 @@ const ThemeCtx = createContext({ themeId:"estudio", setThemeId:()=>{} });
 const useTheme = () => useContext(ThemeCtx);
 
 const CATEGORIES = [
-  { id:"app",      label:"📱 App / Software",   color:T.accent, colorBg:T.accentBg, subcategories:["App móvil","Web app","SaaS","Herramienta interna","API / Backend"], expert:"Eres un líder senior de producto digital con 15 años de experiencia. Analizas ideas con criterio brutal y honesto. No eres complaciente." },
-  { id:"libro",    label:"📚 Libro / Literatura", color:T.amber,  colorBg:T.amberBg,
+  { id:"app",      label:"App / Software",   color:T.accent, colorBg:T.accentBg, subcategories:["App móvil","Web app","SaaS","Herramienta interna","API / Backend"], expert:"Eres un líder senior de producto digital con 15 años de experiencia. Analizas ideas con criterio brutal y honesto. No eres complaciente." },
+  { id:"libro",    label:"Libro / Literatura", color:T.amber,  colorBg:T.amberBg,
     subcategories:["Novela","Cuento","Worldbuilding","Fantasía","Ciencia ficción","Romance","Thriller","Histórico","Infantil","Poesía","Guión","Cómic"],
     expert:"Eres editor literario senior y consultor de worldbuilding con 20 años de experiencia. Sabes qué tiene potencial real de publicación. Eres directo y exigente.",
     worldbuilding: true },
-  { id:"startup",  label:"🚀 Startup / Negocio", color:T.green,  colorBg:T.greenBg,  subcategories:["B2C","B2B","Marketplace","Fintech","Edtech","Healthtech","E-commerce"], expert:"Eres consultor estratégico con experiencia en startups y venture capital. Criterio de inversión real." },
-  { id:"diseño",   label:"🎨 Diseño / Branding", color:T.rose,   colorBg:T.roseBg,   subcategories:["Identidad visual","Packaging","Diseño editorial","Motion","Ilustración"], expert:"Eres director creativo senior con experiencia en branding y diseño estratégico." },
-  { id:"contenido",label:"🎬 Contenido / Media", color:T.orange, colorBg:T.orangeBg, subcategories:["YouTube","Podcast","Newsletter","Curso online","Serie","Documental"], expert:"Eres productor y estratega de contenido digital. Sabes qué funciona en cada plataforma." },
-  { id:"musica",   label:"🎵 Música / Audio",    color:T.cyan,   colorBg:T.cyanBg,   subcategories:["Álbum","Single","Proyecto musical","Sello","Tech musical"], expert:"Eres productor musical y estratega de la industria discográfica." },
+  { id:"startup",  label:"Startup / Negocio", color:T.green,  colorBg:T.greenBg,  subcategories:["B2C","B2B","Marketplace","Fintech","Edtech","Healthtech","E-commerce"], expert:"Eres consultor estratégico con experiencia en startups y venture capital. Criterio de inversión real." },
+  { id:"diseño",   label:"Diseño / Branding", color:T.rose,   colorBg:T.roseBg,   subcategories:["Identidad visual","Packaging","Diseño editorial","Motion","Ilustración"], expert:"Eres director creativo senior con experiencia en branding y diseño estratégico." },
+  { id:"contenido",label:"Contenido / Media", color:T.orange, colorBg:T.orangeBg, subcategories:["YouTube","Podcast","Newsletter","Curso online","Serie","Documental"], expert:"Eres productor y estratega de contenido digital. Sabes qué funciona en cada plataforma." },
+  { id:"musica",   label:"Música / Audio",    color:T.cyan,   colorBg:T.cyanBg,   subcategories:["Álbum","Single","Proyecto musical","Sello","Tech musical"], expert:"Eres productor musical y estratega de la industria discográfica." },
   { id:"otro",     label:"✦ Otro",               color:"#7C6F5E", colorBg:"#F5F0E8", subcategories:["Evento","Producto físico","Servicio","ONG / Causa","Educación","Otro"], expert:"Eres consultor estratégico generalista con criterio crítico y honesto." },
 ];
 
@@ -124,7 +124,7 @@ const SECURITY_QUESTIONS = [
 ];
 
 const STICKER_TYPES = ["opinión","complemento","pregunta","objeción","referencia"];
-const STICKER_ICON  = { "opinión":"💬", "complemento":"➕", "pregunta":"❓", "objeción":"⚡", "referencia":"🔗" };
+const STICKER_ICON  = { "opinión":"◇", "complemento":"+", "pregunta":"?", "objeción":"◆", "referencia":"◎" };
 const STICKER_COLOR = { get "opinión"(){return T.blue}, get "complemento"(){return T.green}, get "pregunta"(){return T.amber}, get "objeción"(){return T.rose}, get "referencia"(){return T.accent} };
 
 function genId()    { return Math.random().toString(36).substr(2, 9); }
@@ -149,13 +149,13 @@ function fmtTime(t) { return new Date(t).toLocaleTimeString("es", { hour:"2-digi
 function fmtSize(b) { return b < 1024 ? b+"B" : b < 1048576 ? Math.round(b/1024)+"KB" : (b/1048576).toFixed(1)+"MB"; }
 function fileIcon(name) {
   const ext = (name||"").split(".").pop().toLowerCase();
-  if (["jpg","jpeg","png","gif","webp","svg"].includes(ext)) return "🖼";
-  if (ext==="pdf") return "📄";
-  if (["doc","docx"].includes(ext)) return "📝";
-  if (["xls","xlsx","csv"].includes(ext)) return "📊";
-  if (["ppt","pptx"].includes(ext)) return "📑";
-  if (["zip","rar"].includes(ext)) return "🗜";
-  return "📎";
+  if (["jpg","jpeg","png","gif","webp","svg"].includes(ext)) return "img";
+  if (ext==="pdf") return "pdf";
+  if (["doc","docx"].includes(ext)) return "doc";
+  if (["xls","xlsx","csv"].includes(ext)) return "xls";
+  if (["ppt","pptx"].includes(ext)) return "ppt";
+  if (["zip","rar"].includes(ext)) return "zip";
+  return "◎";
 }
 
 // ─── CRYPTO HELPERS ───────────────────────────────────────────────────────────
@@ -896,7 +896,7 @@ function PwdInput({ value, onChange, onKeyDown, placeholder, style, autoFocus, i
         onMouseEnter={e => e.currentTarget.style.color = T.ink2}
         onMouseLeave={e => e.currentTarget.style.color = T.ink4}
       >
-        {show ? "🙈" : "👁"}
+        {show ? "◯" : "●"}
       </button>
     </div>
   );
@@ -1309,7 +1309,7 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
         <div style={{ maxWidth: isMobile ? "100%" : 860 }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18, flexWrap:"wrap", gap:10 }}>
             <div>
-              <h2 style={{ fontFamily:"var(--raj)", fontWeight:700, fontSize:isMobile?22:26, marginBottom:3, letterSpacing:"0.06em", textTransform:"uppercase", color:"var(--ink0)" }}>Proyectos</h2>
+              <h2 style={{ fontFamily:"var(--serif)", fontStyle:"italic", fontWeight:500, fontSize:isMobile?22:26, marginBottom:3, letterSpacing:"-0.02em", color:"var(--ink-0)" }}>Proyectos</h2>
               <p style={{ color:T.ink4, fontSize:13, fontFamily:"var(--mono)" }}>{allBoards.length} proyecto{allBoards.length!==1?"s":""}</p>
             </div>
             <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
@@ -1353,7 +1353,7 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
           )}
 
           <div style={{ position:"relative", marginBottom:20 }}>
-            <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:T.ink4, fontSize:14, pointerEvents:"none" }}>🔍</span>
+            <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:T.ink4, fontSize:14, pointerEvents:"none" }}>◎</span>
             <OInput placeholder="Buscar proyectos…" aria-label="Buscar proyectos" value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft:36 }} />
           </div>
           {creating && <CreateBoardModal onClose={() => setCreating(false)} onCreate={onCreate} />}
@@ -1377,7 +1377,7 @@ function Sidebar({ user, boards, onOpen, onSignOut }) {
       <div style={{ padding:"8px 8px 4px", marginBottom:18 }}>
         <MindStormLogo size="sm" light={false} />
       </div>
-      <SideItem icon="🏠" label="Inicio" active />
+      <SideItem icon="◎" label="Inicio" active />
       <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"10px 0" }} />
       <div style={{ color:"rgba(255,255,255,0.25)", fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.18em", padding:"4px 10px", marginBottom:4, textTransform:"uppercase" }}>// Proyectos</div>
       {boards.slice(0,10).map(b => {
@@ -1386,8 +1386,8 @@ function Sidebar({ user, boards, onOpen, onSignOut }) {
           <button key={b.id} onClick={() => onOpen(b)}
             style={{ background:"transparent", border:"none", borderRadius:5,
               textAlign:"left", padding:"6px 10px 6px 8px", cursor:"pointer",
-              color:"var(--ink2)", fontFamily:"var(--raj)", fontSize:12, fontWeight:500,
-              letterSpacing:"0.04em", display:"flex", alignItems:"center", gap:8, width:"100%", transition:"all .13s" }}
+              color:"var(--ink2)", fontFamily:"var(--sans)", fontSize:12, fontWeight:500,
+              letterSpacing:"0.03em", display:"flex", alignItems:"center", gap:8, width:"100%", transition:"all .13s" }}
             onMouseEnter={e => { e.currentTarget.style.background=cat.color+"18"; e.currentTarget.style.color="var(--ink0)"; }}
             onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="var(--ink2)"; }}>
             <span style={{ width:6, height:6, borderRadius:"50%", background:cat.color, flexShrink:0, boxShadow:`0 0 6px ${cat.color}88` }} />
@@ -1403,10 +1403,10 @@ function Sidebar({ user, boards, onOpen, onSignOut }) {
             background:"rgba(176,140,90,0.14)",
             border:"1px solid rgba(176,140,90,0.30)",
             display:"flex", alignItems:"center", justifyContent:"center",
-            fontFamily:"var(--raj)", fontSize:13, fontWeight:700, color:"var(--laton)", flexShrink:0 }}>
+            fontFamily:"var(--sans)", fontSize:13, fontWeight:700, color:"var(--laton)", flexShrink:0 }}>
             {user.name[0].toUpperCase()}
           </div>
-          <span style={{ fontFamily:"var(--raj)", color:"var(--ink2)", fontSize:12, fontWeight:500, letterSpacing:".06em" }}>@{user.name}</span>
+          <span style={{ fontFamily:"var(--mono)", color:"var(--ink2)", fontSize:12, letterSpacing:".04em" }}>@{user.name}</span>
         </div>
         <button onClick={onSignOut}
           className="hud-btn"
@@ -1439,29 +1439,27 @@ function BoardTile({ board, onOpen, onDeleteRequest, onExport, exporting }) {
       role="button" tabIndex={0}
       aria-label={`Abrir proyecto: ${board.name}`}
       onKeyDown={e => (e.key==="Enter"||e.key===" ") && onOpen(board)}
-      style={{ background:"rgba(20,18,16,0.90)", border:`1px solid ${cat.color}38`,
+      style={{ background:"var(--card)",
+        border:`1px solid var(--card-border)`, borderLeft:`3px solid ${cat.color}`,
         borderRadius:10, padding:"16px 18px 14px",
         position:"relative", overflow:"hidden",
-        boxShadow:`0 2px 16px rgba(0,0,0,.4), 0 0 0 1px ${cat.color}10`,
-        backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}>
-      {/* Ambient top-right glow */}
-      <div style={{ position:"absolute", top:-40, right:-40, width:120, height:120, borderRadius:"50%",
-        background:`radial-gradient(circle, ${cat.color}18 0%, transparent 70%)`, pointerEvents:"none" }} />
+        boxShadow:"var(--shadow-1)",
+        transition:"box-shadow .18s, transform .18s" }}>
       {/* Category line */}
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-        <div style={{ fontFamily:"var(--mono)", fontSize:9, color:cat.color, letterSpacing:"0.16em",
-          textTransform:"uppercase", opacity:.8 }}>
-          {cat.label.replace(/^.{2}/,"").trim()}
+        <div style={{ fontFamily:"var(--mono)", fontSize:9, color:cat.color, letterSpacing:"0.14em",
+          textTransform:"uppercase", fontWeight:600 }}>
+          {cat.label.replace(/^[^A-Za-záéíóúàèìòùñÁÉÍÓÚÀÈÌÒÙÑ]+/, "").trim()}
         </div>
         <div style={{ display:"flex", gap:5, alignItems:"center" }}>
-          {board.password && <span style={{ color:"var(--ink3)", fontFamily:"var(--mono)", fontSize:9 }}>⚿</span>}
+          {board.password && <span style={{ color:"var(--ink-3)", fontFamily:"var(--mono)", fontSize:9 }}>⚿</span>}
           <button
             onClick={e => { e.stopPropagation(); onExport && onExport(board); }}
             title="Exportar"
             className="hud-btn"
             style={{ padding:"2px 7px", fontSize:10, letterSpacing:".08em" }}
             onMouseEnter={e => { e.currentTarget.style.color=T.green; e.currentTarget.style.borderColor=T.green+"55"; }}
-            onMouseLeave={e => { e.currentTarget.style.color="var(--ink1)"; e.currentTarget.style.borderColor="rgba(232,82,0,0.18)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color="var(--ink-2)"; e.currentTarget.style.borderColor="var(--card-border)"; }}
           >{exporting === board.id ? "…" : "↓"}</button>
           <button
             onClick={e => { e.stopPropagation(); onDeleteRequest(board); }}
@@ -1469,28 +1467,30 @@ function BoardTile({ board, onOpen, onDeleteRequest, onExport, exporting }) {
             className="hud-btn"
             style={{ padding:"2px 7px", fontSize:10, letterSpacing:".08em" }}
             onMouseEnter={e => { e.currentTarget.style.color=T.rose; e.currentTarget.style.borderColor=T.rose+"55"; }}
-            onMouseLeave={e => { e.currentTarget.style.color="var(--ink1)"; e.currentTarget.style.borderColor="rgba(232,82,0,0.18)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color="var(--ink-2)"; e.currentTarget.style.borderColor="var(--card-border)"; }}
           >✕</button>
         </div>
       </div>
       {/* Title */}
-      <div style={{ fontFamily:"var(--raj)", fontWeight:700, fontSize:17, marginBottom:6,
-        lineHeight:1.2, letterSpacing:"0.02em", color:"var(--ink0)",
-        textShadow:`0 0 20px ${cat.color}22` }}>
+      <div style={{ fontFamily:"var(--serif)", fontStyle:"italic", fontWeight:500, fontSize:18,
+        marginBottom:6, lineHeight:1.2, letterSpacing:"-0.01em", color:"var(--ink-0)" }}>
         {board.name}
       </div>
-      <div style={{ color:"var(--ink2)", fontSize:12, marginBottom:12, lineHeight:1.55,
-        display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden", fontFamily:"var(--sans)" }}>
-        {board.conceptTitle || <span style={{ opacity:0.45, fontStyle:"italic" }}>Sin concepto base</span>}
+      <div style={{ color:"var(--ink-2)", fontSize:12, marginBottom:12, lineHeight:1.55,
+        display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden",
+        fontFamily:"var(--body)" }}>
+        {board.conceptTitle || <span style={{ color:"var(--ink-4)", fontStyle:"italic" }}>Sin concepto base</span>}
       </div>
       <div style={{ display:"flex", gap:4, flexWrap:"wrap", marginBottom:10 }}>
         {(board.subcategories||[]).slice(0,2).map(s => (
-          <span key={s} style={{ fontFamily:"var(--mono)", fontSize:9, padding:"2px 6px",
-            border:`1px solid ${cat.color}28`, color:"var(--ink2)", textTransform:"uppercase", letterSpacing:".08em" }}>{s}</span>
+          <span key={s} style={{ fontFamily:"var(--mono)", fontSize:9, padding:"2px 8px",
+            background:`${cat.color}10`, border:`1px solid ${cat.color}28`,
+            color:cat.color, borderRadius:99, letterSpacing:".06em" }}>{s}</span>
         ))}
       </div>
-      <div style={{ color:"var(--ink3)", fontFamily:"var(--mono)", fontSize:9, letterSpacing:".08em",
-        display:"flex", justifyContent:"space-between", borderTop:`1px dashed ${cat.color}18`, paddingTop:8 }}>
+      <div style={{ color:"var(--ink-4)", fontFamily:"var(--mono)", fontSize:9, letterSpacing:".08em",
+        display:"flex", justifyContent:"space-between",
+        borderTop:"1px solid var(--paper-3)", paddingTop:8 }}>
         <span>@{board.createdBy}</span>
         <span>{fmtDate(board.createdAt)}</span>
       </div>
@@ -1504,8 +1504,8 @@ function SideItem({ icon, label, active }) {
       background: active ? "rgba(176,140,90,0.12)" : "transparent",
       border: active ? "1px solid rgba(176,140,90,0.28)" : "1px solid transparent",
       textAlign:"left", padding:"8px 12px", borderRadius:6, cursor:"pointer",
-      color: active ? "var(--laton)" : "var(--ink2)", fontFamily:"var(--raj)",
-      fontSize:13, fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase",
+      color: active ? "var(--laton)" : "var(--ink2)", fontFamily:"var(--sans)",
+      fontSize:12, fontWeight:600, letterSpacing:"0.06em",
       display:"flex", alignItems:"center", gap:10, width:"100%", transition:"all .15s",
       boxShadow: active ? "inset 3px 0 0 var(--laton)" : "none" }}
       onMouseEnter={e => { if(!active){ e.currentTarget.style.background="rgba(255,255,255,0.07)"; e.currentTarget.style.color="var(--ink0)"; } }}
@@ -1519,7 +1519,7 @@ function SideItem({ icon, label, active }) {
 // ─── MONKEY ISLAND DELETE MODAL ───────────────────────────────────────────────
 const MONKEY_STEPS = [
   {
-    emoji: "🗑",
+    emoji: "✕",
     title: (name) => `¿Eliminar "${name}"?`,
     body:  "Esta acción borrará el proyecto y todas sus tarjetas, conexiones y comentarios. No hay vuelta atrás.",
     yes:   "Sí, eliminar",
@@ -1527,10 +1527,10 @@ const MONKEY_STEPS = [
     color: T.rose,
   },
   {
-    emoji: "💀",
+    emoji: "◆",
     title: () => "Última oportunidad.",
     body:  "Que conste en actas que se te advirtió. Ahora pulsa el botón y que la fuerza te acompañe.",
-    yes:   "⚡ DESTRUIR PARA SIEMPRE",
+    yes:   "◆ DESTRUIR PARA SIEMPRE",
     no:    "Me salvé por los pelos",
     color: T.rose,
   },
@@ -1638,7 +1638,7 @@ function PasswordModal({ board, onClose, onSubmit }) {
       {mode === "login" && (
         <div>
           <div style={{ textAlign:"center", marginBottom:22 }}>
-            <div style={{ fontSize:32, marginBottom:8 }}>🔒</div>
+            <div style={{ fontSize:32, marginBottom:8 }}>◈</div>
             <h2 style={{ color:T.ink, fontSize:20, fontWeight:800, marginBottom:6 }}>Tablero protegido</h2>
             <p style={{ color:T.ink3, fontSize:13 }}>"{board.name}" requiere contraseña</p>
           </div>
@@ -1652,11 +1652,10 @@ function PasswordModal({ board, onClose, onSubmit }) {
               </button>
             ) : (
               <div>
-                <button onClick={() => setError(e => !e)}
+                <button onClick={() => setMode("hint")}
                   style={{ background:"none", border:"none", color:T.ink4, fontSize:12, cursor:"pointer", fontFamily:"var(--sans)", textDecoration:"underline", padding:0 }}
                   onMouseEnter={e => e.currentTarget.style.color=T.ink2}
                   onMouseLeave={e => e.currentTarget.style.color=T.ink4}
-                  onClick={() => setMode("hint")}
                 >
                   ¿Olvidaste la contraseña?
                 </button>
@@ -1673,14 +1672,14 @@ function PasswordModal({ board, onClose, onSubmit }) {
       {mode === "hint" && (
         <div>
           <div style={{ textAlign:"center", marginBottom:20 }}>
-            <div style={{ fontSize:32, marginBottom:8 }}>🔑</div>
+            <div style={{ fontSize:32, marginBottom:8 }}>⚿</div>
             <h2 style={{ color:T.ink, fontSize:18, fontWeight:800, marginBottom:6 }}>Recuperar acceso</h2>
           </div>
           <div style={{ background:T.amberBg, border:"1px solid "+T.amber+"44", borderRadius:8, padding:"14px", marginBottom:16 }}>
             <div style={{ color:T.amber, fontWeight:700, fontSize:13, marginBottom:4 }}>Sin preguntas de seguridad configuradas</div>
             <p style={{ color:T.amber, fontSize:13, lineHeight:1.5 }}>
               Este tablero fue creado por <strong>@{board.createdBy}</strong>.<br/>
-              Contáctalo para que te comparta la contraseña — puede verla haciendo clic en 🔒 dentro del tablero.
+              Contáctalo para que te comparta la contraseña — puede verla haciendo clic en ◈ dentro del tablero.
             </p>
           </div>
           <OGhostBtn full onClick={() => setMode("login")}>← Volver</OGhostBtn>
@@ -1690,7 +1689,7 @@ function PasswordModal({ board, onClose, onSubmit }) {
       {mode === "recover" && !revealed && (
         <div>
           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:18 }}>
-            <span style={{ fontSize:22 }}>🛡</span>
+            <span style={{ fontSize:22 }}>◈</span>
             <div>
               <h2 style={{ color:T.ink, fontSize:18, fontWeight:800 }}>Verificación de identidad</h2>
               <p style={{ color:T.ink3, fontSize:12 }}>Pregunta {step} de 2</p>
@@ -1804,7 +1803,7 @@ function CreateBoardModal({ onClose, onCreate }) {
         <div style={{ padding:"22px 26px 18px", borderBottom:`1px solid ${T.border}`,
           display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <div>
-            <h2 style={{ fontFamily:"var(--raj)", fontWeight:700, fontSize:22, letterSpacing:"0.06em", textTransform:"uppercase", color:T.ink, marginBottom:2 }}>Nuevo proyecto</h2>
+            <h2 style={{ fontFamily:"var(--serif)", fontStyle:"italic", fontWeight:500, fontSize:22, letterSpacing:"-0.02em", color:T.ink, marginBottom:2 }}>Nuevo proyecto</h2>
             <p style={{ color:T.ink4, fontSize:12, fontFamily:"var(--mono)" }}>Completa los campos y lanza</p>
           </div>
           <button onClick={onClose} style={{ background:T.bgHover, border:`1px solid ${T.border}`, color:T.ink3, width:32, height:32, borderRadius:8, cursor:"pointer", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center", transition:"all .15s" }}
@@ -1832,7 +1831,7 @@ function CreateBoardModal({ onClose, onCreate }) {
                     display:"flex", alignItems:"center", gap:5,
                     boxShadow:sel?`0 0 12px ${c.color}33`:"none" }}>
                   <span>{c.label.split(" ")[0]}</span>
-                  <span>{c.label.replace(/^.{2}/,"").trim()}</span>
+                  <span>{c.label.replace(/^[^A-Za-záéíóúàèìòùñÁÉÍÓÚÀÈÌÒÙÑ]+/, "").trim()}</span>
                 </button>
               );
             })}
@@ -1877,7 +1876,7 @@ function CreateBoardModal({ onClose, onCreate }) {
               cursor:"pointer", fontSize:12, fontFamily:"var(--sans)", width:"100%",
               textAlign:"left", display:"flex", alignItems:"center", gap:8,
               transition:"all .15s", marginBottom:showPwd?12:20 }}>
-            <span>🔒</span>
+            <span>◈</span>
             <span>{password ? `Contraseña: ${password.replace(/./g,"•")}` : "Agregar contraseña (opcional)"}</span>
             <span style={{ marginLeft:"auto", opacity:.5 }}>{showPwd?"▲":"▼"}</span>
           </button>
@@ -1890,7 +1889,7 @@ function CreateBoardModal({ onClose, onCreate }) {
               {needsSecurity && (
                 <div style={{ marginTop:14 }}>
                   <div style={{ background:`${T.amber}10`, border:`1px solid ${T.amber}33`, borderRadius:8, padding:"9px 12px", marginBottom:14, display:"flex", gap:7 }}>
-                    <span style={{ color:T.amber, flexShrink:0 }}>🛡</span>
+                    <span style={{ color:T.amber, flexShrink:0 }}>◈</span>
                     <p style={{ color:T.amber, fontSize:11, lineHeight:1.5 }}>Elige 2 preguntas de seguridad para poder recuperar la contraseña si la olvidas.</p>
                   </div>
                   <OLabel>Pregunta 1</OLabel>
@@ -2039,7 +2038,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
     } catch(e) {
       console.error("Save failed:", e);
       setSaveStatus("error");
-      showToast("⚠️ Error al guardar — revisa tu conexión");
+      showToast("⚠ Error al guardar — revisa tu conexión");
     }
   }, [data, onSave, cards, comments, connections]);
 
@@ -2178,14 +2177,15 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
         <div style={{ width:26, height:26, background:`${cat.color}22`, borderRadius:7,
           display:"flex", alignItems:"center", justifyContent:"center", fontSize:14,
           border:`1px solid ${cat.color}44`, flexShrink:0 }}>{cat.label.split(" ")[0]}</div>
-        <span style={{ color:T.ink, fontWeight:700, fontSize:isMobile?13:15,
-          overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:isMobile?160:280 }}>
+        <span style={{ color:T.ink, fontWeight:500, fontSize:isMobile?14:16,
+          fontFamily:"var(--serif)", fontStyle:"italic", letterSpacing:"-0.01em",
+          overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:isMobile?160:300 }}>
           {board.name}
         </span>
         {board.password && <button onClick={() => setShowPwd(p=>!p)}
           style={{ background:"none", border:"none", cursor:"pointer", fontSize:13, color:T.ink4, transition:"color .15s", flexShrink:0 }}
           onMouseEnter={e=>e.currentTarget.style.color=T.amber}
-          onMouseLeave={e=>e.currentTarget.style.color=T.ink4}>🔒</button>}
+          onMouseLeave={e=>e.currentTarget.style.color=T.ink4}>◈</button>}
         {showPwd && board.password && <span style={{ background:T.amberBg, color:T.amber, fontFamily:"var(--mono)", fontSize:12, padding:"4px 11px", borderRadius:7, userSelect:"all", border:`1px solid ${T.amber}33` }}>{board.password}</span>}
         <div style={{ flex:1 }} />
         <div style={{ display:"flex", gap:8, alignItems:"center" }}>
@@ -2195,7 +2195,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               style={{ background:T.bgPanel, border:"1px solid "+T.border, color:T.ink3, padding:"7px 10px", borderRadius:8, fontSize:12, cursor:"pointer", display:"flex", alignItems:"center", gap:5, fontFamily:"var(--sans)", transition:"all .15s" }}
               onMouseEnter={e => { e.currentTarget.style.background=T.bgHover; e.currentTarget.style.color=T.ink; }}
               onMouseLeave={e => { e.currentTarget.style.background=T.bgPanel; e.currentTarget.style.color=T.ink3; }}>
-              🔗{!isMobile && " Compartir"}
+              ◎{!isMobile && " Compartir"}
             </button>
             {showShare && (
               <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, background:T.bgCard, border:"1px solid "+T.border, borderRadius:10, padding:"16px", width:280, boxShadow:"0 8px 30px rgba(0,0,0,.5)", zIndex:50 }}>
@@ -2269,7 +2269,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 transition:"all .15s" }}
               onMouseEnter={e => { e.currentTarget.style.background=pendingConns.length>0?T.amberBg:"var(--paper-2)"; e.currentTarget.style.color=pendingConns.length>0?T.amber:T.ink; }}
               onMouseLeave={e => { e.currentTarget.style.background=pendingConns.length>0?T.amberBg:"transparent"; e.currentTarget.style.color=pendingConns.length>0?T.amber:T.ink4; }}>
-              💡
+              ◎
               {pendingConns.length > 0 && (
                 <span style={{ position:"absolute", top:3, right:3, background:T.amber, color:"#1a0e00",
                   fontSize:8, fontWeight:800, width:14, height:14, borderRadius:"50%",
@@ -2300,7 +2300,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 transition:"all .15s" }}
               onMouseEnter={e => { e.currentTarget.style.background="var(--paper-2)"; e.currentTarget.style.color=T.ink; }}
               onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color=T.ink4; }}>
-              📄
+              ◻
             </button>
 
             {deletedCards.length > 0 && (
@@ -2311,7 +2311,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                   transition:"all .15s" }}
                 onMouseEnter={e => { e.currentTarget.style.background="var(--paper-2)"; e.currentTarget.style.color=T.ink; }}
                 onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color=T.ink4; }}>
-                🗑
+                ✕
                 <span style={{ position:"absolute", top:3, right:3, background:T.rose, color:"#fff",
                   fontSize:8, fontWeight:800, width:14, height:14, borderRadius:"50%",
                   display:"flex", alignItems:"center", justifyContent:"center", lineHeight:1 }}>
@@ -2326,7 +2326,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                   background:T.amberBg, color:T.amber,
                   fontSize:14, display:"flex", alignItems:"center", justifyContent:"center",
                   transition:"all .15s" }}>
-                📖
+                ◻
               </button>
             )}
 
@@ -2341,7 +2341,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 transition:"all .15s" }}
               onMouseEnter={e => { e.currentTarget.style.background=getAIKey()?T.greenBg:"var(--paper-2)"; e.currentTarget.style.color=getAIKey()?T.green:T.ink; }}
               onMouseLeave={e => { e.currentTarget.style.background=getAIKey()?T.greenBg:"transparent"; e.currentTarget.style.color=getAIKey()?T.green:T.ink4; }}>
-              🔑
+              ⚿
             </button>
           </div>
         )}
@@ -2361,11 +2361,11 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 background:`linear-gradient(180deg,${cat.color},${cat.color}44)`,
                 flexShrink:0, boxShadow:`0 0 8px ${cat.color}66` }} />
               <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.12em", marginBottom:2, textTransform:"uppercase" }}>Concepto base · clic para editar</div>
-                <div style={{ color:T.ink, fontWeight:700, fontSize:14, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-                  {concept.title || <span style={{ color:T.ink4, fontStyle:"italic" }}>Sin concepto — haz clic para agregar</span>}
+                <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.14em", marginBottom:3, textTransform:"uppercase" }}>Concepto base · clic para editar</div>
+                <div style={{ color:T.ink, fontWeight:500, fontSize:15, fontFamily:"var(--serif)", fontStyle:"italic", letterSpacing:"-0.01em", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                  {concept.title || <span style={{ color:T.ink4 }}>Sin concepto — haz clic para agregar</span>}
                 </div>
-                {concept.desc && <div style={{ color:T.ink3, fontSize:12, marginTop:2, lineHeight:1.4, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{concept.desc}</div>}
+                {concept.desc && <div style={{ color:T.ink3, fontSize:12, fontFamily:"var(--body)", marginTop:3, lineHeight:1.45, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{concept.desc}</div>}
               </div>
             </div>
           </div>
@@ -2572,7 +2572,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               <div style={{ color:T.ink, fontWeight:700, fontSize:13, lineHeight:1.3, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{board.name}</div>
               <div style={{ display:"flex", alignItems:"center", gap:5, marginTop:4 }}>
                 <div style={{ fontSize:12 }}>{cat.label.split(" ")[0]}</div>
-                <div style={{ color:cat.color, fontSize:11, fontWeight:600 }}>{cat.label.replace(/^.{2}/,"").trim()}</div>
+                <div style={{ color:cat.color, fontSize:11, fontWeight:600 }}>{cat.label.replace(/^[^A-Za-záéíóúàèìòùñÁÉÍÓÚÀÈÌÒÙÑ]+/, "").trim()}</div>
               </div>
             </div>
 
@@ -2638,7 +2638,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                   fontFamily:"var(--sans)", width:"100%", transition:"all .15s", position:"relative" }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor=pendingConns.length>0?T.amber+"88":"var(--ink-4)"; e.currentTarget.style.color=pendingConns.length>0?T.amber:T.ink3; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor=pendingConns.length>0?T.amber+"55":"var(--card-border)"; e.currentTarget.style.color=pendingConns.length>0?T.amber:T.ink4; }}>
-                <span>💡</span>
+                <span>◎</span>
                 <span>Conexiones</span>
                 {pendingConns.length > 0 && (
                   <span style={{ marginLeft:"auto", background:T.amber, color:"#1a0e00",
@@ -2817,7 +2817,7 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
           {commentCount > 0 && (
             <span style={{ color:T.ink3, fontFamily:"var(--mono)", fontSize:9,
               background:"var(--paper-2)", borderRadius:4, padding:"1px 4px" }}>
-              💬{commentCount}
+              ◇{commentCount}
             </span>
           )}
           {connCount > 0 && (
@@ -2839,7 +2839,7 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
               lineHeight:1 }}
             onMouseEnter={e => { e.currentTarget.style.color = T.ink; e.currentTarget.style.background = "var(--paper-2)"; }}
             onMouseLeave={e => { e.currentTarget.style.color = T.ink4; e.currentTarget.style.background = "transparent"; }}>
-            {isOwner ? "✎" : "👁"}
+            {isOwner ? "✎" : "◯"}
           </button>
         </div>
       </div>
@@ -2948,7 +2948,7 @@ function CardReaderModal({ card, cardComments, connections, allCards, user, onEd
             )}
             {connectedCards.length > 0 && (
               <span style={{ color:T.accent, fontSize:11, fontFamily:"var(--mono)" }}>
-                🔗 {connectedCards.length}
+                ◎ {connectedCards.length}
               </span>
             )}
           </div>
@@ -2986,10 +2986,10 @@ function CardReaderModal({ card, cardComments, connections, allCards, user, onEd
             </div>
             <span style={{ color:T.ink4, fontSize:12 }}>{fmtDate(card.createdAt)}</span>
             {(cardComments||[]).length > 0 && (
-              <span style={{ color:T.ink4, fontSize:12 }}>💬 {cardComments.length} comentarios</span>
+              <span style={{ color:T.ink4, fontSize:12 }}>◇ {cardComments.length} comentarios</span>
             )}
             {stickers.length > 0 && (
-              <span style={{ color:T.ink4, fontSize:12 }}>🗂 {stickers.length} stickers</span>
+              <span style={{ color:T.ink4, fontSize:12 }}>▤ {stickers.length} stickers</span>
             )}
           </div>
 
@@ -3057,7 +3057,7 @@ function CardReaderModal({ card, cardComments, connections, allCards, user, onEd
                   <div key={conn.id} style={{ background:T.accentBg,
                     border:"1px solid "+T.accent+"33", borderRadius:9,
                     padding:"7px 13px", display:"flex", gap:7, alignItems:"center" }}>
-                    <span style={{ color:T.accent, fontSize:12 }}>🔗</span>
+                    <span style={{ color:T.accent, fontSize:12 }}>◎</span>
                     <div>
                       <div style={{ color:T.ink, fontSize:12, fontWeight:700 }}>{other.title}</div>
                       <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>
@@ -3211,7 +3211,7 @@ function EditCardModal({ card, cardComments, user, onSave, onDelete, onClose, on
       {/* Header shows owner badge or read-only notice */}
       {!isOwner && (
         <div style={{ background:T.bgPanel, border:"1px solid "+T.border, borderRadius:8, padding:"10px 14px", marginBottom:16, display:"flex", gap:8, alignItems:"center" }}>
-          <span style={{ fontSize:14 }}>👁</span>
+          <span style={{ fontSize:14 }}>◯</span>
           <div>
             <span style={{ color:T.ink2, fontSize:13, fontWeight:600 }}>Tarjeta de @{card.author}</span>
             <span style={{ color:T.ink4, fontSize:12 }}> · Puedes comentar y agregar stickers</span>
@@ -3223,8 +3223,8 @@ function EditCardModal({ card, cardComments, user, onSave, onDelete, onClose, on
       <div style={{ display:"flex", gap:0, marginBottom:20, borderBottom:"1px solid "+T.border }}>
         {[
           isOwner ? ["edit", "✎ Editar"] : null,
-          ["comments", "💬 Comentarios" + (cardComments.length ? ` (${cardComments.length})` : "")],
-          ["stickers", "🗂 Stickers" + (stickerCount > 0 ? ` (${stickerCount})` : "")],
+          ["comments", "◇ Comentarios" + (cardComments.length ? ` (${cardComments.length})` : "")],
+          ["stickers", "▤ Stickers" + (stickerCount > 0 ? ` (${stickerCount})` : "")],
         ].filter(Boolean).map(([id, lbl]) => (
           <button key={id} onClick={() => setTab(id)}
             style={{ background:"none", border:"none", borderBottom:"2px solid "+(tab===id?T.accent:"transparent"), color:tab===id?T.accent:T.ink3, padding:"8px 14px", cursor:"pointer", fontSize:13, fontWeight:tab===id?700:400, fontFamily:"var(--sans)", marginBottom:-1, transition:"all .15s" }}>
@@ -3263,7 +3263,7 @@ function EditCardModal({ card, cardComments, user, onSave, onDelete, onClose, on
             {!confirmDel ? (
               <button onClick={() => setConfirmDel(true)}
                 style={{ background:T.roseBg, border:"1px solid "+T.rose+"33", color:T.rose, padding:"8px 14px", borderRadius:7, cursor:"pointer", fontSize:13, fontFamily:"var(--sans)" }}>
-                🗑 Mover a papelera
+                ✕ Mover a papelera
               </button>
             ) : (
               <div style={{ display:"flex", gap:6, alignItems:"center" }}>
@@ -3325,7 +3325,7 @@ function StickerTree({ card, user, onAdd, onUpdate }) {
     <div>
       {/* Explanation */}
       <div style={{ background:T.accentBg, border:"1px solid "+T.accent+"33", borderRadius:8, padding:"10px 14px", marginBottom:16, display:"flex", gap:8 }}>
-        <span style={{ color:T.accent, fontSize:14, flexShrink:0 }}>🗂</span>
+        <span style={{ color:T.accent, fontSize:14, flexShrink:0 }}>▤</span>
         <p style={{ color:T.accent, fontSize:12, lineHeight:1.5 }}>
           Los stickers son anotaciones de otros usuarios conectadas a esta tarjeta. Se organizan en árbol — cada sticker puede recibir respuestas.
         </p>
@@ -3363,7 +3363,7 @@ function StickerNode({ sticker, allStickers, user, onAdd, onUpdate, depth }) {
   const [replying, setReplying] = useState(false);
   const children = allStickers.filter(s => s.parentId === sticker.id).sort((a, b) => a.ts - b.ts);
   const color = STICKER_COLOR[sticker.type] || T.blue;
-  const icon  = STICKER_ICON[sticker.type]  || "💬";
+  const icon  = STICKER_ICON[sticker.type]  || "◇";
   const isDiscarded = sticker.status === "discarded";
 
   const bgColor = isDiscarded ? "#F9F9F9" : color + "0A";
@@ -3518,7 +3518,7 @@ function TrashPanel({ cards, onRestore, onDelete, onClose }) {
   return (
     <OOverlay onClose={onClose}><OModalBox wide>
       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:20 }}>
-        <span style={{ fontSize:20 }}>🗑</span>
+        <span style={{ fontSize:20 }}>✕</span>
         <h2 style={{ color:T.ink, fontSize:18, fontWeight:800 }}>Papelera</h2>
         <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:11, marginLeft:"auto" }}>{cards.length} elemento{cards.length!==1?"s":""}</span>
       </div>
@@ -3610,7 +3610,7 @@ function ConnCard({ conn, cards, connections, onUpdate, onAddAsTask }) {
           <>
             <span style={{ background:color+"20", color, fontFamily:"var(--mono)", fontSize:10, padding:"2px 8px", borderRadius:99, fontWeight:600 }}>{CONN_TYPE_LABELS[conn.type]||conn.type}</span>
             <div style={{ flex:1, height:1, background:color+"33" }} />
-            <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>⚡{conn.strength}/10</span>
+            <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>◆{conn.strength}/10</span>
           </>
         )}
       </div>
@@ -3675,13 +3675,13 @@ function ConnCard({ conn, cards, connections, onUpdate, onAddAsTask }) {
         <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
           {conn.status==="pending" && <>
             <button onClick={()=>doUpdateStatus(conn.id,"approved")} style={{ flex:1, background:T.greenBg, border:"1px solid "+T.green+"44", color:T.green, padding:"7px", borderRadius:7, cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"var(--sans)" }}>✓ Aprobar</button>
-            <button onClick={()=>doUpdateStatus(conn.id,"review")}   style={{ flex:1, background:T.amberBg, border:"1px solid "+T.amber+"44", color:T.amber, padding:"7px", borderRadius:7, cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"var(--sans)" }}>👁 Revisar</button>
+            <button onClick={()=>doUpdateStatus(conn.id,"review")}   style={{ flex:1, background:T.amberBg, border:"1px solid "+T.amber+"44", color:T.amber, padding:"7px", borderRadius:7, cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"var(--sans)" }}>◯ Revisar</button>
             <button onClick={()=>doUpdateStatus(conn.id,"discarded")} style={{ flex:1, background:T.roseBg, border:"1px solid "+T.rose+"44", color:T.rose, padding:"7px", borderRadius:7, cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"var(--sans)" }}>✕ Descartar</button>
           </>}
           {conn.status==="review" && <>
             <button onClick={()=>doUpdateStatus(conn.id,"approved")}  style={{ background:T.greenBg, border:"1px solid "+T.green+"44", color:T.green, padding:"6px 12px", borderRadius:7, cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"var(--sans)" }}>✓ Aprobar</button>
             <button onClick={()=>doUpdateStatus(conn.id,"discarded")} style={{ background:T.roseBg, border:"1px solid "+T.rose+"44", color:T.rose, padding:"6px 12px", borderRadius:7, cursor:"pointer", fontSize:12, fontFamily:"var(--sans)" }}>✕ Descartar</button>
-            <span style={{ background:T.amberBg, color:T.amber, fontFamily:"var(--mono)", fontSize:10, padding:"3px 10px", borderRadius:99, alignSelf:"center" }}>👁 En revisión</span>
+            <span style={{ background:T.amberBg, color:T.amber, fontFamily:"var(--mono)", fontSize:10, padding:"3px 10px", borderRadius:99, alignSelf:"center" }}>◯ En revisión</span>
           </>}
           {conn.status==="approved" && <>
             <span style={{ background:T.greenBg, color:T.green, fontFamily:"var(--mono)", fontSize:10, padding:"3px 10px", borderRadius:99, alignSelf:"center" }}>✓ Aprobada</span>
@@ -3791,7 +3791,7 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
         <div style={{ padding:"17px 20px 14px", borderBottom:"1px solid var(--card-border)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <div>
             <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-              <span style={{ fontSize:17 }}>💡</span>
+              <span style={{ fontSize:17 }}>◎</span>
               <span style={{ color:T.ink, fontWeight:800, fontSize:15 }}>Conexiones entre ideas</span>
             </div>
             <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10, marginTop:2, letterSpacing:"0.03em" }}>
@@ -3802,7 +3802,7 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
         </div>
         <div style={{ background:"var(--paper-2)", borderBottom:"1px solid var(--card-border)", padding:"10px 18px", display:"flex", gap:8 }}>
           <span style={{ color:"var(--ink-3)", fontSize:13, flexShrink:0 }}>ℹ</span>
-          <p style={{ color:"var(--ink-2)", fontSize:12, lineHeight:1.5, fontFamily:"var(--body)" }}>Las conexiones se guardan permanentemente. Las aprobadas muestran 🔗 en las tarjetas.</p>
+          <p style={{ color:"var(--ink-2)", fontSize:12, lineHeight:1.5, fontFamily:"var(--body)" }}>Las conexiones se guardan permanentemente. Las aprobadas muestran ◎ en las tarjetas.</p>
         </div>
         <div style={{ flex:1, overflow:"auto", padding:"16px 18px" }}>
           {status==="no_key" ? (
@@ -3810,7 +3810,7 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
           ) : (
           <>
           <OBtn full onClick={findConnections} disabled={status==="loading" || status==="rate_limit" || status==="daily_quota"}>
-            {status==="loading" ? "🔍 Analizando…" : status==="rate_limit" ? `⏳ Disponible en ${countdown}s` : "🔍 Buscar nuevas conexiones con IA"}
+            {status==="loading" ? "Analizando…" : status==="rate_limit" ? `Disponible en ${countdown}s` : "Buscar conexiones con IA"}
           </OBtn>
           <div style={{ height:12 }}/>
           {status==="loading" && (
@@ -3831,7 +3831,7 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
           )}
           {status==="daily_quota" && (
             <div style={{ background:T.roseBg, border:"1px solid "+T.rose+"44", borderRadius:8, padding:"12px 14px", marginBottom:14 }}>
-              <div style={{ color:T.rose, fontSize:13, fontWeight:600, marginBottom:4 }}>📊 Cupo diario agotado</div>
+              <div style={{ color:T.rose, fontSize:13, fontWeight:600, marginBottom:4 }}>Cupo diario agotado</div>
               <div style={{ color:T.ink3, fontFamily:"var(--mono)", fontSize:11, lineHeight:1.6 }}>
                 El cupo gratuito de Gemini se reinicia a medianoche UTC.<br/>
                 <span style={{ color:T.amber, fontWeight:700 }}>Tiempo restante: {fmtCountdownHM(quotaMs)}</span><br/>
@@ -3848,7 +3848,7 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
           {renderGroup("DESCARTADAS", discarded, false)}
           {connections.length===0 && status==="idle" && (
             <div style={{ textAlign:"center", padding:"20px 0", color:T.ink4, fontSize:13 }}>
-              <div style={{ fontSize:32, marginBottom:12, opacity:.3 }}>💡</div>
+              <div style={{ fontSize:32, marginBottom:12, opacity:.3 }}>◎</div>
               <p style={{ marginBottom:8 }}>Aún no hay conexiones detectadas.</p>
               <p style={{ fontFamily:"var(--mono)", fontSize:11, lineHeight:1.6 }}>La IA analiza todas las tarjetas y encuentra pares con conexión conceptual real.</p>
             </div>
@@ -3945,7 +3945,7 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
               <span style={{ color:cat.color, fontSize:16 }}>✦</span>
               <span style={{ color:T.ink, fontWeight:800, fontSize:15 }}>Análisis IA</span>
             </div>
-            <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10, marginTop:1 }}>Experto en {cat.label.replace(/^.{2}/,"").trim()}</div>
+            <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10, marginTop:1 }}>Experto en {cat.label.replace(/^[^A-Za-záéíóúàèìòùñÁÉÍÓÚÀÈÌÒÙÑ]+/, "").trim()}</div>
           </div>
           <OGhostBtn small onClick={onClose}>× Cerrar</OGhostBtn>
         </div>
@@ -3979,7 +3979,7 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
           )}
           {status==="daily_quota" && (
             <div style={{ background:T.roseBg, border:"1px solid "+T.rose+"44", borderRadius:12, padding:"20px", textAlign:"center", marginBottom:14 }}>
-              <div style={{ fontSize:28, marginBottom:8 }}>📊</div>
+              <div style={{ fontSize:28, marginBottom:8 }}>▦</div>
               <div style={{ color:T.rose, fontWeight:700, fontSize:14, marginBottom:8 }}>Cupo diario agotado</div>
               <div style={{ color:T.ink3, fontSize:12, lineHeight:1.6, marginBottom:10 }}>El cupo gratuito de Gemini se reinicia a medianoche UTC.</div>
               <div style={{ color:T.amber, fontFamily:"var(--mono)", fontSize:22, fontWeight:700, marginBottom:4 }}>{fmtCountdownHM(quotaMs)}</div>
@@ -4070,7 +4070,7 @@ function AttachZone({ atts, onRemove, onAdd, loading }) {
       )}
       <button onClick={onAdd} className="att-btn"
         style={{ background:T.bgPanel, border:"1.5px dashed "+T.border2, color:T.ink3, padding:"7px 12px", borderRadius:7, fontSize:12, cursor:"pointer", display:"flex", alignItems:"center", gap:6, width:"100%", transition:"all .15s", fontFamily:"var(--sans)" }}>
-        {loading ? "↑ Procesando…" : "📎 Adjuntar imagen o archivo"}
+        {loading ? "↑ Procesando…" : "◎ Adjuntar"}
       </button>
     </div>
   );
@@ -4102,7 +4102,7 @@ function DocPanel({ board, concept, cards, comments, connections, cat, onClose }
       return `  - "${ca?.title}" ⇄ "${cb?.title}"\n    Tipo: ${c.type} | Razón: ${c.reason}`;
     }).join("\n");
 
-    return `Eres un consultor senior especializado en ${cat.label.replace(/^.{2}/,"").trim()}. Tu tarea es compilar y estructurar toda la información de este proyecto en un documento maestro profesional y útil.
+    return `Eres un consultor senior especializado en ${cat.label.replace(/^[^A-Za-záéíóúàèìòùñÁÉÍÓÚÀÈÌÒÙÑ]+/, "").trim()}. Tu tarea es compilar y estructurar toda la información de este proyecto en un documento maestro profesional y útil.
 
 PROYECTO: "${board.name}"
 CATEGORÍA: ${cat.label}${(board.subcategories||[]).length > 0 ? " > " + board.subcategories.join(", ") : ""}
@@ -4238,17 +4238,16 @@ Escribe en español. Usa markdown con headers (##), bullets (-) y énfasis (**).
   }
 
   return (
-    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,5,.65)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, WebkitBackdropFilter:"blur(8px)", backdropFilter:"blur(8px)", padding:20 }}>
-      <div style={{ background:"rgba(13,13,30,0.95)", border:"1px solid rgba(15,214,138,0.2)",
+    <div style={{ position:"fixed", inset:0, background:"rgba(26,24,20,0.50)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:20 }}>
+      <div style={{ background:"var(--card-soft)", border:"1px solid var(--card-border)",
         borderRadius:18, width:"100%", maxWidth:690, maxHeight:"92vh", display:"flex", flexDirection:"column",
-        boxShadow:"0 30px 80px rgba(0,0,0,.65), 0 0 40px rgba(15,214,138,0.06)",
-        backdropFilter:"blur(14px)", WebkitBackdropFilter:"blur(14px)",
+        boxShadow:"var(--shadow-3)",
         animation:"scaleIn .25s ease" }}>
         {/* Header */}
         <div style={{ padding:"18px 22px 14px", borderBottom:"1px solid "+T.border, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <div>
             <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-              <span style={{ fontSize:18 }}>📄</span>
+              <span style={{ fontSize:18 }}>◻</span>
               <span style={{ color:T.ink, fontWeight:800, fontSize:16 }}>Documento Maestro</span>
             </div>
             <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:11, marginTop:2 }}>
@@ -4281,7 +4280,7 @@ Escribe en español. Usa markdown con headers (##), bullets (-) y énfasis (**).
                 <div style={{ height:1, background:T.border, margin:"12px 0" }} />
                 <div style={{ display:"flex", gap:16 }}>
                   <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                    <span style={{ color:T.accent, fontSize:12 }}>🔗</span>
+                    <span style={{ color:T.accent, fontSize:12 }}>◎</span>
                     <span style={{ color:T.ink3, fontSize:13 }}>{approvedConns.length} conexiones aprobadas</span>
                   </div>
                   <div style={{ display:"flex", alignItems:"center", gap:6 }}>
@@ -4289,7 +4288,7 @@ Escribe en español. Usa markdown con headers (##), bullets (-) y énfasis (**).
                     <span style={{ color:T.ink3, fontSize:13 }}>{taskCards.length} tareas</span>
                   </div>
                   <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                    <span style={{ color:T.ink4, fontSize:12 }}>💬</span>
+                    <span style={{ color:T.ink4, fontSize:12 }}>◇</span>
                     <span style={{ color:T.ink3, fontSize:13 }}>{Object.values(comments).reduce((s, v) => s + v.length, 0)} comentarios</span>
                   </div>
                 </div>
@@ -4340,7 +4339,7 @@ Escribe en español. Usa markdown con headers (##), bullets (-) y énfasis (**).
                 <OGhostBtn small onClick={generate}>↻ Regenerar</OGhostBtn>
               </div>
               <div style={{ background:T.amberBg, border:"1px solid "+T.amber+"33", borderRadius:8, padding:"10px 14px", marginBottom:16, display:"flex", gap:8 }}>
-                <span style={{ color:T.amber, fontSize:13, flexShrink:0 }}>💡</span>
+                <span style={{ color:T.amber, fontSize:13, flexShrink:0 }}>◎</span>
                 <p style={{ color:T.amber, fontSize:12, lineHeight:1.4 }}>El HTML se puede abrir en Word (Archivo → Abrir) o imprimir a PDF desde el navegador con Ctrl+P / ⌘+P.</p>
               </div>
               {/* Preview */}
@@ -4384,7 +4383,7 @@ const NODE_GOLD_DIM    = "#92400E";   // subtle border when idle
 const NODE_PASTEL_BG = { tarea:"#0C1020", idea:"#121008", pregunta:"#090E1A", referencia:"#081410", bloqueo:"#130810" };
 const NODE_PASTEL_BD = { tarea:"#7C6AE8", idea:"#C88838", pregunta:"#E85200", referencia:"#3CB87A", bloqueo:"#C04870" };
 const NODE_PASTEL_IC = { tarea:"#A898F0", idea:"#E0AB60", pregunta:"#84AEF8", referencia:"#68D4A0", bloqueo:"#DC7898" };
-const NODE_ICONS     = { tarea:"✦", idea:"💡", pregunta:"?", referencia:"◎", bloqueo:"⚡" };
+const NODE_ICONS     = { tarea:"✦", idea:"◎", pregunta:"?", referencia:"◎", bloqueo:"◆" };
 
 // Circle-edge connection endpoint
 function circleEdgePt(cx, cy, tx, ty, r) {
@@ -4540,6 +4539,10 @@ function layoutMicelio(cards, connections, W, H) {
   return Object.fromEntries(Object.entries(pos).map(([id,p])=>[id,{x:Math.round(p.x),y:Math.round(p.y)}]));
 }
 
+// Sticker placement: ordered column to the right of each card
+const STKR_ROW = 70;   // vertical spacing per sticker slot
+const STKR_DX  = CARD_W + 36; // horizontal offset from card left edge
+
 function computeStickerPos(cards, cardPos) {
   const out = {};
   cards.forEach(card => {
@@ -4547,12 +4550,9 @@ function computeStickerPos(cards, cardPos) {
     if (!cp) return;
     out[card.id] = {};
     (card.stickers||[]).filter(s => s.status!=="discarded").forEach((s, i) => {
-      const seed  = s.id.split("").reduce((a,c) => a+c.charCodeAt(0), 0);
-      const angle = (seed/999)*Math.PI*2 + i*1.20;
-      const dist  = 220 + (i%3)*55; // further from card so strings are visible
       out[card.id][s.id] = {
-        x: Math.round(cp.x + CARD_W/2 + Math.cos(angle)*dist - STKR_W/2),
-        y: Math.round(cp.y + CARD_H/2 + Math.sin(angle)*dist - STKR_HH)
+        x: Math.round(cp.x + STKR_DX),
+        y: Math.round(cp.y + i * STKR_ROW)
       };
     });
   });
@@ -4561,7 +4561,7 @@ function computeStickerPos(cards, cardPos) {
 
 // ─── CANVAS STICKER NODE ──────────────────────────────────────────────────────
 const STKR_COLOR = { "opinión":T.blue, "complemento":T.green, "pregunta":T.amber, "objeción":T.rose, "referencia":T.accent };
-const STKR_ICON  = { "opinión":"💬", "complemento":"➕", "pregunta":"❓", "objeción":"⚡", "referencia":"🔗" };
+const STKR_ICON  = { "opinión":"◇", "complemento":"+", "pregunta":"?", "objeción":"◆", "referencia":"◎" };
 const CONN_COLORS = { complementa:T.accent, secuencia:T.green, contraste:T.orange, refuerza:T.blue };
 const CONN_LABELS = { complementa:"Complementa", secuencia:"Secuencia", contraste:"Contraste", refuerza:"Refuerza" };
 const CONN_ICONS  = { complementa:"◈", secuencia:"→", contraste:"⇄", refuerza:"◉" };
@@ -4861,9 +4861,10 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
     containerRef.current.addEventListener("touchend",  onEnd);
   }
 
-  const allStickers = cards.flatMap(card =>
-    (card.stickers||[]).filter(s=>s.status!=="discarded").map(s=>({...s,cardId:card.id}))
-  );
+  const allStickers = cards.flatMap(card => {
+    const active = (card.stickers||[]).filter(s=>s.status!=="discarded");
+    return active.map((s, idx) => ({...s, cardId:card.id, cardStickerIdx:idx}));
+  });
   const approvedConns = connections.filter(c => c.status==="approved" && pos.cards[c.cardA] && pos.cards[c.cardB]);
 
   return (
@@ -4942,44 +4943,36 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
             const organicD=`M${ep1.x},${ep1.y} C${ep1.x+dx*0.5},${ep1.y} ${ep2.x-dx*0.5},${ep2.y} ${ep2.x},${ep2.y}`;
             return (
               <g key={conn.id}>
-                <path d={organicD} stroke="var(--line)" strokeWidth="2" fill="none" opacity="0.65"/>
-                <circle cx={ep1.x} cy={ep1.y} r="3.5" fill="var(--noir)" opacity="0.8"/>
-                <circle cx={ep2.x} cy={ep2.y} r="3.5" fill="var(--noir)" opacity="0.8"/>
-                <circle cx={mx} cy={my} r="5" fill="var(--neon)" stroke="var(--noir)" strokeWidth="1.2"/>
-                <text x={mx} y={my-9} textAnchor="middle" fontSize="8"
+                <path d={organicD} stroke="var(--line)" strokeWidth="1.5" fill="none" opacity="0.55"/>
+                <circle cx={ep1.x} cy={ep1.y} r="2.5" fill="var(--laton)" opacity="0.6"/>
+                <circle cx={ep2.x} cy={ep2.y} r="2.5" fill="var(--laton)" opacity="0.6"/>
+                <circle cx={mx} cy={my} r="3.5" fill="var(--laton)" opacity="0.45"/>
+                <text x={mx} y={my-7} textAnchor="middle" fontSize="7"
                   fontFamily="'Quicksand',system-ui" fontWeight="600"
-                  fill="var(--ink-3)" letterSpacing="0.04em">
+                  fill="var(--ink-3)" letterSpacing="0.05em" opacity="0.7">
                   {CONN_LABELS[conn.type]}
                 </text>
               </g>
             );
           })}
-          {/* Sticker strings — card edge → sticker top-center */}
+          {/* Sticker threads — card right edge → sticker left edge (horizontal) */}
           {allStickers.map(s=>{
             const cp=pos.cards[s.cardId];
-            const seed=s.id.split("").reduce((a,c)=>a+c.charCodeAt(0),0);
-            const angle=(seed/999)*Math.PI*2;
             const spp=(pos.stickers[s.cardId]||{})[s.id]||(cp?{
-              x:Math.round(cp.x+CARD_W/2+Math.cos(angle)*220-STKR_W/2),
-              y:Math.round(cp.y+CARD_H/2+Math.sin(angle)*150-STKR_HH)
+              x:Math.round(cp.x+STKR_DX),
+              y:Math.round(cp.y+s.cardStickerIdx*STKR_ROW)
             }:null);
             if(!cp||!spp)return null;
             const color=STKR_COLOR[s.type]||T.blue;
-            // SVG offset +3000 for all coordinates
-            const cx=cp.x+CARD_W/2+3000, cy=cp.y+CARD_H/2+3000;
-            const sx=spp.x+STKR_W/2+3000; // sticker top-center X
-            const sy=spp.y+3000;           // sticker top Y
-            const ep=edgePt(cx,cy,sx,sy);
-            // Control points: slightly curved S-shape
-            const midy=(ep.y+sy)/2;
+            // Horizontal connector: card right edge → sticker left edge
+            const midY = spp.y + 22; // vertical center of sticker (~half its height)
+            const cx=cp.x+CARD_W+3000, cy=midY+3000;
+            const sx=spp.x+3000,       sy=midY+3000;
             return (
               <g key={s.id}>
-                <path
-                  d={`M${ep.x},${ep.y} C${ep.x},${midy} ${sx},${midy} ${sx},${sy}`}
-                  fill="none" stroke={color} strokeWidth="1.8" strokeOpacity="0.55"
-                  strokeDasharray="6 4" strokeLinecap="round"/>
-                <circle cx={ep.x} cy={ep.y} r="3" fill={color} opacity="0.7"/>
-                <circle cx={sx} cy={sy} r="2.5" fill={color} opacity="0.45"/>
+                <path d={`M${cx},${cy} L${sx},${sy}`}
+                  fill="none" stroke={color} strokeWidth="1.2" strokeOpacity="0.30"/>
+                <circle cx={sx} cy={sy} r="2" fill={color} opacity="0.45"/>
               </g>
             );
           })}
@@ -5003,17 +4996,15 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
         {/* Sticker suggestion cards */}
         {allStickers.map(s=>{
           const cardPos=pos.cards[s.cardId];
-          const seed=s.id.split("").reduce((a,c)=>a+c.charCodeAt(0),0);
-          const angle=(seed/999)*Math.PI*2;
           const sp=(pos.stickers[s.cardId]||{})[s.id]||(cardPos?{
-            x:Math.round(cardPos.x+CARD_W/2+Math.cos(angle)*220-STKR_W/2),
-            y:Math.round(cardPos.y+CARD_H/2+Math.sin(angle)*150-STKR_HH)
+            x:Math.round(cardPos.x+STKR_DX),
+            y:Math.round(cardPos.y+s.cardStickerIdx*STKR_ROW)
           }:null);
           if(!sp)return null;
           const color=STKR_COLOR[s.type]||T.blue;
           return (
             <CanvasStickerNode key={s.id} s={s} sp={sp} color={color}
-              icon={STKR_ICON[s.type]||"💬"}
+              icon={STKR_ICON[s.type]||"◇"}
               onMouseDown={e=>startDrag(e,"sticker",s.id,s.cardId)}
               onTouchStart={e=>startTouchDrag(e,"sticker",s.id,s.cardId)}/>
           );
@@ -5041,13 +5032,13 @@ function CanvasCardNode({ card, p, tc, col, cc, sc, isOwner, onEditCard, onMouse
         </div>
         <button onClick={e=>{e.stopPropagation();onEditCard(card);}}
           style={{background:"none",border:"none",color:T.ink4,cursor:"pointer",fontSize:13,padding:"0 2px",lineHeight:1,flexShrink:0}}>
-          {isOwner?"✎":"👁"}
+          {isOwner?"✎":"◯"}
         </button>
       </div>
       {!expanded && (cc>0||sc>0) && (
         <div style={{padding:"0 10px 7px",display:"flex",gap:5}}>
-          {cc>0&&<span style={{color:T.ink4,fontFamily:"var(--mono)",fontSize:9}}>💬{cc}</span>}
-          {sc>0&&<span style={{color:T.blue,fontFamily:"var(--mono)",fontSize:9}}>🗂{sc}</span>}
+          {cc>0&&<span style={{color:T.ink4,fontFamily:"var(--mono)",fontSize:9}}>◇{cc}</span>}
+          {sc>0&&<span style={{color:T.blue,fontFamily:"var(--mono)",fontSize:9}}>▤{sc}</span>}
         </div>
       )}
       {expanded && (
@@ -5057,8 +5048,8 @@ function CanvasCardNode({ card, p, tc, col, cc, sc, isOwner, onEditCard, onMouse
             <div style={{display:"flex",gap:5,alignItems:"center"}}>
               <span style={{background:tc+"22",color:tc,fontFamily:"var(--mono)",fontSize:9,padding:"1px 6px",borderRadius:99}}>{card.type}</span>
               <span style={{color:T.ink4,fontFamily:"var(--mono)",fontSize:10}}>@{card.author}</span>
-              {cc>0&&<span style={{color:T.ink4,fontFamily:"var(--mono)",fontSize:10}}>💬{cc}</span>}
-              {sc>0&&<span style={{color:T.blue,fontFamily:"var(--mono)",fontSize:10}}>🗂{sc}</span>}
+              {cc>0&&<span style={{color:T.ink4,fontFamily:"var(--mono)",fontSize:10}}>◇{cc}</span>}
+              {sc>0&&<span style={{color:T.blue,fontFamily:"var(--mono)",fontSize:10}}>▤{sc}</span>}
             </div>
             {col&&<div style={{display:"flex",alignItems:"center",gap:4}}>
               <div style={{width:5,height:5,borderRadius:"50%",background:col.color}}/>
@@ -5109,7 +5100,7 @@ function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchSta
           </div>
           <div className="mmuted">
             @{card.author || "—"}
-            {cc > 0 && ` · 💬 ${cc}`}
+            {cc > 0 && ` · ◇ ${cc}`}
             {sc > 0 && ` · ◎ ${sc}`}
           </div>
           <div className="mcard-btns">
@@ -5127,7 +5118,7 @@ function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchSta
           borderTop:"1px solid rgba(0,0,0,0.06)" }}>
           {cc > 0 && (
             <span style={{ fontFamily:"var(--mono)", fontSize:9,
-              color:"#8A8480", letterSpacing:".06em" }}>💬 {cc}</span>
+              color:"#8A8480", letterSpacing:".06em" }}>◇ {cc}</span>
           )}
           {sc > 0 && (
             <span style={{ fontFamily:"var(--mono)", fontSize:9,
@@ -5141,19 +5132,19 @@ function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchSta
 
 // ─── WORLDBUILDING PANEL ──────────────────────────────────────────────────────
 const WB_TABS = [
-  { id:"world",    icon:"🗺",  label:"World Atlas"  },
-  { id:"timeline", icon:"📅",  label:"Timeline"     },
-  { id:"family",   icon:"🌳",  label:"Family Tree"  },
+  { id:"world",    icon:"◎",  label:"World Atlas"  },
+  { id:"timeline", icon:"▤",  label:"Timeline"     },
+  { id:"family",   icon:"◈",  label:"Family Tree"  },
 ];
 
 const WORLD_CATS = [
-  { key:"lugares",    label:"Lugares",     icon:"📍", examples:["ciudad","villa","río","montaña","bosque","isla","reino","territorio","región","mar","lago","desierto","torre","castillo","aldea"] },
-  { key:"personajes", label:"Personajes",  icon:"👤", examples:["personaje","héroe","villano","protagonista","antagonista","mago","guerrero","rey","reina","príncipe","princesa","general","espía"] },
-  { key:"facciones",  label:"Facciones",   icon:"⚔️",  examples:["facción","clan","gremio","orden","ejército","hermandad","alianza","imperio","reino","facción","sociedad","culto"] },
-  { key:"artefactos", label:"Artefactos",  icon:"⚡",  examples:["artefacto","espada","escudo","libro","orbe","aparato","máquina","dispositivo","reliquia","amuleto","objeto mágico"] },
-  { key:"magia",      label:"Magia / Tech",icon:"✨",  examples:["magia","hechizo","poder","energía","sistema","tecnología","maná","runa","alquimia","ritual","elemento"] },
-  { key:"historia",   label:"Historia",    icon:"📜",  examples:["batalla","guerra","era","época","evento","fundación","colapso","tratado","coronación","profecía","leyenda"] },
-  { key:"cultura",    label:"Cultura",     icon:"🎭",  examples:["idioma","religión","tradición","costumbre","festival","rito","creencia","mitología","arte","música","moneda"] },
+  { key:"lugares",    label:"Lugares",     icon:"◎", examples:["ciudad","villa","río","montaña","bosque","isla","reino","territorio","región","mar","lago","desierto","torre","castillo","aldea"] },
+  { key:"personajes", label:"Personajes",  icon:"◇", examples:["personaje","héroe","villano","protagonista","antagonista","mago","guerrero","rey","reina","príncipe","princesa","general","espía"] },
+  { key:"facciones",  label:"Facciones",   icon:"◆",  examples:["facción","clan","gremio","orden","ejército","hermandad","alianza","imperio","reino","facción","sociedad","culto"] },
+  { key:"artefactos", label:"Artefactos",  icon:"◈",  examples:["artefacto","espada","escudo","libro","orbe","aparato","máquina","dispositivo","reliquia","amuleto","objeto mágico"] },
+  { key:"magia",      label:"Magia / Tech",icon:"✦",  examples:["magia","hechizo","poder","energía","sistema","tecnología","maná","runa","alquimia","ritual","elemento"] },
+  { key:"historia",   label:"Historia",    icon:"▤",  examples:["batalla","guerra","era","época","evento","fundación","colapso","tratado","coronación","profecía","leyenda"] },
+  { key:"cultura",    label:"Cultura",     icon:"◇",  examples:["idioma","religión","tradición","costumbre","festival","rito","creencia","mitología","arte","música","moneda"] },
   { key:"otros",      label:"Otros",       icon:"◈",   examples:[] },
 ];
 
@@ -5259,7 +5250,7 @@ Incluye TODOS los personajes mencionados, aunque sea brevemente. Infiere relacio
         <div style={{padding:"16px 20px 0",borderBottom:"1px solid "+T.border}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
             <div style={{display:"flex",gap:9,alignItems:"center"}}>
-              <span style={{fontSize:20}}>📖</span>
+              <span style={{fontSize:20}}>◻</span>
               <div>
                 <div style={{color:T.ink,fontWeight:800,fontSize:17}}>Mundo de {concept.title||board.name}</div>
                 <div style={{color:T.ink4,fontFamily:"var(--mono)",fontSize:11}}>Extracción automática con IA · {cards.length} tarjetas analizadas</div>
@@ -5346,7 +5337,7 @@ Incluye TODOS los personajes mencionados, aunque sea brevemente. Infiere relacio
                   <div>
                     {tabData.sistema_temporal && (
                       <div style={{background:T.amberBg,border:"1px solid "+T.amber+"44",borderRadius:8,padding:"10px 14px",marginBottom:16,display:"flex",gap:8}}>
-                        <span style={{color:T.amber,fontSize:14,flexShrink:0}}>🗓</span>
+                        <span style={{color:T.amber,fontSize:14,flexShrink:0}}>◻</span>
                         <div>
                           <div style={{color:T.amber,fontWeight:700,fontSize:13}}>Sistema temporal</div>
                           <div style={{color:T.amber,fontSize:12,marginTop:2}}>{tabData.sistema_temporal}</div>
@@ -5374,7 +5365,7 @@ Incluye TODOS los personajes mencionados, aunque sea brevemente. Infiere relacio
                                 <span style={{color:color,fontFamily:"var(--mono)",fontSize:10,marginLeft:"auto"}}>{ev.tipo}</span>
                               </div>
                               {ev.descripcion && <div style={{color:T.ink3,fontSize:13,lineHeight:1.5}}>{ev.descripcion}</div>}
-                              {ev.tarjeta && <div style={{color:T.ink4,fontFamily:"var(--mono)",fontSize:10,marginTop:6}}>📌 {ev.tarjeta}</div>}
+                              {ev.tarjeta && <div style={{color:T.ink4,fontFamily:"var(--mono)",fontSize:10,marginTop:6}}>◎ {ev.tarjeta}</div>}
                             </div>
                           </div>
                         );
@@ -5440,7 +5431,7 @@ Incluye TODOS los personajes mencionados, aunque sea brevemente. Infiere relacio
                           <div style={{color:T.ink,fontWeight:700,fontSize:13,marginBottom:3}}>{p.nombre}</div>
                           {p.rol&&<div style={{color:T.amber,fontFamily:"var(--mono)",fontSize:10,marginBottom:4}}>{p.rol}</div>}
                           {p.descripcion&&<div style={{color:T.ink3,fontSize:12,lineHeight:1.4}}>{p.descripcion}</div>}
-                          {p.grupo&&<div style={{color:T.ink4,fontFamily:"var(--mono)",fontSize:10,marginTop:5}}>🏰 {p.grupo}</div>}
+                          {p.grupo&&<div style={{color:T.ink4,fontFamily:"var(--mono)",fontSize:10,marginTop:5}}>◈ {p.grupo}</div>}
                         </div>
                       ))}
                     </div>
