@@ -1974,6 +1974,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
   const [editCard, setEditCard]         = useState(null);
   const [dragCard, setDragCard]         = useState(null);
   const [dragOver, setDragOver]         = useState(null);
+  const dragCountRef                    = useRef({});
   const [aiPanel, setAiPanel]           = useState(false);
   const [connPanel, setConnPanel]       = useState(false);
   const [trashOpen, setTrashOpen]       = useState(false);
@@ -2545,9 +2546,10 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                   const isOver = dragOver===col.id;
                   return (
                     <div key={col.id} data-col={col.id}
-                      onDragOver={e => { e.preventDefault(); setDragOver(col.id); }}
-                      onDragLeave={() => setDragOver(null)}
-                      onDrop={async e => { e.preventDefault(); if (dragCard) await moveCard(dragCard, col.id); setDragOver(null); setDragCard(null); }}
+                      onDragOver={e => { e.preventDefault(); }}
+                      onDragEnter={e => { e.preventDefault(); dragCountRef.current[col.id] = (dragCountRef.current[col.id]||0)+1; setDragOver(col.id); }}
+                      onDragLeave={() => { dragCountRef.current[col.id] = Math.max(0,(dragCountRef.current[col.id]||0)-1); if (!dragCountRef.current[col.id]) setDragOver(null); }}
+                      onDrop={async e => { e.preventDefault(); dragCountRef.current[col.id]=0; if (dragCard) await moveCard(dragCard, col.id); setDragOver(null); setDragCard(null); }}
                       style={{ width:isMobile?"100%":258, flexShrink:0,
                         background:isOver?T.accentBg:T.bgPanel,
                         borderRadius:12,
@@ -2597,8 +2599,23 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                             onEdit={() => setEditCard(card)}
                             onMove={c => moveCard(card.id, c)}
                             onDragStart={() => setDragCard(card.id)}
+                            onDragEnd={() => { setDragCard(null); setDragOver(null); dragCountRef.current={}; }}
+                            isDragging={dragCard===card.id}
                             currentCol={col.id} />
                         ))}
+                        {/* Drop zone indicator */}
+                        {dragCard && isOver && dragCard !== null && (() => {
+                          const draggingCol = cards.find(c=>c.id===dragCard)?.col;
+                          return draggingCol !== col.id;
+                        })() && (
+                          <div style={{ border:`2px dashed ${col.color}88`, borderRadius:8,
+                            height:48, display:"flex", alignItems:"center", justifyContent:"center",
+                            color:col.color, fontSize:11, fontFamily:"var(--mono)",
+                            background:`${col.color}08`, marginTop:4, flexShrink:0,
+                            animation:"fadeIn .15s ease" }}>
+                            soltar aquí
+                          </div>
+                        )}
                         {hasFilter && colCards.length === 0 && (
                           <div style={{ textAlign:"center", padding:"22px 0", color:T.ink4, fontSize:12,
                             fontFamily:"var(--mono)", border:"1px dashed var(--paper-3)",
@@ -2838,7 +2855,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
 }
 
 // ─── WORK CARD ────────────────────────────────────────────────────────────────
-function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDragStart, currentCol, isOwner }) {
+function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDragStart, onDragEnd, isDragging, currentCol, isOwner }) {
   const [expanded, setExpanded] = useState(false);
   const tc  = TYPE_COLOR[card.type] || T.accent;
   const tbg = TYPE_BG[card.type]    || T.accentBg;
@@ -2847,12 +2864,16 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
   const sc = (card.stickers||[]).filter(s => s.status!=="discarded").length;
 
   return (
-    <div className="wcard" draggable onDragStart={onDragStart}
+    <div className="wcard" draggable onDragStart={onDragStart} onDragEnd={onDragEnd}
       style={{ background:T.bgCard,
         border:`1px solid var(--card-border)`,
         borderLeft:`3px solid ${tc}`,
-        borderRadius:10, overflow:"hidden", cursor:"grab",
-        boxShadow:"var(--shadow-1)" }}>
+        borderRadius:10, overflow:"hidden", cursor:isDragging?"grabbing":"grab",
+        boxShadow:isDragging?"var(--shadow-3)":"var(--shadow-1)",
+        opacity:isDragging?0.45:1,
+        transform:isDragging?"scale(0.97) rotate(-1deg)":"none",
+        transition:isDragging?"none":"opacity .15s, transform .15s, box-shadow .15s",
+        pointerEvents:isDragging?"none":"auto" }}>
 
       {/* Card header — always visible, click to expand */}
       <div
