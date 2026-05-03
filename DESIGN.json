@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-02T00:00:00Z",
+  "title": "Design System: MindStorm",
+  "extensions": {
+    "colorMeta": {
+      "paper":        { "role": "neutral-bg",  "displayName": "Papel Cream",       "canonical": "#EFEBE3", "tonalRamp": ["#1a1814","#2a2620","#3a352d","#6a6258","#9a9286","#c8c1b3","#D8D2C5","#E5E0D5","#EFEBE3"] },
+      "paper-2":      { "role": "neutral-bg",  "displayName": "Papel Cream 2",     "canonical": "#E5E0D5", "tonalRamp": ["#1a1814","#2a2620","#3a352d","#6a6258","#9a9286","#c8c1b3","#D8D2C5","#E5E0D5","#EFEBE3"] },
+      "paper-3":      { "role": "neutral-border","displayName": "Papel Cream 3",   "canonical": "#D8D2C5", "tonalRamp": ["#1a1814","#2a2620","#3a352d","#6a6258","#9a9286","#c8c1b3","#D8D2C5","#E5E0D5","#EFEBE3"] },
+      "card-white":   { "role": "surface",      "displayName": "Blanco Card",      "canonical": "#FFFFFF", "tonalRamp": ["#1a1814","#2a2620","#3a352d","#6a6258","#9a9286","#c8c1b3","#E5E0D5","#F5F2EC","#FFFFFF"] },
+      "ink-0":        { "role": "on-surface",   "displayName": "Tinta Negra",      "canonical": "#1A1814", "tonalRamp": ["#1a1814","#2a2620","#3a352d","#6a6258","#9a9286","#c8c1b3","#D8D2C5","#E5E0D5","#EFEBE3"] },
+      "neon":         { "role": "primary",      "displayName": "Neón Eléctrico",   "canonical": "#E8F062", "tonalRamp": ["#2a2e04","#4a5208","#6b760e","#919e16","#b8c61e","#d0dc30","#E8F062","#F2F4C8","#FAFBE8"] },
+      "terra":        { "role": "error",        "displayName": "Terracota",        "canonical": "#C97D5C", "tonalRamp": ["#2e1206","#52210d","#7a3318","#a24b26","#c26040","#C97D5C","#E0A88C","#F0DDD2","#FAF2EE"] },
+      "olive":        { "role": "success",      "displayName": "Verde Oliva",      "canonical": "#7A8A4F", "tonalRamp": ["#141d06","#253510","#3a521c","#52702a","#678a38","#7A8A4F","#A0AE78","#DCE2C8","#EFF2E4"] },
+      "sky":          { "role": "info",         "displayName": "Azul Polvo",       "canonical": "#6B91B3", "tonalRamp": ["#081420","#0f2338","#1a3d5c","#2d5a7e","#4478a0","#6B91B3","#94B3CE","#D5DFE8","#EBF1F7"] },
+      "line":         { "role": "on-surface",   "displayName": "Línea de Conexión","canonical": "#2A2620", "tonalRamp": ["#1a1814","#2a2620","#3a352d","#6a6258","#9a9286","#c8c1b3","#D8D2C5","#E5E0D5","#EFEBE3"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display — Fraunces Italic", "purpose": "Títulos de pantalla, nombre del proyecto. Solo cuando la idea debe ser protagonista." },
+      "title":   { "displayName": "Title — Fraunces Italic",   "purpose": "Títulos de tarjetas en el canvas Mycelium. El más visible; define la identidad visual del canvas." },
+      "body":    { "displayName": "Body — Quicksand",          "purpose": "Cuerpo de texto en cards expandidas, descripciones, paneles. Máx 65ch." },
+      "label":   { "displayName": "Label — Quicksand 600 CAPS","purpose": "Column headers, section headers, contadores. UPPERCASE con tracking." },
+      "mono":    { "displayName": "Mono — JetBrains Mono",     "purpose": "Timestamps, datos del HUD (ZOOM · 100%), usernames. Datos, no prosa." }
+    },
+    "shadows": [
+      { "name": "shadow-1", "value": "0 1px 0 rgba(58,50,38,0.06), 0 2px 8px rgba(58,50,38,0.06)",     "purpose": "Estado base de cards, pills, inputs. La card descansa sobre el papel cream." },
+      { "name": "shadow-2", "value": "0 1px 0 rgba(58,50,38,0.08), 0 8px 24px rgba(58,50,38,0.08)",   "purpose": "Hover de cards, paneles. La card se levanta al interactuar." },
+      { "name": "shadow-3", "value": "0 2px 0 rgba(58,50,38,0.10), 0 16px 40px rgba(58,50,38,0.12)", "purpose": "Modales, card en drag activo, card expandida en canvas. Papel más arriba en la pila." }
+    ],
+    "motion": [
+      { "name": "transition-base",  "value": "0.15s",                              "purpose": "Hover de pills y cards." },
+      { "name": "transition-card",  "value": "0.18s",                              "purpose": "Sombras y transformaciones de cards." },
+      { "name": "ease-out-quart",   "value": "cubic-bezier(0.25, 0.46, 0.45, 0.94)", "purpose": "Curva estándar. Sin bounce, sin elastic." },
+      { "name": "transition-expand","value": "0.2s",                               "purpose": "Expansión de width en mcard (250px → 300px)." }
+    ],
+    "breakpoints": [
+      { "name": "mobile",  "value": "680px",  "behavior": "Stack layout, hide sidebar labels." },
+      { "name": "tablet",  "value": "1023px", "behavior": "2-col grid, condensed sidebar." },
+      { "name": "desktop", "value": "1024px+","behavior": "Full layout with sidebar + canvas." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Pill Button — Primary (Noir)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "La acción principal de un panel. Una sola por pantalla.",
+      "html": "<button class=\"ds-btn-primary\">Guardar idea</button>",
+      "css": ".ds-btn-primary { background: #1A1814; color: #EFEBE3; border: none; padding: 10px 24px; border-radius: 999px; font-family: 'Quicksand', system-ui, sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.02em; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.18); transition: background 0.15s, transform 0.15s; display: inline-flex; align-items: center; gap: 6px; } .ds-btn-primary:hover { background: #2A2620; transform: translateY(-1px); } .ds-btn-primary:active { transform: translateY(0); } .ds-btn-primary:focus-visible { outline: 2px solid rgba(26,24,20,0.7); outline-offset: 3px; }"
+    },
+    {
+      "name": "Pill Button — Ghost (HUD)",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Control navegable por defecto. Pill blanca con sombra. Activo cambia a pill negra.",
+      "html": "<div style=\"display:flex;gap:6px\"><button class=\"ds-hud-btn\">Stack</button><button class=\"ds-hud-btn ds-hud-btn-active\">Red</button><button class=\"ds-hud-btn\">Árbol</button></div>",
+      "css": ".ds-hud-btn { background: #FFFFFF; border: 1px solid rgba(58,50,38,0.08); color: #6A6258; padding: 6px 14px; border-radius: 999px; font-family: 'Quicksand', system-ui, sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; box-shadow: 0 1px 0 rgba(58,50,38,0.06), 0 2px 8px rgba(58,50,38,0.06); transition: box-shadow 0.15s, transform 0.15s, color 0.15s; display: inline-flex; align-items: center; gap: 5px; } .ds-hud-btn:hover { box-shadow: 0 1px 0 rgba(58,50,38,0.08), 0 8px 24px rgba(58,50,38,0.08); transform: translateY(-1px); color: #1A1814; } .ds-hud-btn-active { background: #1A1814 !important; border-color: #1A1814 !important; color: #EFEBE3 !important; box-shadow: none !important; transform: none !important; }"
+    },
+    {
+      "name": "Pill Button — Neon",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Solo para aprobar conexión, completar onboarding. Máximo una por pantalla.",
+      "html": "<button class=\"ds-btn-neon\">✓ Aprobar conexión</button>",
+      "css": ".ds-btn-neon { background: #E8F062; color: #1A1814; border: 1px solid #E8F062; padding: 8px 20px; border-radius: 999px; font-family: 'Quicksand', system-ui, sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: opacity 0.15s, transform 0.15s; display: inline-flex; align-items: center; gap: 6px; } .ds-btn-neon:hover { opacity: 0.88; transform: translateY(-1px); } .ds-btn-neon:focus-visible { outline: 2px solid #1A1814; outline-offset: 3px; }"
+    },
+    {
+      "name": "Canvas Card — mcard",
+      "kind": "card",
+      "refersTo": "card-canvas",
+      "description": "Tarjeta flotante del canvas Mycelium. El componente más representativo del sistema.",
+      "html": "<div class=\"ds-mcard\">\n  <div class=\"ds-mcard-head\">\n    <span class=\"ds-mcard-glyph\">▸</span>\n    <span class=\"ds-mcard-title\">La idea empieza aquí</span>\n    <span class=\"ds-mcard-dot\" style=\"background:#6090C0\"></span>\n  </div>\n</div>",
+      "css": ".ds-mcard { position: relative; width: 250px; background: #FFFFFF; border: 1px solid rgba(58,50,38,0.08); border-radius: 16px; box-shadow: 0 1px 0 rgba(58,50,38,0.06), 0 2px 8px rgba(58,50,38,0.06); font-family: 'Quicksand', system-ui, sans-serif; cursor: grab; transition: box-shadow 0.18s, transform 0.18s; } .ds-mcard:hover { box-shadow: 0 1px 0 rgba(58,50,38,0.08), 0 8px 24px rgba(58,50,38,0.08); transform: translateY(-1px); } .ds-mcard-head { display: flex; align-items: center; gap: 8px; padding: 10px 13px; } .ds-mcard-glyph { flex: none; color: #9A9286; font-size: 10px; width: 12px; } .ds-mcard-title { flex: 1; font-family: 'Fraunces', Georgia, serif; font-style: italic; font-size: 14px; font-weight: 500; letter-spacing: -0.01em; color: #1A1814; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-mcard-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; opacity: 0.85; }"
+    },
+    {
+      "name": "Canvas Card — mcard expandida",
+      "kind": "card",
+      "refersTo": "card-canvas",
+      "description": "mcard en estado expandido: 300px, body visible, shadow-3.",
+      "html": "<div class=\"ds-mcard ds-mcard-exp\">\n  <div class=\"ds-mcard-head\">\n    <span class=\"ds-mcard-glyph\">◢</span>\n    <span class=\"ds-mcard-title\">La idea empieza aquí</span>\n    <span class=\"ds-mcard-dot\" style=\"background:#6090C0\"></span>\n  </div>\n  <div class=\"ds-mcard-body\">\n    <p>Descripción de la idea. Máx 3 líneas antes de colapsar.</p>\n    <div class=\"ds-mcard-tags\"><span class=\"ds-mtag\">idea</span><span class=\"ds-mtag\" style=\"color:#6090C0;border-color:#6090C044\">Concepto</span></div>\n    <div class=\"ds-mmuted\">@usuario · hace 3h</div>\n    <div class=\"ds-mcard-btns\"><button class=\"ds-mcard-action\">◎ Leer</button></div>\n  </div>\n</div>",
+      "css": ".ds-mcard-exp { width: 300px; box-shadow: 0 2px 0 rgba(58,50,38,0.10), 0 16px 40px rgba(58,50,38,0.12); } .ds-mcard-body { padding: 10px 13px; font-size: 12px; line-height: 1.6; color: #3A352D; border-top: 1px solid rgba(58,50,38,0.06); } .ds-mcard-body p { margin-bottom: 8px; } .ds-mcard-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; } .ds-mtag { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 999px; border: 1px solid #D8D2C5; color: #6A6258; font-family: 'Quicksand', system-ui, sans-serif; letter-spacing: 0.04em; } .ds-mmuted { color: #9A9286; font-size: 10px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.06em; margin-bottom: 8px; } .ds-mcard-btns { display: flex; gap: 6px; } .ds-mcard-action { background: #FFFFFF; border: 1px solid rgba(58,50,38,0.08); color: #3A352D; padding: 5px 12px; border-radius: 999px; font-size: 11px; font-weight: 500; font-family: 'Quicksand', system-ui, sans-serif; cursor: pointer; box-shadow: 0 1px 0 rgba(58,50,38,0.06), 0 2px 8px rgba(58,50,38,0.06); transition: box-shadow 0.13s, transform 0.13s; } .ds-mcard-action:hover { box-shadow: 0 1px 0 rgba(58,50,38,0.08), 0 8px 24px rgba(58,50,38,0.08); transform: translateY(-1px); }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "card-kanban",
+      "description": "Campo de texto. Fondo blanco, borde sutil, halo cream en focus.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-label\">TÍTULO DE IDEA</label><input class=\"ds-input\" placeholder=\"Escribe aquí…\" /></div>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; } .ds-label { font-family: 'Quicksand', system-ui, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #9A9286; } .ds-input { background: #FFFFFF; border: 1.5px solid #D8D2C5; color: #1A1814; padding: 10px 14px; border-radius: 16px; font-size: 13px; font-family: 'Quicksand', system-ui, sans-serif; font-weight: 500; outline: none; transition: border-color 0.2s, box-shadow 0.2s; } .ds-input:focus { border-color: #6A6258; box-shadow: 0 0 0 4px rgba(58,50,38,0.06); } .ds-input::placeholder { color: #C8C1B3; }"
+    },
+    {
+      "name": "Conexión Aprobada (Canvas)",
+      "kind": "custom",
+      "refersTo": "card-canvas",
+      "description": "Curva orgánica + endpoint dots negros + midpoint neon. La firma visual del sistema.",
+      "html": "<svg width=\"280\" height=\"80\" style=\"display:block\">\n  <path d=\"M20,40 C80,40 200,40 260,40\" stroke=\"#2A2620\" stroke-width=\"1.4\" fill=\"none\" opacity=\"0.7\"/>\n  <circle cx=\"20\" cy=\"40\" r=\"3.5\" fill=\"#1A1814\"/>\n  <circle cx=\"260\" cy=\"40\" r=\"3.5\" fill=\"#1A1814\"/>\n  <circle cx=\"140\" cy=\"40\" r=\"4\" fill=\"#E8F062\" stroke=\"#1A1814\" stroke-width=\"1\"/>\n  <text x=\"140\" y=\"28\" text-anchor=\"middle\" font-size=\"8\" font-family=\"Quicksand,system-ui\" font-weight=\"600\" fill=\"#9A9286\" letter-spacing=\"0.04em\">refuerza</text>\n</svg>",
+      "css": "/* Conexión se renderiza en SVG — no hay CSS independiente. Ver elbowPath / organicPath en el código. El neon dot (r=4) siempre lleva stroke noir de 1px. Los endpoint dots (r=3.5) son fill:var(--noir) sólido. */"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Puente de Mando",
+    "overview": "MindStorm es una herramienta seria diseñada por y para creativos. No es un cuaderno de notas con stickers, no es un dashboard corporativo, no es una pizarra lúdica. Es el puente de una nave diseñada por artistas: cada control tiene intención, cada espacio respira, cada conexión entre ideas deja una marca visible.\n\nEl sistema visual habla de papel de bitácora sobre una mesa de trabajo real. El cream no es decorativo, es el contexto físico. Las tarjetas flotan como fichas de papel blanco sobre ese fondo. La tinta es oscura y directa. El amarillo neón, cuando aparece, lo hace como una señal inequívoca: algo aquí importa, algo aquí está aprobado, algo aquí está vivo.\n\nLa tipografía mezcla intencionalmente dos mundos: Fraunces italic para los títulos de las ideas y Quicksand para la interfaz. Esta dualidad hace que el contenido del usuario se destaque sobre los controles del sistema.",
+    "keyCharacteristics": [
+      "Papel cream como contexto físico, no como color de moda",
+      "Tarjetas blancas flotando sobre el fondo con sombras dobles de papel",
+      "Fraunces italic como firma visual de los títulos de ideas",
+      "Amarillo neón disciplinado: solo en conexiones aprobadas y estados activos",
+      "Conexiones orgánicas con dots negros sólidos, nunca líneas invisibles",
+      "Grilla de puntos tenue como referencia n8n, no como decoración"
+    ],
+    "rules": [
+      { "name": "La Regla del Pulso",         "body": "El neón (#E8F062) es un sistema de señales, no un color de marca. Aparece en el midpoint de cada conexión aprobada y en los estados activos de navegación. Prohibido como fondo de página, columna, hero o botón primario.", "section": "colors" },
+      { "name": "La Regla de la Tinta",       "body": "No hay naranja. No hay violeta. No hay gradientes de color. Los únicos saturados son neón, terra, olive y sky, todos apagados y papelosos. Si no parece tinta sobre papel, no pertenece.", "section": "colors" },
+      { "name": "La Regla de la Doble Voz",   "body": "Los títulos de lo que el usuario crea van en Fraunces italic. Todo lo que pertenece a la herramienta va en Quicksand. No mezclar en el mismo elemento.", "section": "typography" },
+      { "name": "La Regla del Italic Obligatorio", "body": "Fraunces sin italic pierde su personalidad. No hay uso de Fraunces en estilo normal en este sistema. Si la fuente está en roman, usar Quicksand.", "section": "typography" },
+      { "name": "La Regla del Papel sobre Papel", "body": "Cada sombra tiene dos capas: hairline arriba + difusa abajo. Sin hairline, la card flota sin contexto. Sin difusa, no hay profundidad. Las dos capas siempre van juntas.", "section": "elevation" },
+      { "name": "La Regla del Color Neutro",  "body": "Las sombras no tienen color de marca. El tono rgba(58,50,38,...) es papel envejecido, no glow de acento. Prohibido box-shadow con neon, terra, olive o sky.", "section": "elevation" }
+    ],
+    "dos": [
+      "Usar Fraunces italic para cualquier texto que represente una idea del usuario (títulos de cards, proyectos).",
+      "Usar el amarillo neón solo como señal de estado activo o conexión aprobada.",
+      "Mantener las dos capas en cada sombra: hairline + difusa.",
+      "Usar endpoint dots negros en todas las conexiones del canvas, sin excepción.",
+      "Usar pills como el contenedor por defecto de controles navegables.",
+      "Dejar que el canvas respire: el fondo cream con grilla tenue es el protagonista cuando no hay tarjetas.",
+      "Usar los colores de estado (terra, olive, sky) solo para información, nunca para decorar."
+    ],
+    "donts": [
+      "No usar Notion, ClickUp ni Linear como referencia visual.",
+      "No usar gradientes de purple, fondo blanco puro como background de página, Inter font, ni grid de tarjetas idénticas.",
+      "No imitar Miro o FigJam: sin stickers de colores sólidos, sin lienzos que parezcan cuadernos de notas infantiles.",
+      "No usar Fraunces en estilo normal (roman). Si no es italic, usar Quicksand.",
+      "No poner sombras con color de acento. Las sombras son siempre rgba(58,50,38,...).",
+      "No usar border-left mayor a 1px como stripe de color en cards o list items.",
+      "No usar el neón como fondo de página, columna, hero, ni botón primario habitual.",
+      "No agregar glassmorphism como decoración.",
+      "No agregar bordes de colores de marca a inputs o cards en reposo."
+    ]
+  }
+}

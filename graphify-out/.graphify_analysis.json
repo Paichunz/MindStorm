@@ -1,0 +1,59 @@
+{
+  "god_nodes": [
+    {
+      "id": "src_app_usetheme",
+      "label": "useTheme()",
+      "degree": 6
+    },
+    {
+      "id": "src_app_fmtdate",
+      "label": "fmtDate()",
+      "degree": 6
+    },
+    {
+      "id": "src_app_boardscreen",
+      "label": "BoardScreen()",
+      "degree": 6
+    },
+    {
+      "id": "src_app_getaikey",
+      "label": "getAIKey()",
+      "degree": 5
+    },
+    {
+      "id": "src_app_getthemecss",
+      "label": "getThemeCSS()",
+      "degree": 5
+    },
+    {
+      "id": "src_app_lobbyscreen",
+      "label": "LobbyScreen()",
+      "degree": 5
+    },
+    {
+      "id": "src_app_getl",
+      "label": "getL()",
+      "degree": 4
+    },
+    {
+      "id": "src_app_useismobile",
+      "label": "useIsMobile()",
+      "degree": 4
+    },
+    {
+      "id": "src_app_joinscreen",
+      "label": "JoinScreen()",
+      "degree": 4
+    },
+    {
+      "id": "src_app_setl",
+      "label": "setL()",
+      "degree": 3
+    }
+  ],
+  "surprising_connections": [],
+  "suggested_questions": [],
+  "community_count": 11,
+  "total_nodes": 84,
+  "total_edges": 173
+}

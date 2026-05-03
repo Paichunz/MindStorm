@@ -1,0 +1,61 @@
+﻿{
+  "nodes": [
+    {
+      "id": "index_mindstorm",
+      "label": "MindStorm",
+      "file_type": "document",
+      "source_file": "index.html",
+      "attributes": {
+        "description": "Tu tablero creativo inteligente",
+        "lang": "es",
+        "charset": "UTF-8",
+        "viewport": "width=device-width, initial-scale=1.0"
+      }
+    },
+    {
+      "id": "index_root_div",
+      "label": "root",
+      "file_type": "document",
+      "source_file": "index.html",
+      "attributes": {
+        "element": "div",
+        "id": "root",
+        "rationale": "React mount point for the SPA application"
+      }
+    },
+    {
+      "id": "index_main_jsx",
+      "label": "main.jsx",
+      "file_type": "document",
+      "source_file": "index.html",
+      "attributes": {
+        "path": "/src/main.jsx",
+        "type": "module"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "index_mindstorm",
+      "target": "index_root_div",
+      "relation": "contains",
+      "provenance": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "index_mindstorm",
+      "target": "index_main_jsx",
+      "relation": "imports",
+      "provenance": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "index_main_jsx",
+      "target": "index_root_div",
+      "relation": "mounts_into",
+      "provenance": "INFERRED",
+      "confidence_score": 0.9
+    }
+  ],
+  "hyperedges": []
+}

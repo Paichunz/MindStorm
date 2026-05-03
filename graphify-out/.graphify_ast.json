@@ -1,0 +1,1472 @@
+{
+  "nodes": [
+    {
+      "id": "vite_config_js",
+      "label": "vite.config.js",
+      "file_type": "code",
+      "source_file": "vite.config.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_app_jsx",
+      "label": "App.jsx",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_app_usetheme",
+      "label": "useTheme()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L71"
+    },
+    {
+      "id": "src_app_genid",
+      "label": "genId()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L114"
+    },
+    {
+      "id": "src_app_nowts",
+      "label": "nowTs()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L115"
+    },
+    {
+      "id": "src_app_fmtdate",
+      "label": "fmtDate()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L116"
+    },
+    {
+      "id": "src_app_fmttime",
+      "label": "fmtTime()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L117"
+    },
+    {
+      "id": "src_app_fmtsize",
+      "label": "fmtSize()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L118"
+    },
+    {
+      "id": "src_app_fileicon",
+      "label": "fileIcon()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L119"
+    },
+    {
+      "id": "src_app_getl",
+      "label": "getL()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L136"
+    },
+    {
+      "id": "src_app_setl",
+      "label": "setL()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L137"
+    },
+    {
+      "id": "src_app_dbtoboard",
+      "label": "dbToBoard()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L140"
+    },
+    {
+      "id": "src_app_boardtodb",
+      "label": "boardToDb()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L151"
+    },
+    {
+      "id": "src_app_dbtodata",
+      "label": "dbToData()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L162"
+    },
+    {
+      "id": "src_app_dbgetboards",
+      "label": "dbGetBoards()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L170"
+    },
+    {
+      "id": "src_app_dbcreateboard",
+      "label": "dbCreateBoard()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L175"
+    },
+    {
+      "id": "src_app_dbdeleteboard",
+      "label": "dbDeleteBoard()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L187"
+    },
+    {
+      "id": "src_app_dbgetboarddata",
+      "label": "dbGetBoardData()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L190"
+    },
+    {
+      "id": "src_app_dbsaveboarddata",
+      "label": "dbSaveBoardData()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L195"
+    },
+    {
+      "id": "src_app_getaikey",
+      "label": "getAIKey()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L210"
+    },
+    {
+      "id": "src_app_saveaikey",
+      "label": "saveAIKey()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L211"
+    },
+    {
+      "id": "src_app_callai",
+      "label": "callAI()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L213"
+    },
+    {
+      "id": "src_app_aikeysetup",
+      "label": "AIKeySetup()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L240"
+    },
+    {
+      "id": "src_app_resizeimage",
+      "label": "resizeImage()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L279"
+    },
+    {
+      "id": "src_app_getthemecss",
+      "label": "getThemeCSS()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L300"
+    },
+    {
+      "id": "src_app_useismobile",
+      "label": "useIsMobile()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L484"
+    },
+    {
+      "id": "src_app_pwdinput",
+      "label": "PwdInput()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L495"
+    },
+    {
+      "id": "src_app_app",
+      "label": "App()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L531"
+    },
+    {
+      "id": "src_app_themeswitcher",
+      "label": "ThemeSwitcher()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L646"
+    },
+    {
+      "id": "src_app_mindstormlogo",
+      "label": "MindStormLogo()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L668"
+    },
+    {
+      "id": "src_app_joinscreen",
+      "label": "JoinScreen()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L730"
+    },
+    {
+      "id": "src_app_lobbyscreen",
+      "label": "LobbyScreen()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L762"
+    },
+    {
+      "id": "src_app_sidebar",
+      "label": "Sidebar()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L944"
+    },
+    {
+      "id": "src_app_boardgrid",
+      "label": "BoardGrid()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L990"
+    },
+    {
+      "id": "src_app_boardtile",
+      "label": "BoardTile()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L999"
+    },
+    {
+      "id": "src_app_sideitem",
+      "label": "SideItem()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1057"
+    },
+    {
+      "id": "src_app_monkeydeletemodal",
+      "label": "MonkeyDeleteModal()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1113"
+    },
+    {
+      "id": "src_app_passwordmodal",
+      "label": "PasswordModal()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1176"
+    },
+    {
+      "id": "src_app_createboardmodal",
+      "label": "CreateBoardModal()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1335"
+    },
+    {
+      "id": "src_app_boardscreen",
+      "label": "BoardScreen()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1499"
+    },
+    {
+      "id": "src_app_workcard",
+      "label": "WorkCard()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L2293"
+    },
+    {
+      "id": "src_app_cardreadermodal",
+      "label": "CardReaderModal()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L2395"
+    },
+    {
+      "id": "src_app_addform",
+      "label": "AddForm()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L2628"
+    },
+    {
+      "id": "src_app_editcardmodal",
+      "label": "EditCardModal()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L2671"
+    },
+    {
+      "id": "src_app_stickertree",
+      "label": "StickerTree()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L2815"
+    },
+    {
+      "id": "src_app_stickernode",
+      "label": "StickerNode()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L2857"
+    },
+    {
+      "id": "src_app_addstickerform",
+      "label": "AddStickerForm()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L2948"
+    },
+    {
+      "id": "src_app_trashpanel",
+      "label": "TrashPanel()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3013"
+    },
+    {
+      "id": "src_app_conncard",
+      "label": "ConnCard()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3054"
+    },
+    {
+      "id": "src_app_connectionspanel",
+      "label": "ConnectionsPanel()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3209"
+    },
+    {
+      "id": "src_app_editconceptmodal",
+      "label": "EditConceptModal()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3314"
+    },
+    {
+      "id": "src_app_aipanel",
+      "label": "AIPanel()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3336"
+    },
+    {
+      "id": "src_app_attachzone",
+      "label": "AttachZone()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3430"
+    },
+    {
+      "id": "src_app_docpanel",
+      "label": "DocPanel()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3466"
+    },
+    {
+      "id": "src_app_circleedgept",
+      "label": "circleEdgePt()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3771"
+    },
+    {
+      "id": "src_app_edgept",
+      "label": "edgePt()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3778"
+    },
+    {
+      "id": "src_app_layoutstack",
+      "label": "layoutStack()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3789"
+    },
+    {
+      "id": "src_app_layouttree",
+      "label": "layoutTree()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3801"
+    },
+    {
+      "id": "src_app_layoutmicelio",
+      "label": "layoutMicelio()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3853"
+    },
+    {
+      "id": "src_app_computestickerpos",
+      "label": "computeStickerPos()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3924"
+    },
+    {
+      "id": "src_app_canvasstickernode",
+      "label": "CanvasStickerNode()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3950"
+    },
+    {
+      "id": "src_app_canvasview",
+      "label": "CanvasView()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3979"
+    },
+    {
+      "id": "src_app_canvascardnode",
+      "label": "CanvasCardNode()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4399"
+    },
+    {
+      "id": "src_app_canvasskillnode",
+      "label": "CanvasSkillNode()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4447"
+    },
+    {
+      "id": "src_app_worldbuildingpanel",
+      "label": "WorldbuildingPanel()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4531"
+    },
+    {
+      "id": "src_app_familytreesvg",
+      "label": "FamilyTreeSVG()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4830"
+    },
+    {
+      "id": "src_app_oinput",
+      "label": "OInput()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4896"
+    },
+    {
+      "id": "src_app_otextarea",
+      "label": "OTextarea()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4907"
+    },
+    {
+      "id": "src_app_obtn",
+      "label": "OBtn()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4918"
+    },
+    {
+      "id": "src_app_oghostbtn",
+      "label": "OGhostBtn()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4942"
+    },
+    {
+      "id": "src_app_ooverlay",
+      "label": "OOverlay()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4954"
+    },
+    {
+      "id": "src_app_omodalbox",
+      "label": "OModalBox()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4968"
+    },
+    {
+      "id": "src_app_olabel",
+      "label": "OLabel()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4980"
+    },
+    {
+      "id": "src_app_otag",
+      "label": "OTag()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4983"
+    },
+    {
+      "id": "src_app_osection",
+      "label": "OSection()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4993"
+    },
+    {
+      "id": "src_app_stepbar",
+      "label": "StepBar()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L5001"
+    },
+    {
+      "id": "src_app_emptymsg",
+      "label": "EmptyMsg()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L5013"
+    },
+    {
+      "id": "src_main_jsx",
+      "label": "main.jsx",
+      "file_type": "code",
+      "source_file": "src\\main.jsx",
+      "source_location": "L1"
+    }
+  ],
+  "edges": [
+    {
+      "source": "vite_config_js",
+      "target": "vite",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "vite.config.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "vite_config_js",
+      "target": "plugin_react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "vite.config.js",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "supabase_js",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_usetheme",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L71",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_genid",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L114",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_nowts",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L115",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_fmtdate",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L116",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_fmttime",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L117",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_fmtsize",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L118",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_fileicon",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L119",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_getl",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L136",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_setl",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L137",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_dbtoboard",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L140",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_boardtodb",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L151",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_dbtodata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L162",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_dbgetboards",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L170",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_dbcreateboard",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L175",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_dbdeleteboard",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L187",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_dbgetboarddata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L190",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_dbsaveboarddata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L195",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_getaikey",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L210",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_saveaikey",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L211",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_callai",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L213",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_aikeysetup",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L240",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_resizeimage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L279",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_getthemecss",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L300",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_useismobile",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L484",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_pwdinput",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L495",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_app",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L531",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_themeswitcher",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L646",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_mindstormlogo",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L668",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_joinscreen",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L730",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_lobbyscreen",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L762",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_sidebar",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L944",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_boardgrid",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L990",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_boardtile",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L999",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_sideitem",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1057",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_monkeydeletemodal",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1113",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_passwordmodal",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1176",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_createboardmodal",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1335",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_boardscreen",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1499",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_workcard",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L2293",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_cardreadermodal",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L2395",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_addform",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L2628",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_editcardmodal",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L2671",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_stickertree",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L2815",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_stickernode",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L2857",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_addstickerform",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L2948",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_trashpanel",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3013",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_conncard",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3054",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_connectionspanel",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3209",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_editconceptmodal",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3314",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_aipanel",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3336",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_attachzone",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3430",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_docpanel",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3466",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_circleedgept",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3771",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_edgept",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3778",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_layoutstack",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3789",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_layouttree",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3801",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_layoutmicelio",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3853",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_computestickerpos",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3924",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_canvasstickernode",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3950",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_canvasview",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3979",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_canvascardnode",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4399",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_canvasskillnode",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4447",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_worldbuildingpanel",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4531",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_familytreesvg",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4830",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_oinput",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4896",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_otextarea",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4907",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_obtn",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4918",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_oghostbtn",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4942",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_ooverlay",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4954",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_omodalbox",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4968",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_olabel",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4980",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_otag",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4983",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_osection",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4993",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_stepbar",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L5001",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_app_emptymsg",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L5013",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_dbcreateboard",
+      "target": "src_app_boardtodb",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L176",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_dbgetboarddata",
+      "target": "src_app_dbtodata",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L193",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_getaikey",
+      "target": "src_app_getl",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L210",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_saveaikey",
+      "target": "src_app_setl",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L211",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_callai",
+      "target": "src_app_getaikey",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L214",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_app",
+      "target": "src_app_getl",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L639",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_themeswitcher",
+      "target": "src_app_usetheme",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L647",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_joinscreen",
+      "target": "src_app_usetheme",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L732",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_joinscreen",
+      "target": "src_app_getthemecss",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L736",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_lobbyscreen",
+      "target": "src_app_useismobile",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L773",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_lobbyscreen",
+      "target": "src_app_usetheme",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L862",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_lobbyscreen",
+      "target": "src_app_getthemecss",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L866",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_boardtile",
+      "target": "src_app_fmtdate",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1051",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_boardscreen",
+      "target": "src_app_useismobile",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1526",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_boardscreen",
+      "target": "src_app_usetheme",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1707",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_boardscreen",
+      "target": "src_app_getthemecss",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1711",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_boardscreen",
+      "target": "src_app_getaikey",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1815",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_cardreadermodal",
+      "target": "src_app_fmtdate",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L2482",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_stickernode",
+      "target": "src_app_fmtdate",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L2894",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_conncard",
+      "target": "src_app_fmtdate",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3162",
+      "weight": 1.0
+    },
+    {
+      "source": "src_main_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\main.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_main_jsx",
+      "target": "client",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\main.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_main_jsx",
+      "target": "c_users_cjere_mindstorm_src_app_tsx",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\main.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

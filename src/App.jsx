@@ -2021,31 +2021,30 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
       {/* Toast */}
       {toast && (
         <div className="toast" style={{ position:"fixed", bottom:28, left:"50%", transform:"translateX(-50%)",
-          background:"rgba(10,10,24,0.97)", color:T.ink, padding:"14px 22px", borderRadius:14, display:"flex",
+          background:"var(--card)", color:"var(--ink-0)", padding:"14px 22px", borderRadius:"var(--r-md)", display:"flex",
           gap:14, alignItems:"center", zIndex:999,
-          boxShadow:"0 16px 48px rgba(0,0,0,.5), 0 0 0 1px rgba(232,82,0,0.18), inset 0 1px 0 rgba(255,255,255,0.06)",
-          backdropFilter:"blur(14px)", border:"1px solid rgba(232,82,0,0.14)", fontSize:13 }}>
+          boxShadow:"var(--shadow-3)", border:"1px solid var(--card-border)", fontSize:13,
+          fontFamily:"var(--sans)" }}>
           <span>{toast.msg}</span>
           {toast.undoFn && (
             <button onClick={() => { toast.undoFn(); setToast(null); }}
-              style={{ background:"linear-gradient(135deg,#F06020,#CC4000)", border:"none", color:"#FFFFFF",
-                padding:"5px 14px", borderRadius:7, cursor:"pointer", fontSize:12, fontWeight:700 }}>
+              style={{ background:"var(--noir)", border:"none", color:"var(--paper)",
+                padding:"5px 14px", borderRadius:"var(--r-pill)", cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"var(--sans)" }}>
               Deshacer
             </button>
           )}
-          <button onClick={() => setToast(null)} style={{ background:"none", border:"none", color:T.ink4, cursor:"pointer", fontSize:17, padding:"0 2px", lineHeight:1 }}>×</button>
+          <button onClick={() => setToast(null)} style={{ background:"none", border:"none", color:"var(--ink-3)", cursor:"pointer", fontSize:17, padding:"0 2px", lineHeight:1 }}>×</button>
         </div>
       )}
 
       {/* ── NEW TOP BAR (simplified) ── */}
       <div style={{ display:"flex", alignItems:"center", gap:isMobile?8:12,
         padding:isMobile?"9px 12px":"10px 20px",
-        background:"rgba(10,9,8,0.95)", borderBottom:"1px solid rgba(255,255,255,0.07)",
-        backdropFilter:"blur(14px)", WebkitBackdropFilter:"blur(14px)",
-        boxShadow:"0 2px 20px rgba(0,0,0,.3)",
+        background:"var(--paper)", borderBottom:"1px solid var(--card-border)",
+        boxShadow:"var(--shadow-1)",
         position:"sticky", top:0, zIndex:50, flexShrink:0 }}>
         {!isMobile && <MindStormLogo size="sm" />}
-        {!isMobile && <div style={{ width:1, height:18, background:"rgba(255,255,255,0.07)", flexShrink:0 }} />}
+        {!isMobile && <div style={{ width:1, height:18, background:"var(--card-border)", flexShrink:0 }} />}
         <div style={{ width:26, height:26, background:`${cat.color}22`, borderRadius:7,
           display:"flex", alignItems:"center", justifyContent:"center", fontSize:14,
           border:`1px solid ${cat.color}44`, flexShrink:0 }}>{cat.label.split(" ")[0]}</div>
@@ -2092,7 +2091,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
         {/* ── LEFT SIDEBAR (52px) — hidden on mobile ── */}
         {!isMobile && (
           <div style={{ width:52, flexShrink:0, background:T.bgPanel,
-            borderRight:"1px solid rgba(200,170,100,0.10)",
+            borderRight:"1px solid var(--card-border)",
             display:"flex", flexDirection:"column", alignItems:"center",
             padding:"10px 0", gap:4, zIndex:10 }}>
 
@@ -2114,7 +2113,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 color: viewMode==="kanban" ? T.accent : T.ink4,
                 fontSize:15, display:"flex", alignItems:"center", justifyContent:"center",
                 transition:"all .15s" }}
-              onMouseEnter={e => { if (viewMode!=="kanban") { e.currentTarget.style.background="rgba(255,255,255,0.07)"; e.currentTarget.style.color=T.ink; } }}
+              onMouseEnter={e => { if (viewMode!=="kanban") { e.currentTarget.style.background="var(--paper-2)"; e.currentTarget.style.color=T.ink; } }}
               onMouseLeave={e => { e.currentTarget.style.background=viewMode==="kanban"?T.accentBg:"transparent"; e.currentTarget.style.color=viewMode==="kanban"?T.accent:T.ink4; }}>
               ▦
             </button>
@@ -2125,12 +2124,12 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 color: viewMode==="canvas" ? T.accent : T.ink4,
                 fontSize:15, display:"flex", alignItems:"center", justifyContent:"center",
                 transition:"all .15s" }}
-              onMouseEnter={e => { if (viewMode!=="canvas") { e.currentTarget.style.background="rgba(255,255,255,0.07)"; e.currentTarget.style.color=T.ink; } }}
+              onMouseEnter={e => { if (viewMode!=="canvas") { e.currentTarget.style.background="var(--paper-2)"; e.currentTarget.style.color=T.ink; } }}
               onMouseLeave={e => { e.currentTarget.style.background=viewMode==="canvas"?T.accentBg:"transparent"; e.currentTarget.style.color=viewMode==="canvas"?T.accent:T.ink4; }}>
               ◯
             </button>
 
-            <div style={{ width:24, height:1, background:"rgba(232,82,0,0.10)", margin:"4px 0" }} />
+            <div style={{ width:24, height:1, background:"var(--paper-3)", margin:"4px 0" }} />
 
             <button onClick={() => setConnPanel(true)} title={`Conexiones${pendingConns.length>0?" ("+pendingConns.length+" pendientes)":""}`}
               style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer", position:"relative",
@@ -2138,7 +2137,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 color: pendingConns.length>0 ? T.amber : T.ink4,
                 fontSize:15, display:"flex", alignItems:"center", justifyContent:"center",
                 transition:"all .15s" }}
-              onMouseEnter={e => { e.currentTarget.style.background=pendingConns.length>0?T.amberBg:"rgba(255,255,255,0.07)"; e.currentTarget.style.color=pendingConns.length>0?T.amber:T.ink; }}
+              onMouseEnter={e => { e.currentTarget.style.background=pendingConns.length>0?T.amberBg:"var(--paper-2)"; e.currentTarget.style.color=pendingConns.length>0?T.amber:T.ink; }}
               onMouseLeave={e => { e.currentTarget.style.background=pendingConns.length>0?T.amberBg:"transparent"; e.currentTarget.style.color=pendingConns.length>0?T.amber:T.ink4; }}>
               💡
               {pendingConns.length > 0 && (
@@ -2153,23 +2152,23 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
             <button onClick={() => setAiPanel(true)} title="Análisis IA"
               className="ai-glow"
               style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
-                background:"rgba(255,255,255,0.08)",
+                background:"var(--paper-2)",
                 color:T.accent,
                 fontSize:15, display:"flex", alignItems:"center", justifyContent:"center",
                 transition:"all .15s" }}
-              onMouseEnter={e => { e.currentTarget.style.background="rgba(255,255,255,0.16)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background="rgba(255,255,255,0.08)"; }}>
+              onMouseEnter={e => { e.currentTarget.style.background="var(--paper-3)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background="var(--paper-2)"; }}>
               ✦
             </button>
 
-            <div style={{ width:24, height:1, background:"rgba(232,82,0,0.10)", margin:"4px 0" }} />
+            <div style={{ width:24, height:1, background:"var(--paper-3)", margin:"4px 0" }} />
 
             <button onClick={() => setDocPanel(true)} title="Documento"
               style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
                 background:"transparent", color:T.ink4,
                 fontSize:14, display:"flex", alignItems:"center", justifyContent:"center",
                 transition:"all .15s" }}
-              onMouseEnter={e => { e.currentTarget.style.background="rgba(255,255,255,0.07)"; e.currentTarget.style.color=T.ink; }}
+              onMouseEnter={e => { e.currentTarget.style.background="var(--paper-2)"; e.currentTarget.style.color=T.ink; }}
               onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color=T.ink4; }}>
               📄
             </button>
@@ -2180,7 +2179,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                   background:"transparent", color:T.ink4,
                   fontSize:14, display:"flex", alignItems:"center", justifyContent:"center",
                   transition:"all .15s" }}
-                onMouseEnter={e => { e.currentTarget.style.background="rgba(255,255,255,0.07)"; e.currentTarget.style.color=T.ink; }}
+                onMouseEnter={e => { e.currentTarget.style.background="var(--paper-2)"; e.currentTarget.style.color=T.ink; }}
                 onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color=T.ink4; }}>
                 🗑
                 <span style={{ position:"absolute", top:3, right:3, background:T.rose, color:"#fff",
@@ -2202,7 +2201,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
             )}
 
             <div style={{ flex:1 }} />
-            <div style={{ width:24, height:1, background:"rgba(232,82,0,0.10)", margin:"4px 0" }} />
+            <div style={{ width:24, height:1, background:"var(--paper-3)", margin:"4px 0" }} />
 
             <button onClick={() => setKeyModal(true)} title={getAIKey() ? "IA conectada — cambiar clave" : "Conectar IA"}
               style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
@@ -2210,7 +2209,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 color: getAIKey() ? T.green : T.ink4,
                 fontSize:14, display:"flex", alignItems:"center", justifyContent:"center",
                 transition:"all .15s" }}
-              onMouseEnter={e => { e.currentTarget.style.background=getAIKey()?T.greenBg:"rgba(255,255,255,0.07)"; e.currentTarget.style.color=getAIKey()?T.green:T.ink; }}
+              onMouseEnter={e => { e.currentTarget.style.background=getAIKey()?T.greenBg:"var(--paper-2)"; e.currentTarget.style.color=getAIKey()?T.green:T.ink; }}
               onMouseLeave={e => { e.currentTarget.style.background=getAIKey()?T.greenBg:"transparent"; e.currentTarget.style.color=getAIKey()?T.green:T.ink4; }}>
               🔑
             </button>
@@ -2222,11 +2221,11 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
 
           {/* Concept bar */}
           <div onClick={() => setEditConcept(true)}
-            style={{ background:T.bgPanel, borderBottom:"1px solid rgba(200,170,100,0.10)",
+            style={{ background:T.bgPanel, borderBottom:"1px solid var(--card-border)",
               padding:"11px 18px", cursor:"pointer", transition:"background .15s, border-color .15s",
               flexShrink:0 }}
             onMouseEnter={e=>{ e.currentTarget.style.background=T.bgHover; e.currentTarget.style.borderBottomColor=`${cat.color}28`; }}
-            onMouseLeave={e=>{ e.currentTarget.style.background=T.bgPanel; e.currentTarget.style.borderBottomColor="rgba(200,170,100,0.10)"; }}>
+            onMouseLeave={e=>{ e.currentTarget.style.background=T.bgPanel; e.currentTarget.style.borderBottomColor="var(--card-border)"; }}>
             <div style={{ display:"flex", gap:12, alignItems:"flex-start" }}>
               <div style={{ width:3, minHeight:32, borderRadius:2,
                 background:`linear-gradient(180deg,${cat.color},${cat.color}44)`,
@@ -2244,7 +2243,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
           {/* Filter bar — pill style, only in kanban mode */}
           {viewMode === "kanban" && (
             <div style={{ display:"flex", alignItems:"center", gap:8, padding:"7px 18px",
-              background:T.bgPanel, borderBottom:"1px solid rgba(200,170,100,0.07)",
+              background:T.bgPanel, borderBottom:"1px solid var(--card-border)",
               overflowX:"auto", flexShrink:0 }}>
               <div style={{ position:"relative", flexShrink:0 }}>
                 <span style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)",
@@ -2255,12 +2254,12 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                   onChange={e => setFilterQuery(e.target.value)}
                   placeholder="Buscar…"
                   aria-label="Buscar tarjetas en el tablero"
-                  style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(200,170,100,0.15)",
+                  style={{ background:"var(--card)", border:"1px solid var(--card-border)",
                     color:T.ink, borderRadius:99, padding:"5px 10px 5px 28px", fontSize:12,
                     fontFamily:"var(--sans)", outline:"none", width:160,
                     transition:"border-color .15s", caretColor:T.accent }}
-                  onFocus={e => e.target.style.borderColor=T.accent+"88"}
-                  onBlur={e => e.target.style.borderColor="rgba(200,170,100,0.15)"}
+                  onFocus={e => e.target.style.borderColor="var(--ink-2)"}
+                  onBlur={e => e.target.style.borderColor="var(--card-border)"}
                 />
                 {filterQuery && (
                   <button onClick={() => setFilterQuery("")}
@@ -2269,41 +2268,41 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                       fontSize:13, lineHeight:1, padding:0 }}>×</button>
                 )}
               </div>
-              <div style={{ width:1, height:16, background:"rgba(200,170,100,0.10)", flexShrink:0 }} />
+              <div style={{ width:1, height:16, background:"var(--paper-3)", flexShrink:0 }} />
               {["", ...CARD_TYPES].map(t => {
                 const isAll = t === "";
                 const active = filterType === t;
                 const color = isAll ? T.ink3 : TYPE_COLOR[t];
-                const bg = isAll ? "rgba(255,255,255,0.08)" : TYPE_BG[t];
+                const bg = isAll ? "var(--paper-2)" : TYPE_BG[t];
                 return (
                   <button key={t} onClick={() => setFilterType(t)}
-                    style={{ background: active ? (isAll ? "rgba(255,255,255,0.12)" : bg) : "transparent",
-                      border:`1px solid ${active ? (isAll ? "rgba(255,255,255,0.25)" : color+"55") : "rgba(200,170,100,0.15)"}`,
+                    style={{ background: active ? (isAll ? "var(--paper-3)" : bg) : "transparent",
+                      border:`1px solid ${active ? (isAll ? "var(--ink-4)" : color+"55") : "var(--card-border)"}`,
                       color: active ? (isAll ? T.ink : color) : T.ink4,
                       borderRadius:99, padding:"4px 12px", fontSize:11, cursor:"pointer",
                       fontFamily:"var(--sans)", fontWeight:active?700:400, whiteSpace:"nowrap",
                       transition:"all .15s", flexShrink:0 }}
-                    onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor="rgba(200,170,100,0.35)"; e.currentTarget.style.color=T.ink3; } }}
-                    onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor="rgba(200,170,100,0.15)"; e.currentTarget.style.color=T.ink4; } }}>
+                    onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor="var(--ink-4)"; e.currentTarget.style.color=T.ink3; } }}
+                    onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor="var(--card-border)"; e.currentTarget.style.color=T.ink4; } }}>
                     {isAll ? "Todos" : t}
                   </button>
                 );
               })}
               {allAuthors.length > 1 && <>
-                <div style={{ width:1, height:16, background:"rgba(200,170,100,0.10)", flexShrink:0 }} />
+                <div style={{ width:1, height:16, background:"var(--paper-3)", flexShrink:0 }} />
                 {["", ...allAuthors].map(a => {
                   const isAll = a === "";
                   const active = filterAuthor === a;
                   return (
                     <button key={a} onClick={() => setFilterAuthor(a)}
                       style={{ background: active ? T.accentBg : "transparent",
-                        border:`1px solid ${active ? T.accent+"55" : "rgba(200,170,100,0.15)"}`,
+                        border:`1px solid ${active ? T.accent+"55" : "var(--card-border)"}`,
                         color: active ? T.accent : T.ink4,
                         borderRadius:99, padding:"4px 12px", fontSize:11, cursor:"pointer",
                         fontFamily:"var(--sans)", fontWeight:active?700:400, whiteSpace:"nowrap",
                         transition:"all .15s", flexShrink:0 }}
-                      onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor="rgba(200,170,100,0.35)"; e.currentTarget.style.color=T.ink3; } }}
-                      onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor="rgba(200,170,100,0.15)"; e.currentTarget.style.color=T.ink4; } }}>
+                      onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor="var(--ink-4)"; e.currentTarget.style.color=T.ink3; } }}
+                      onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor="var(--card-border)"; e.currentTarget.style.color=T.ink4; } }}>
                       {isAll ? "Autores" : `@${a}`}
                     </button>
                   );
@@ -2357,7 +2356,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                         background:isOver?T.accentBg:T.bgPanel,
                         borderRadius:12,
                         border:`1px solid ${isOver?col.color+"55":col.color+"20"}`,
-                        boxShadow:isOver?`0 0 0 1px ${col.color}30, 0 8px 24px rgba(0,0,0,.25)`:`0 2px 12px rgba(0,0,0,.20)`,
+                        boxShadow:isOver?"var(--shadow-2)":"var(--shadow-1)",
                         transition:"all .18s", padding:"14px 12px" }}>
                       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center",
                         paddingBottom:12, marginBottom:12,
@@ -2406,18 +2405,18 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                         ))}
                         {hasFilter && colCards.length === 0 && (
                           <div style={{ textAlign:"center", padding:"22px 0", color:T.ink4, fontSize:12,
-                            fontFamily:"var(--mono)", border:"1px dashed rgba(255,255,255,0.06)",
+                            fontFamily:"var(--mono)", border:"1px dashed var(--paper-3)",
                             borderRadius:10, marginTop:4 }}>sin resultados</div>
                         )}
                         {addingTo !== col.id && (
                           <button onClick={() => setAddingTo(col.id)}
                             style={{ width:"100%", marginTop:colCards.length?8:0,
-                              background:"transparent", border:"1px dashed rgba(255,255,255,0.07)",
+                              background:"transparent", border:"1px dashed var(--paper-3)",
                               borderRadius:9, padding:"9px 0", cursor:"pointer", color:T.ink4,
                               fontSize:12, fontFamily:"var(--sans)", transition:"all .15s",
                               display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}
                             onMouseEnter={e => { e.currentTarget.style.borderColor=`${col.color}55`; e.currentTarget.style.color=col.color; e.currentTarget.style.background=`${col.color}08`; }}
-                            onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(255,255,255,0.07)"; e.currentTarget.style.color=T.ink4; e.currentTarget.style.background="transparent"; }}>
+                            onMouseLeave={e => { e.currentTarget.style.borderColor="var(--paper-3)"; e.currentTarget.style.color=T.ink4; e.currentTarget.style.background="transparent"; }}>
                             <span style={{ fontSize:14, fontWeight:300, lineHeight:1 }}>+</span>
                             <span>Nueva tarjeta</span>
                           </button>
@@ -2434,10 +2433,10 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
         {/* ── RIGHT STATS PANEL (200px) — hidden on mobile ── */}
         {!isMobile && (
           <div style={{ width:200, flexShrink:0, background:T.bgPanel,
-            borderLeft:"1px solid rgba(200,170,100,0.10)",
+            borderLeft:"1px solid var(--card-border)",
             display:"flex", flexDirection:"column", overflowY:"auto" }}>
 
-            <div style={{ padding:"13px 14px 10px", borderBottom:"1px solid rgba(200,170,100,0.08)" }}>
+            <div style={{ padding:"13px 14px 10px", borderBottom:"1px solid var(--card-border)" }}>
               <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:4 }}>TABLERO</div>
               <div style={{ color:T.ink, fontWeight:700, fontSize:13, lineHeight:1.3, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{board.name}</div>
               <div style={{ display:"flex", alignItems:"center", gap:5, marginTop:4 }}>
@@ -2446,7 +2445,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               </div>
             </div>
 
-            <div style={{ padding:"12px 14px 8px", borderBottom:"1px solid rgba(200,170,100,0.08)" }}>
+            <div style={{ padding:"12px 14px 8px", borderBottom:"1px solid var(--card-border)" }}>
               <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:8 }}>TARJETAS</div>
               {COLUMNS.map(col => {
                 const count = activeCards.filter(c => c.col===col.id).length;
@@ -2469,7 +2468,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                       <span style={{ color:T.ink4, fontSize:10, fontFamily:"var(--mono)" }}>completado</span>
                       <span style={{ color:pct>=75?T.green:pct>=40?T.amber:T.ink3, fontFamily:"var(--mono)", fontSize:10, fontWeight:700 }}>{pct}%</span>
                     </div>
-                    <div style={{ height:4, background:"rgba(255,255,255,0.05)", borderRadius:2 }}>
+                    <div style={{ height:4, background:"var(--paper-2)", borderRadius:2 }}>
                       <div style={{ height:"100%", width:pct+"%",
                         background:pct>=75?T.green:pct>=40?T.amber:T.accent,
                         borderRadius:2, transition:"width .6s ease" }} />
@@ -2479,7 +2478,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               })()}
             </div>
 
-            <div style={{ padding:"12px 14px 10px", borderBottom:"1px solid rgba(200,170,100,0.08)" }}>
+            <div style={{ padding:"12px 14px 10px", borderBottom:"1px solid var(--card-border)" }}>
               <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:8 }}>ESTADO IA</div>
               <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
                 <div style={{ width:7, height:7, borderRadius:"50%",
@@ -2501,13 +2500,13 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               </button>
               <button onClick={() => setConnPanel(true)}
                 style={{ display:"flex", alignItems:"center", gap:6,
-                  background: pendingConns.length>0 ? T.amberBg : "rgba(255,255,255,0.03)",
-                  border:`1px solid ${pendingConns.length>0 ? T.amber+"55" : "rgba(200,170,100,0.15)"}`,
+                  background: pendingConns.length>0 ? T.amberBg : "var(--paper-2)",
+                  border:`1px solid ${pendingConns.length>0 ? T.amber+"55" : "var(--card-border)"}`,
                   color: pendingConns.length>0 ? T.amber : T.ink4,
                   borderRadius:8, padding:"6px 10px", fontSize:11, fontWeight:600, cursor:"pointer",
                   fontFamily:"var(--sans)", width:"100%", transition:"all .15s", position:"relative" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor=pendingConns.length>0?T.amber+"88":"rgba(200,170,100,0.35)"; e.currentTarget.style.color=pendingConns.length>0?T.amber:T.ink3; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor=pendingConns.length>0?T.amber+"55":"rgba(200,170,100,0.15)"; e.currentTarget.style.color=pendingConns.length>0?T.amber:T.ink4; }}>
+                onMouseEnter={e => { e.currentTarget.style.borderColor=pendingConns.length>0?T.amber+"88":"var(--ink-4)"; e.currentTarget.style.color=pendingConns.length>0?T.amber:T.ink3; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor=pendingConns.length>0?T.amber+"55":"var(--card-border)"; e.currentTarget.style.color=pendingConns.length>0?T.amber:T.ink4; }}>
                 <span>💡</span>
                 <span>Conexiones</span>
                 {pendingConns.length > 0 && (
@@ -2519,7 +2518,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               </button>
             </div>
 
-            <div style={{ padding:"10px 14px", borderBottom:"1px solid rgba(200,170,100,0.08)" }}>
+            <div style={{ padding:"10px 14px", borderBottom:"1px solid var(--card-border)" }}>
               <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                 {saveStatus === "saving" && <>
                   <span className="spinner" style={{ display:"inline-block", width:8, height:8, border:"1.5px solid "+T.border, borderTop:"1.5px solid "+T.ink4, borderRadius:"50%" }} />
@@ -2594,7 +2593,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
 
       {/* Mobile save indicator */}
       {isMobile && saveStatus === "saving" && (
-        <div style={{ position:"fixed", bottom:16, left:"50%", transform:"translateX(-50%)", background:"rgba(10,9,8,0.9)", color:T.ink4, padding:"6px 14px", borderRadius:99, fontSize:11, fontFamily:"var(--mono)", zIndex:99 }}>
+        <div style={{ position:"fixed", bottom:16, left:"50%", transform:"translateX(-50%)", background:"var(--card)", color:"var(--ink-2)", padding:"6px 14px", borderRadius:99, fontSize:11, fontFamily:"var(--mono)", zIndex:99, boxShadow:"var(--shadow-2)", border:"1px solid var(--card-border)" }}>
           Guardando…
         </div>
       )}
@@ -2654,10 +2653,10 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
   return (
     <div className="wcard" draggable onDragStart={onDragStart}
       style={{ background:T.bgCard,
-        border:`1px solid rgba(200,170,100,0.16)`,
+        border:`1px solid var(--card-border)`,
         borderLeft:`3px solid ${tc}`,
         borderRadius:10, overflow:"hidden", cursor:"grab",
-        boxShadow:`0 2px 10px rgba(0,0,0,.30)` }}>
+        boxShadow:"var(--shadow-1)" }}>
 
       {/* Card header — always visible, click to expand */}
       <div
@@ -2686,7 +2685,7 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
         <div style={{ display:"flex", gap:4, alignItems:"center", flexShrink:0 }}>
           {commentCount > 0 && (
             <span style={{ color:T.ink3, fontFamily:"var(--mono)", fontSize:9,
-              background:"rgba(255,255,255,0.05)", borderRadius:4, padding:"1px 4px" }}>
+              background:"var(--paper-2)", borderRadius:4, padding:"1px 4px" }}>
               💬{commentCount}
             </span>
           )}
@@ -2707,7 +2706,7 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
             style={{ background:"transparent", border:"none", color:T.ink4, cursor:"pointer",
               fontSize:12, padding:"1px 4px", borderRadius:4, flexShrink:0, transition:"all .12s",
               lineHeight:1 }}
-            onMouseEnter={e => { e.currentTarget.style.color = T.ink; e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
+            onMouseEnter={e => { e.currentTarget.style.color = T.ink; e.currentTarget.style.background = "var(--paper-2)"; }}
             onMouseLeave={e => { e.currentTarget.style.color = T.ink4; e.currentTarget.style.background = "transparent"; }}>
             {isOwner ? "✎" : "👁"}
           </button>
@@ -2716,7 +2715,7 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
 
       {/* Expanded body */}
       {expanded && (
-        <div style={{ padding:"0 11px 10px 14px", borderTop:`1px solid rgba(200,170,100,0.10)` }}>
+        <div style={{ padding:"0 11px 10px 14px", borderTop:"1px solid var(--card-border)" }}>
           {/* Images */}
           {imgs.length > 0 && (
             <div style={{ display:"flex", gap:4, marginTop:8, marginBottom:6 }}>
@@ -2751,7 +2750,7 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
             <div style={{ display:"flex", gap:3 }}>
               {COLUMNS.filter(c => c.id!==currentCol).map(c => (
                 <button key={c.id} onClick={e => { e.stopPropagation(); onMove(c.id); }} title={c.label} className="mv-btn"
-                  style={{ background:"rgba(255,255,255,0.04)", border:`1px solid ${c.color}30`,
+                  style={{ background:"var(--paper-2)", border:`1px solid ${c.color}30`,
                     color:c.color, cursor:"pointer", fontSize:10, padding:"2px 7px", borderRadius:4,
                     transition:"all .15s", fontFamily:"var(--mono)", letterSpacing:"0.04em" }}>
                   {c.icon} {c.label}

@@ -1,0 +1,108 @@
+{
+  "0": [
+    "c_users_cjere_mindstorm_src_app_jsx",
+    "src_app_addform",
+    "src_app_addstickerform",
+    "src_app_aikeysetup",
+    "src_app_aipanel",
+    "src_app_attachzone",
+    "src_app_boardgrid",
+    "src_app_canvascardnode",
+    "src_app_canvasskillnode",
+    "src_app_canvasstickernode",
+    "src_app_canvasview",
+    "src_app_circleedgept",
+    "src_app_computestickerpos",
+    "src_app_connectionspanel",
+    "src_app_createboardmodal",
+    "src_app_dbdeleteboard",
+    "src_app_dbgetboards",
+    "src_app_dbsaveboarddata",
+    "src_app_dbtoboard",
+    "src_app_docpanel",
+    "src_app_edgept",
+    "src_app_editcardmodal",
+    "src_app_editconceptmodal",
+    "src_app_emptymsg",
+    "src_app_familytreesvg",
+    "src_app_fileicon",
+    "src_app_fmtsize",
+    "src_app_fmttime",
+    "src_app_genid",
+    "src_app_jsx",
+    "src_app_layoutmicelio",
+    "src_app_layoutstack",
+    "src_app_layouttree",
+    "src_app_mindstormlogo",
+    "src_app_monkeydeletemodal",
+    "src_app_nowts",
+    "src_app_obtn",
+    "src_app_oghostbtn",
+    "src_app_oinput",
+    "src_app_olabel",
+    "src_app_omodalbox",
+    "src_app_ooverlay",
+    "src_app_osection",
+    "src_app_otag",
+    "src_app_otextarea",
+    "src_app_passwordmodal",
+    "src_app_pwdinput",
+    "src_app_resizeimage",
+    "src_app_sidebar",
+    "src_app_sideitem",
+    "src_app_stepbar",
+    "src_app_stickertree",
+    "src_app_trashpanel",
+    "src_app_workcard",
+    "src_app_worldbuildingpanel"
+  ],
+  "1": [
+    "src_app_app",
+    "src_app_boardscreen",
+    "src_app_callai",
+    "src_app_getaikey",
+    "src_app_getl",
+    "src_app_getthemecss",
+    "src_app_joinscreen",
+    "src_app_lobbyscreen",
+    "src_app_themeswitcher",
+    "src_app_useismobile",
+    "src_app_usetheme"
+  ],
+  "2": [
+    "src_app_boardtile",
+    "src_app_cardreadermodal",
+    "src_app_conncard",
+    "src_app_fmtdate",
+    "src_app_stickernode"
+  ],
+  "3": [
+    "index_main_jsx",
+    "index_mindstorm",
+    "index_root_div"
+  ],
+  "4": [
+    "src_app_saveaikey",
+    "src_app_setl"
+  ],
+  "5": [
+    "src_app_dbgetboarddata",
+    "src_app_dbtodata"
+  ],
+  "6": [
+    "src_app_boardtodb",
+    "src_app_dbcreateboard"
+  ],
+  "7": [
+    "vite_config_js"
+  ],
+  "8": [
+    "src_main_jsx"
+  ],
+  "9": [
+    "c_users_cjere_mindstorm_vite_config_js"
+  ],
+  "10": [
+    "c_users_cjere_mindstorm_src_main_jsx"
+  ]
+}
