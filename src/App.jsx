@@ -83,7 +83,7 @@ const THEMES = {
 let T = { ...THEMES.estudio };
 
 // Theme context
-const ThemeCtx = createContext({ themeId:"dark", setThemeId:()=>{} });
+const ThemeCtx = createContext({ themeId:"estudio", setThemeId:()=>{} });
 const useTheme = () => useContext(ThemeCtx);
 
 const CATEGORIES = [
@@ -830,7 +830,10 @@ export default function App() {
   const [boardData, setBoardData]     = useState(null);
   const [themeId, setThemeIdRaw]      = useState(() => {
     const stored = getL("mindstorm-theme", "estudio");
-    return THEMES[stored] ? stored : "estudio"; // fallback
+    // Reject dark themes — estudio is the only active theme
+    const valid = THEMES[stored] && !THEMES[stored].isDark ? stored : "estudio";
+    if (valid !== stored) setL("mindstorm-theme", "estudio"); // overwrite stale dark pref
+    return valid;
   });
 
   const setThemeId = (id) => {
