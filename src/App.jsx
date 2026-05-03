@@ -962,62 +962,87 @@ function ThemeSwitcher() {
 }
 
 // ─── MINDSTORM LOGO ──────────────────────────────────────────────────────────
-function MindStormLogo({ size = "md", light = false }) {
-  // size: sm (sidebar), md (join screen), lg (future)
+function MindStormLogo({ size = "md", light = true }) {
+  // light=true  → cream background (board topbar, lobby)
+  // light=false → dark background (future dark mode)
   const configs = {
-    sm: { iconW:36, iconH:36, fontSize:17, tagSize:0,  gap:8  },
-    md: { iconW:72, iconH:72, fontSize:38, tagSize:10, gap:16 },
+    sm: { iconW:32, iconH:32, fontSize:16, tagSize:0,  gap:9  },
+    md: { iconW:68, iconH:68, fontSize:36, tagSize:10, gap:14 },
   };
   const c = configs[size] || configs.md;
-  // Equilateral triangle: circumradius r, centered at (cx,cy)
-  // top: (cx, cy-r), bottom-right: (cx+r·sin60, cy+r·cos60), bottom-left: (cx-r·sin60, cy+r·cos60)
-  const r = c.iconW * 0.38;
-  const cx = c.iconW / 2;
-  const cy = c.iconH / 2 + r * 0.08;
-  const sin60 = 0.866;
+
+  // Three nodes in a loose organic triangle — not equilateral, slightly asymmetric
+  const W = c.iconW, H = c.iconH;
   const nodes = [
-    { x: cx,                y: cy - r           },
-    { x: cx + r * sin60,    y: cy + r * 0.5     },
-    { x: cx - r * sin60,    y: cy + r * 0.5     },
+    { x: W * 0.50, y: H * 0.13 },  // top — slightly left of center
+    { x: W * 0.88, y: H * 0.80 },  // bottom-right
+    { x: W * 0.12, y: H * 0.80 },  // bottom-left
   ];
-  const nr = c.iconW * 0.095;  // node circle radius
-  const sw = c.iconW * 0.072;  // stroke width
+
+  // Organic bezier between each pair: control points curve outward
+  function organicEdge(a, b, bow = 0.28) {
+    const mx = (a.x + b.x) / 2;
+    const my = (a.y + b.y) / 2;
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const nx = -dy * bow, ny = dx * bow;
+    return `M${a.x},${a.y} C${mx + nx * 0.6 + dx * 0.1},${my + ny * 0.6 + dy * 0.1} ${mx + nx * 0.4 - dx * 0.1},${my + ny * 0.4 - dy * 0.1} ${b.x},${b.y}`;
+  }
+
+  const edges = [[0,1,0.22],[1,2,-0.18],[2,0,0.20]];
+  const nr  = W * 0.082;
+  const sw  = W * 0.062;
+  const inkColor    = light ? "var(--noir)"   : "rgba(255,255,255,0.90)";
+  const edgeColor   = light ? "var(--ink-3)"  : "rgba(255,255,255,0.35)";
+  const dotAccent   = "var(--neon)";
+  const bgDot       = light ? "var(--paper)"  : "rgba(30,25,20,0.9)";
 
   return (
     <div style={{ display:"flex", alignItems:"center", gap:c.gap }}>
-      {/* Icon SVG */}
-      <svg width={c.iconW} height={c.iconH} viewBox={`0 0 ${c.iconW} ${c.iconH}`} style={{ flexShrink:0 }}>
-        {/* Edges */}
-        {[[0,1],[1,2],[2,0]].map(([a,b],i) => (
-          <line key={i}
-            x1={nodes[a].x} y1={nodes[a].y}
-            x2={nodes[b].x} y2={nodes[b].y}
-            stroke={light ? "rgba(44,40,38,0.40)" : "rgba(255,255,255,0.40)"} strokeWidth={sw} strokeLinecap="round"/>
+      {/* Icon SVG — organic node graph */}
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ flexShrink:0, overflow:"visible" }}>
+        {/* Organic edges */}
+        {edges.map(([a,b,bow],i) => (
+          <path key={i} d={organicEdge(nodes[a], nodes[b], bow)}
+            fill="none" stroke={edgeColor} strokeWidth={sw * 0.65} strokeLinecap="round" opacity="0.7"/>
         ))}
-        {/* Node rings */}
+        {/* Node rings — cream fill, noir border */}
         {nodes.map((n,i) => (
           <circle key={i} cx={n.x} cy={n.y} r={nr}
-            fill={light ? T.bgCard : T.bgCard} stroke={light ? T.ink2 : "rgba(255,255,255,0.50)"} strokeWidth={sw*0.8}/>
+            fill={bgDot} stroke={inkColor} strokeWidth={sw * 0.55} opacity="0.9"/>
         ))}
-        {/* Node inner dots */}
-        {nodes.map((n,i) => (
-          <circle key={i} cx={n.x} cy={n.y} r={nr * 0.42} fill={light ? T.ink2 : "rgba(255,255,255,0.70)"} opacity="0.9"/>
+        {/* Top node gets neon accent fill — the "spark" */}
+        <circle cx={nodes[0].x} cy={nodes[0].y} r={nr * 0.55} fill={dotAccent} opacity="0.95"/>
+        {/* Other nodes get noir dot */}
+        {nodes.slice(1).map((n,i) => (
+          <circle key={i} cx={n.x} cy={n.y} r={nr * 0.42} fill={inkColor} opacity="0.8"/>
         ))}
       </svg>
 
-      {/* Wordmark */}
+      {/* Wordmark — Fraunces italic (display font from DESIGN.md) */}
       {size !== "xs" && (
         <div>
-          <div style={{ lineHeight:1, display:"flex", alignItems:"baseline", gap:0 }}>
-            <span style={{ fontFamily:"var(--raj)", fontWeight:400, fontSize:c.fontSize,
-              color: light ? "rgba(44,40,38,0.45)" : "rgba(255,255,255,0.40)", letterSpacing:"0.12em", textTransform:"uppercase" }}>MIND</span>
-            <span style={{ fontFamily:"var(--raj)", fontWeight:700, fontSize:c.fontSize,
-              color: light ? T.ink : "var(--ink0)", letterSpacing:"0.06em", textTransform:"uppercase",
-              textShadow: light ? "none" : "none" }}>STORM</span>
+          <div style={{ lineHeight:1 }}>
+            <span style={{
+              fontFamily:"'Fraunces', Georgia, serif",
+              fontStyle:"italic",
+              fontWeight:300,
+              fontSize:c.fontSize,
+              letterSpacing:"-0.01em",
+              color: light ? "var(--ink-3)" : "rgba(255,255,255,0.45)"
+            }}>mind</span><span style={{
+              fontFamily:"'Fraunces', Georgia, serif",
+              fontStyle:"italic",
+              fontWeight:700,
+              fontSize:c.fontSize,
+              letterSpacing:"-0.02em",
+              color: light ? "var(--noir)" : "rgba(255,255,255,0.92)"
+            }}>storm</span>
           </div>
           {c.tagSize > 0 && (
-            <div style={{ fontFamily:"var(--mono)", fontSize:c.tagSize, color: light ? "rgba(44,40,38,0.35)" : "rgba(255,255,255,0.25)", letterSpacing:"0.28em", marginTop:3, textTransform:"uppercase" }}>
-              THINK TOGETHER
+            <div style={{ fontFamily:"var(--mono)", fontSize:c.tagSize,
+              color: light ? "var(--ink-4)" : "rgba(255,255,255,0.25)",
+              letterSpacing:"0.24em", marginTop:4, textTransform:"uppercase" }}>
+              think together
             </div>
           )}
         </div>
@@ -1168,7 +1193,7 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
       <div className="board-area" style={{ flex:1, padding: isMobile ? "16px 14px" : isTablet ? "24px 20px" : "32px 36px", overflowY:"auto", position:"relative", zIndex:1 }}>
         {/* Mobile top bar */}
         {isMobile && (
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16, paddingBottom:14, borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16, paddingBottom:14, borderBottom:"1px solid var(--card-border)" }}>
             <MindStormLogo size="sm" light />
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>@{user.name}</span>
@@ -1246,7 +1271,7 @@ function Sidebar({ user, boards, onOpen, onSignOut }) {
       backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)",
       boxShadow:"2px 0 24px rgba(0,0,0,.35)" }}>
       <div style={{ padding:"8px 8px 4px", marginBottom:18 }}>
-        <MindStormLogo size="sm" />
+        <MindStormLogo size="sm" light={false} />
       </div>
       <SideItem icon="🏠" label="Inicio" active />
       <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"10px 0" }} />
@@ -2342,6 +2367,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 canvasPositions={data.canvasPositions || { cards:{}, stickers:{} }}
                 onSavePositions={saveCanvasPositions}
                 cat={cat}
+                onAddCard={() => setAddingTo("concepto")}
               />
             : <div style={{ display:"flex", flex:1, overflow:"hidden", position:"relative" }}>
               <div style={{ display:"flex", flexDirection:isMobile?"column":"row", gap:isMobile?12:14,
@@ -4440,7 +4466,7 @@ function CanvasStickerNode({ s, sp, color, rot, icon, onMouseDown, onTouchStart 
 }
 
 // ─── CANVAS VIEW ──────────────────────────────────────────────────────────────
-function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard, canvasPositions, onSavePositions, cat }) {
+function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard, canvasPositions, onSavePositions, cat, onAddCard }) {
   const initPos = { cards:{...canvasPositions.cards}, stickers:{...canvasPositions.stickers} };
   const posRef      = useRef(initPos);
   const [pos, setPos] = useState(initPos);
@@ -4459,6 +4485,31 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
 
   const hasAllPos = cards.length > 0 && cards.every(c => posRef.current.cards[c.id]);
 
+  function fitToView(cardPositions) {
+    const cpMap = cardPositions || posRef.current.cards;
+    const pts = Object.values(cpMap);
+    if (!pts.length) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const minX = Math.min(...pts.map(p => p.x));
+    const maxX = Math.max(...pts.map(p => p.x + CARD_W));
+    const minY = Math.min(...pts.map(p => p.y));
+    const maxY = Math.max(...pts.map(p => p.y + CARD_H));
+    const vw = el.clientWidth, vh = el.clientHeight;
+    const pad = 80;
+    const scaleX = (vw - pad * 2) / Math.max(1, maxX - minX);
+    const scaleY = (vh - pad * 2) / Math.max(1, maxY - minY);
+    const nz = Math.min(1.4, Math.max(0.15, Math.min(scaleX, scaleY)));
+    const pw = (maxX - minX) * nz;
+    const ph = (maxY - minY) * nz;
+    const px = (vw - pw) / 2 - minX * nz;
+    const py = (vh - ph) / 2 - minY * nz;
+    panRef.current  = { x:px, y:py };
+    zoomRef.current = nz;
+    applyT(px, py, nz);
+    setZoomPct(Math.round(nz * 100));
+  }
+
   function runLayout(mode) {
     if (running) return;
     const m = mode || layoutMode;
@@ -4476,11 +4527,9 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
       posRef.current = np;
       setPos({ ...np });
       onSavePositions(np);
-      panRef.current  = { x:0, y:0 };
-      zoomRef.current = 1;
-      setZoomPct(100);
-      applyT(0, 0, 1);
       setRunning(false);
+      // Fit all cards into view after layout — small extra delay lets DOM settle
+      setTimeout(() => fitToView(cp), 30);
     }, 60);
   }
 
@@ -4696,14 +4745,25 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
       onMouseDown={startPan}
       onTouchStart={onTouchStart}
     >
-      {/* ── HUD Toolbar top-left ── */}
-      <div style={{position:"absolute",top:14,left:14,zIndex:20,display:"flex",gap:6,flexWrap:"wrap"}}>
+      {/* ── HUD Toolbar top-left: layout modes ── */}
+      <div style={{position:"absolute",top:14,left:14,zIndex:20,display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
         {[["stack","▦ Stack"],["tree","⊤ Árbol"],["micelio","◉ Red"]].map(([m,label])=>(
           <button key={m} className={`hud-btn${layoutMode===m?" hud-btn-active":""}`}
             onClick={()=>{setLayoutMode(m);runLayout(m);}} disabled={running}>
             {label}
           </button>
         ))}
+        <div style={{width:1,height:16,background:"var(--card-border)",margin:"0 2px"}}/>
+        <button className="hud-btn" title="Centrar vista"
+          onClick={()=>fitToView()} disabled={running || !Object.keys(posRef.current.cards).length}>
+          ⊙ Centrar
+        </button>
+        {onAddCard && (
+          <button className="hud-btn" title="Nueva tarjeta"
+            onClick={onAddCard} style={{fontWeight:600}}>
+            + Tarjeta
+          </button>
+        )}
         {running && (
           <span style={{fontFamily:"var(--mono)",fontSize:10,letterSpacing:".1em",
             color:"var(--mc)",padding:"6px 0",textTransform:"uppercase",opacity:0.7}}>
@@ -4712,20 +4772,20 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
         )}
       </div>
 
-      {/* ── HUD zoom + hint bottom-right ── */}
+      {/* ── HUD zoom bottom-right ── */}
       <div style={{position:"absolute",bottom:14,right:14,zIndex:20,
         fontFamily:"var(--mono)",fontSize:10,letterSpacing:".13em",
-        color: T.ink3,
-        background: T.bgPanel,
-        border: `1px solid ${T.border2}`,
-        backdropFilter:"blur(8px)",padding:"8px 12px",lineHeight:1.7,pointerEvents:"none"}}>
-        <div style={{color: T.ink2,fontWeight:700}}>
-          ZOOM · {zoomPct}%
+        color:"var(--ink-3)",
+        background:"var(--card)",
+        border:"1px solid var(--card-border)",
+        boxShadow:"var(--shadow-1)",
+        borderRadius:8,padding:"8px 12px",lineHeight:1.7}}>
+        <div style={{color:"var(--ink-2)",fontWeight:700,marginBottom:4}}>
+          {zoomPct}%
         </div>
-        <div>DRAG · WHEEL · CLICK</div>
-        <div style={{display:"flex",gap:5,marginTop:4,pointerEvents:"auto"}}>
+        <div style={{display:"flex",gap:5}}>
           <button onClick={()=>zoomStep(-1)} className="hud-btn" style={{padding:"2px 8px",fontSize:12,letterSpacing:0}}>−</button>
-          <button onClick={resetZoom} className="hud-btn" style={{padding:"2px 8px",fontSize:10}}>↺</button>
+          <button onClick={()=>fitToView()} className="hud-btn" style={{padding:"2px 6px",fontSize:10,letterSpacing:0}} title="Encuadrar todo">↔</button>
           <button onClick={()=>zoomStep(+1)} className="hud-btn" style={{padding:"2px 8px",fontSize:12,letterSpacing:0}}>+</button>
         </div>
       </div>
