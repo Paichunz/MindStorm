@@ -255,116 +255,185 @@ async function dbSaveBoardData(boardId, data) {
   return { ...data, lastUpdated: now };
 }
 
-// ─── AI HELPER — Google Gemini (gratis, sin tarjeta de crédito) ───────────────
+// ─── AI HELPER ────────────────────────────────────────────────────────────────
+// Provider 1: Google Gemini (gratis, sin tarjeta)
+// Provider 2: Groq (gratis, 14 400 req/día, llama-3.3-70b)
 const GEMINI_MODEL = "gemini-2.0-flash";
 function getAIKey()     { return getL("mindstorm-apikey", ""); }
 function saveAIKey(k)   { setL("mindstorm-apikey", k.trim()); }
+function getGroqKey()   { return getL("mindstorm-groqkey", ""); }
+function saveGroqKey(k) { setL("mindstorm-groqkey", k.trim()); }
 
-async function callAI(system, userMessages, maxTokens = 1200) {
-  const key = getAIKey();
-  if (!key) throw Object.assign(new Error("NO_KEY"), { code:"NO_KEY" });
-  const prompt = Array.isArray(userMessages)
-    ? (userMessages[userMessages.length - 1]?.content || "")
-    : userMessages;
-
-  // Model pool — only models confirmed available on v1beta/generateContent.
-  // On 429, wait and retry the same model once before moving to the next.
-  const models = [
-    GEMINI_MODEL,            // gemini-2.0-flash       — primary (15 RPM free)
-    "gemini-2.0-flash-lite", // lighter, higher RPM (30 RPM free)
-  ];
-  let lastErr = null;
-
-  for (const model of models) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-
-    // Single attempt per model — no internal retry (UI handles countdown)
-    let res;
-    try {
-      res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: system }] },
-          contents: [{ role:"user", parts:[{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 },
-        }),
-      });
-    } catch {
-      throw Object.assign(new Error("CONNECTION_ERROR"), { code:"API_ERROR",
-        detail: "Sin conexión a internet o error de red." });
-    }
-
-    if (res.ok) {
-      const d = await res.json();
-      return d.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("") || "";
-    }
-
-    const errBody = await res.json().catch(() => ({}));
-    const msg = errBody?.error?.message || "";
-
-    if (res.status === 403 || (res.status === 400 && /api.key|invalid.key/i.test(msg))) {
-      throw Object.assign(new Error("INVALID_KEY"), { code:"INVALID_KEY" });
-    }
-    if (res.status === 429) {
-      // Gemini returns RESOURCE_EXHAUSTED for both RPM and daily quota.
-      // Daily quota messages typically mention "quota" or "GenerateContent".
-      const isDailyQuota = /quota|day|daily/i.test(msg);
-      lastErr = isDailyQuota ? "daily_quota" : "rate_limit";
-      continue; // try next model
-    }
-    // Any other error (404, 500…): try next model
-    lastErr = msg || `error_${res.status}`;
-  }
-
-  if (lastErr === "daily_quota") {
-    throw Object.assign(new Error("DAILY_QUOTA"), { code:"DAILY_QUOTA",
-      detail: "Cupo diario gratuito agotado. Se reinicia a medianoche (UTC). Puedes continuar mañana o verificar tu cuota en aistudio.google.com." });
-  }
-  if (lastErr === "rate_limit") {
-    throw Object.assign(new Error("RATE_LIMIT"), { code:"RATE_LIMIT",
-      detail: "Límite por minuto alcanzado. Espera el contador e intenta de nuevo." });
-  }
-  throw Object.assign(new Error("API_ERROR"), { code:"API_ERROR",
-    detail: lastErr || "Modelo no disponible." });
+// Classify a Gemini 429 error.
+// BUG HISTORY: "/quota|day|daily/i" matched the generic RPM message
+// "Resource has been exhausted (e.g. check quota)." — classifying RPM limits
+// as daily quota and showing a 6-hour countdown when 65s was enough.
+// Fix: daily quota requires explicit "daily" or "per.?day" in the message.
+function geminiErrType(msg) {
+  if (/\bdaily\b|per.?day|free.?tier|billing|plan/i.test(msg)) return "daily_quota";
+  return "rate_limit"; // includes generic "Resource has been exhausted"
 }
 
-// Small reusable key-setup widget rendered inside AI panels when no key exists
+async function callGemini(system, prompt, maxTokens) {
+  const key = getAIKey();
+  if (!key) return null; // no key → skip
+  const models = ["gemini-2.0-flash", "gemini-2.0-flash-lite"];
+  let lastErr = null;
+  for (const model of models) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    let res;
+    try { res = await fetch(url, { method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ system_instruction:{parts:[{text:system}]},
+        contents:[{role:"user",parts:[{text:prompt}]}],
+        generationConfig:{maxOutputTokens:maxTokens,temperature:0.7} }) });
+    } catch { throw Object.assign(new Error("NET"), { code:"API_ERROR", detail:"Sin conexión." }); }
+    if (res.ok) {
+      const d = await res.json();
+      return d.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("") || "";
+    }
+    const errBody = await res.json().catch(()=>({}));
+    const msg = errBody?.error?.message || "";
+    if (res.status===403 || (res.status===400 && /api.key|invalid.key/i.test(msg)))
+      throw Object.assign(new Error("INVALID_KEY"), { code:"INVALID_KEY" });
+    if (res.status===429) { lastErr = geminiErrType(msg); continue; }
+    lastErr = msg || `error_${res.status}`;
+  }
+  return { _err: lastErr }; // signal caller with error type
+}
+
+async function callGroq(system, prompt, maxTokens) {
+  const key = getGroqKey();
+  if (!key) return null; // no key → skip
+  let res;
+  try { res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method:"POST", headers:{"Content-Type":"application/json","Authorization":`Bearer ${key}`},
+    body: JSON.stringify({ model:"llama-3.3-70b-versatile",
+      messages:[{role:"system",content:system},{role:"user",content:prompt}],
+      max_tokens:maxTokens, temperature:0.7 }) });
+  } catch { return null; } // network error → fall through
+  if (res.ok) {
+    const d = await res.json();
+    return d.choices?.[0]?.message?.content || "";
+  }
+  if (res.status===401) throw Object.assign(new Error("INVALID_KEY"), { code:"INVALID_KEY", detail:"Clave Groq inválida." });
+  return null; // other error → fall through
+}
+
+async function callAI(system, userMessages, maxTokens = 1200) {
+  const hasGemini = !!getAIKey(), hasGroq = !!getGroqKey();
+  if (!hasGemini && !hasGroq)
+    throw Object.assign(new Error("NO_KEY"), { code:"NO_KEY" });
+
+  const prompt = Array.isArray(userMessages)
+    ? (userMessages[userMessages.length-1]?.content || "") : userMessages;
+
+  // Try Gemini first, then Groq as fallback
+  if (hasGemini) {
+    const result = await callGemini(system, prompt, maxTokens);
+    if (typeof result === "string") return result; // success
+    if (result?._err === "daily_quota") {
+      // Try Groq before giving up on daily quota
+      if (hasGroq) {
+        const gr = await callGroq(system, prompt, maxTokens);
+        if (typeof gr === "string") return gr;
+      }
+      throw Object.assign(new Error("DAILY_QUOTA"), { code:"DAILY_QUOTA",
+        detail: "Cupo diario de Gemini agotado. El reinicio es a medianoche (hora del Pacífico, UTC-7/8), no UTC." +
+          (hasGroq ? "" : " Configura una clave Groq gratuita para evitar este límite.") });
+    }
+    // rate_limit or generic error → try Groq immediately
+    if (hasGroq) {
+      const gr = await callGroq(system, prompt, maxTokens);
+      if (typeof gr === "string") return gr;
+    }
+    // Both failed
+    if (result?._err === "rate_limit")
+      throw Object.assign(new Error("RATE_LIMIT"), { code:"RATE_LIMIT",
+        detail:"Límite por minuto de Gemini alcanzado. Espera 65s o configura una clave Groq." });
+    throw Object.assign(new Error("API_ERROR"), { code:"API_ERROR",
+      detail: result?._err || "Modelo no disponible." });
+  }
+
+  // Only Groq configured
+  const gr = await callGroq(system, prompt, maxTokens);
+  if (typeof gr === "string") return gr;
+  throw Object.assign(new Error("RATE_LIMIT"), { code:"RATE_LIMIT",
+    detail:"Límite de Groq alcanzado. Intenta de nuevo en un momento." });
+}
+
+// Key-setup widget — supports Gemini (primary) + Groq (fallback, no daily limit)
 function AIKeySetup({ onSaved }) {
-  const [val, setVal] = useState("");
-  const [err, setErr] = useState("");
+  const [tab, setTab]         = useState("gemini"); // "gemini" | "groq"
+  const [val, setVal]         = useState("");
+  const [err, setErr]         = useState("");
+  const hasGemini = !!getAIKey(), hasGroq = !!getGroqKey();
+
   function save() {
     const k = val.trim();
     if (k.length < 20) { setErr("Clave inválida — debe tener más de 20 caracteres"); return; }
-    saveAIKey(k); onSaved();
+    if (tab === "groq") { saveGroqKey(k); } else { saveAIKey(k); }
+    onSaved();
   }
+
+  const isGroq = tab === "groq";
+  const color  = isGroq ? T.blue : T.green;
+  const prefix = isGroq ? "gsk_…" : "AIzaSy…";
+
   return (
-    <div style={{ background:T.greenBg, border:"1px solid "+T.green+"44", borderRadius:12, padding:20, textAlign:"center" }}>
-      <div style={{ fontSize:28, marginBottom:8 }}>✦</div>
-      <div style={{ color:T.ink, fontWeight:700, fontSize:14, marginBottom:6 }}>Conectar IA gratuita</div>
-      <p style={{ color:T.ink3, fontSize:12, lineHeight:1.6, marginBottom:14 }}>
-        Usa <strong style={{color:T.green}}>Google Gemini</strong> — 100% gratis, sin tarjeta de crédito.<br/>
-        1. Ve a <strong style={{color:T.green}}>aistudio.google.com/apikey</strong><br/>
-        2. Inicia sesión con tu cuenta Google<br/>
-        3. Clic en <em>"Create API Key"</em> → copia el código
-      </p>
+    <div style={{ background:"var(--card)", border:`1px solid ${color}33`, borderRadius:12, padding:20 }}>
+      {/* Tab switcher */}
+      <div style={{ display:"flex", gap:6, marginBottom:14 }}>
+        {[["gemini","Gemini",T.green],["groq","Groq",T.blue]].map(([id,label,c])=>(
+          <button key={id} onClick={()=>{setTab(id);setVal("");setErr("");}}
+            style={{ flex:1, padding:"6px 0", borderRadius:7, border:`1px solid ${tab===id?c:T.border}`,
+              background:tab===id?c+"18":"transparent", color:tab===id?c:T.ink4,
+              fontFamily:"var(--mono)", fontSize:11, fontWeight:700, cursor:"pointer",
+              textTransform:"uppercase", letterSpacing:"0.06em" }}>
+            {label}{tab===id && (id==="gemini"?hasGemini:hasGroq) ? " ✓" : ""}
+          </button>
+        ))}
+      </div>
+
+      {isGroq ? (
+        <p style={{ color:T.ink3, fontSize:11, lineHeight:1.6, marginBottom:12 }}>
+          <strong style={{color:T.blue}}>Groq</strong> — gratis, sin límite diario relevante (14 400 req/día).<br/>
+          Sin tarjeta. Usa <strong>Llama 3.3 70B</strong> — calidad comparable a GPT-4.<br/>
+          1. Ve a <strong style={{color:T.blue}}>console.groq.com/keys</strong><br/>
+          2. Crea una clave → cópiala aquí.
+        </p>
+      ) : (
+        <p style={{ color:T.ink3, fontSize:11, lineHeight:1.6, marginBottom:12 }}>
+          <strong style={{color:T.green}}>Google Gemini</strong> — gratis, sin tarjeta.<br/>
+          Límite: ~15 req/min · se reinicia medianoche Pacífico (UTC-7/8).<br/>
+          1. Ve a <strong style={{color:T.green}}>aistudio.google.com/apikey</strong><br/>
+          2. Crea una clave → cópiala aquí.
+        </p>
+      )}
+
       <input
-        placeholder="AIzaSy…"
-        aria-label="Clave de API de Google Gemini"
+        key={tab}
+        placeholder={prefix}
         value={val}
-        onChange={e => { setVal(e.target.value); setErr(""); }}
-        onKeyDown={e => e.key==="Enter" && save()}
+        onChange={e=>{ setVal(e.target.value); setErr(""); }}
+        onKeyDown={e=>e.key==="Enter"&&save()}
         autoFocus
-        style={{ background:"rgba(255,255,255,0.08)", border:"1.5px solid "+(err?T.rose:T.green+"66"),
-          color:T.ink, padding:"10px 14px", borderRadius:9, fontFamily:"var(--mono)", fontSize:12,
-          width:"100%", outline:"none", marginBottom:err?4:12, boxSizing:"border-box" }}
+        style={{ background:"var(--paper)", border:`1.5px solid ${err?T.rose:color+"55"}`,
+          color:"var(--noir)", padding:"9px 12px", borderRadius:8, fontFamily:"var(--mono)",
+          fontSize:12, width:"100%", outline:"none", marginBottom:err?4:10, boxSizing:"border-box" }}
       />
-      {err && <div style={{ color:T.rose, fontSize:11, marginBottom:8, textAlign:"left" }}>{err}</div>}
+      {err && <div style={{ color:T.rose, fontSize:11, marginBottom:8 }}>{err}</div>}
       <button onClick={save}
-        style={{ background:T.green, color:"#fff", border:"none", borderRadius:8, padding:"9px 20px",
+        style={{ background:color, color:"#fff", border:"none", borderRadius:8, padding:"9px 0",
           fontWeight:700, fontSize:13, cursor:"pointer", fontFamily:"var(--sans)", width:"100%" }}>
-        Guardar y activar IA →
+        Guardar clave {isGroq?"Groq":"Gemini"} →
       </button>
+
+      {(hasGemini||hasGroq) && (
+        <div style={{ marginTop:10, color:T.ink4, fontSize:10, fontFamily:"var(--mono)",
+          textAlign:"center", letterSpacing:"0.05em" }}>
+          {[hasGemini&&"Gemini ✓", hasGroq&&"Groq ✓"].filter(Boolean).join(" · ")} configuradas
+        </div>
+      )}
     </div>
   );
 }
