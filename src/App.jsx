@@ -575,7 +575,7 @@ function getThemeCSS(id) {
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const GLOBAL_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300..900;1,300..900&family=Quicksand:wght@300..700&family=JetBrains+Mono:wght@400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300..900;1,300..900&family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Quicksand:wght@300..700&family=JetBrains+Mono:wght@400;500&display=swap');
   :root {
     --serif: 'Fraunces', Georgia, serif;
     /* Editorial Cream tokens */
@@ -601,6 +601,9 @@ const GLOBAL_CSS = `
     --olive-soft: #DCE2C8;
     --sky:        #6B91B3;
     --sky-soft:   #D5DFE8;
+    --laton:      #B08C5A;
+    --laton-soft: #F0E6D4;
+    --dark-warm:  #1C1513;
     --line:       #2a2620;
     --line-soft:  rgba(42,38,32,0.18);
     --line-dot:   rgba(42,38,32,0.10);
@@ -618,7 +621,7 @@ const GLOBAL_CSS = `
     --mg: #3DAA6C;
     --mr: #D04060;
     --mb0: #141210;
-    --mb1: #1C1A18;
+    --mb1: #1C1513;
     --mb2: #242220;
     --ink0: #F0EDE8;
     --ink1: #9C9488;
@@ -645,7 +648,7 @@ const GLOBAL_CSS = `
   .mcard-glyph { flex:none; color:var(--ink-3); font-size:10px; width:12px; }
   .mcard-title { flex:1; font-family:var(--serif); font-style:italic; font-size:14px; font-weight:500; letter-spacing:-0.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink-0); }
   .mcard-dot { width:7px; height:7px; border-radius:50%; flex:none; opacity:0.85; }
-  .mcard-body { padding:10px 13px; font-size:12px; line-height:1.6; color:var(--ink-1); font-family:var(--sans); }
+  .mcard-body { padding:10px 13px; font-size:12px; line-height:1.65; color:var(--ink-1); font-family:var(--body); }
   .mcard-body p { margin-bottom:8px; }
   .mcard-tags { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px; }
   .mtag { font-size:10px; font-weight:600; padding:2px 8px; border-radius:var(--r-pill); border:1px solid var(--paper-3); color:var(--ink-2); font-family:var(--sans); letter-spacing:0.04em; }
@@ -667,7 +670,7 @@ const GLOBAL_CSS = `
   .hud-btn:hover { box-shadow:var(--shadow-2); transform:translateY(-1px); color:var(--ink-0); }
   .hud-btn-active { background:var(--noir) !important; border-color:var(--noir) !important; color:var(--paper) !important; box-shadow:none !important; transform:none !important; }
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-  :root { --sans:'Quicksand',sans-serif; --mono:'JetBrains Mono',monospace; }
+  :root { --sans:'Quicksand',sans-serif; --body:'Lora',Georgia,serif; --mono:'JetBrains Mono',monospace; }
   html, body { background:var(--paper); color:var(--ink-0); font-family:var(--sans); min-height:100vh; }
 
   /* ── Dot grid — referencia n8n, tenue como papel punteado ── */
@@ -1350,10 +1353,9 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
 
 function Sidebar({ user, boards, onOpen, onSignOut }) {
   return (
-    <div style={{ width:230, background:"#1C1A18", borderRight:"1px solid rgba(255,255,255,0.06)",
+    <div style={{ width:230, background:"#1C1513", borderRight:"1px solid rgba(255,255,255,0.05)",
       padding:"20px 12px", display:"flex", flexDirection:"column", flexShrink:0,
-      backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)",
-      boxShadow:"2px 0 24px rgba(0,0,0,.35)" }}>
+      boxShadow:"2px 0 20px rgba(0,0,0,.30)" }}>
       <div style={{ padding:"8px 8px 4px", marginBottom:18 }}>
         <MindStormLogo size="sm" light={false} />
       </div>
@@ -3766,13 +3768,12 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
   }
 
   return (
-    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,5,.65)", display:"flex", alignItems:"flex-end", justifyContent:"flex-end", zIndex:200, WebkitBackdropFilter:"blur(8px)", backdropFilter:"blur(8px)", padding:20 }}>
-      <div style={{ background:T.bgPanel, border:`1px solid rgba(232,82,0,0.18)`,
+    <div style={{ position:"fixed", inset:0, background:"rgba(26,24,20,0.55)", display:"flex", alignItems:"flex-end", justifyContent:"flex-end", zIndex:200, padding:20 }}>
+      <div style={{ background:"var(--card-soft)", border:"1px solid var(--card-border)",
         borderRadius:16, width:"100%", maxWidth:530, maxHeight:"90vh", display:"flex", flexDirection:"column",
-        boxShadow:"0 30px 80px rgba(0,0,0,.55), 0 0 40px rgba(232,82,0,0.06)",
-        backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)",
+        boxShadow:"var(--shadow-3)",
         animation:"slideIn .3s cubic-bezier(.16,1,.3,1)" }}>
-        <div style={{ padding:"17px 20px 14px", borderBottom:"1px solid rgba(255,255,255,0.07)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+        <div style={{ padding:"17px 20px 14px", borderBottom:"1px solid var(--card-border)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <div>
             <div style={{ display:"flex", gap:8, alignItems:"center" }}>
               <span style={{ fontSize:17 }}>💡</span>
@@ -3784,9 +3785,9 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
           </div>
           <OGhostBtn small onClick={onClose}>× Cerrar</OGhostBtn>
         </div>
-        <div style={{ background:T.accentBg, borderBottom:`1px solid ${T.accent}14`, padding:"10px 18px", display:"flex", gap:8 }}>
-          <span style={{ color:T.accent, fontSize:13, flexShrink:0 }}>ℹ</span>
-          <p style={{ color:T.ink3, fontSize:12, lineHeight:1.5 }}>Las conexiones se guardan permanentemente. Las aprobadas muestran 🔗 en las tarjetas.</p>
+        <div style={{ background:"var(--paper-2)", borderBottom:"1px solid var(--card-border)", padding:"10px 18px", display:"flex", gap:8 }}>
+          <span style={{ color:"var(--ink-3)", fontSize:13, flexShrink:0 }}>ℹ</span>
+          <p style={{ color:"var(--ink-2)", fontSize:12, lineHeight:1.5, fontFamily:"var(--body)" }}>Las conexiones se guardan permanentemente. Las aprobadas muestran 🔗 en las tarjetas.</p>
         </div>
         <div style={{ flex:1, overflow:"auto", padding:"16px 18px" }}>
           {status==="no_key" ? (
@@ -3918,13 +3919,12 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
   }
 
   return (
-    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,5,.65)", display:"flex", alignItems:"flex-end", justifyContent:"flex-end", zIndex:200, WebkitBackdropFilter:"blur(8px)", backdropFilter:"blur(8px)", padding:20 }}>
-      <div style={{ background:"rgba(13,13,30,0.95)", border:`1px solid ${cat.color}33`,
+    <div style={{ position:"fixed", inset:0, background:"rgba(26,24,20,0.55)", display:"flex", alignItems:"flex-end", justifyContent:"flex-end", zIndex:200, padding:20 }}>
+      <div style={{ background:"var(--card-soft)", border:"1px solid var(--card-border)",
         borderRadius:16, width:"100%", maxWidth:490, maxHeight:"88vh", display:"flex", flexDirection:"column",
-        boxShadow:`0 30px 80px rgba(0,0,0,.6), 0 0 40px ${cat.color}12`,
-        backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)",
+        boxShadow:"var(--shadow-3)",
         animation:"slideIn .3s cubic-bezier(.16,1,.3,1)" }}>
-        <div style={{ padding:"17px 20px 12px", borderBottom:"1px solid rgba(255,255,255,0.07)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+        <div style={{ padding:"17px 20px 12px", borderBottom:"1px solid var(--card-border)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <div>
             <div style={{ display:"flex", gap:8, alignItems:"center" }}>
               <span style={{ color:cat.color, fontSize:16 }}>✦</span>
@@ -3975,7 +3975,7 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
           {(status==="done"||status==="error") && (
             <div>
               {scores && (
-                <div style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:14, padding:"16px", marginBottom:20 }}>
+                <div style={{ background:"var(--card)", border:"1px solid var(--card-border)", borderRadius:14, padding:"16px", marginBottom:20, boxShadow:"var(--shadow-1)" }}>
                   <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:14 }}>
                     {[["potencial","Potencial"],["viabilidad","Viabilidad"],["diferenciacion","Diferenc."],["madurez","Madurez"]].map(([k,l]) => (
                       <div key={k} style={{ flex:"1 0 70px", textAlign:"center" }}>
@@ -3983,14 +3983,14 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
                           {scores[k]}<span style={{ fontSize:11, color:T.ink4, fontWeight:400 }}>/10</span>
                         </div>
                         <div style={{ color:T.ink4, fontSize:9, fontFamily:"var(--mono)", marginTop:1, textTransform:"uppercase", letterSpacing:"0.06em" }}>{l}</div>
-                        <div style={{ height:3, background:"rgba(255,255,255,0.06)", borderRadius:2, marginTop:6 }}>
+                        <div style={{ height:3, background:"var(--paper-3)", borderRadius:2, marginTop:6 }}>
                           <div style={{ height:"100%", width:((scores[k]||0)*10)+"%", background:`linear-gradient(90deg,${cat.color},${cat.color}88)`, borderRadius:2, transition:"width .7s cubic-bezier(.22,1,.36,1)", boxShadow:`0 0 6px ${cat.color}55` }} />
                         </div>
                       </div>
                     ))}
                   </div>
                   {scores.recomendacion && (
-                    <div style={{ textAlign:"center", paddingTop:12, borderTop:"1px solid rgba(255,255,255,0.06)" }}>
+                    <div style={{ textAlign:"center", paddingTop:12, borderTop:"1px solid var(--card-border)" }}>
                       <span style={{ background:`${REC_COLOR[scores.recomendacion]||cat.color}18`, color:REC_COLOR[scores.recomendacion]||cat.color, fontWeight:800, fontSize:11, padding:"6px 18px", borderRadius:99, letterSpacing:"0.08em", textTransform:"uppercase", border:`1px solid ${REC_COLOR[scores.recomendacion]||cat.color}44` }}>
                         → {scores.recomendacion}
                       </span>
@@ -3999,18 +3999,18 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
                 </div>
               )}
               {status === "error" ? (
-                <div style={{ background:"rgba(255,77,126,0.08)", border:"1px solid rgba(255,77,126,0.25)", borderRadius:12, padding:"20px", textAlign:"center" }}>
+                <div style={{ background:"var(--terra-soft)", border:"1px solid var(--terra)44", borderRadius:12, padding:"20px", textAlign:"center" }}>
                   <div style={{ fontSize:32, marginBottom:10 }}>⚠</div>
                   <div style={{ color:T.rose, fontWeight:700, fontSize:14, marginBottom:6 }}>Error en el análisis</div>
                   <div style={{ color:T.ink3, fontSize:13, lineHeight:1.55 }}>{result}</div>
                 </div>
               ) : (
-                <div style={{ color:T.ink2, fontSize:13, lineHeight:1.75 }}>
+                <div style={{ color:"var(--ink-1)", fontSize:13, lineHeight:1.75, fontFamily:"var(--body)" }}>
                   {result.split("\n").map((line,i) => {
                     const isH = line.startsWith("##")||(line.startsWith("**")&&line.endsWith("**"));
                     const clean = line.replace(/\*\*/g,"").replace(/^#+\s*/,"");
-                    if (isH) return <div key={i} style={{ color:T.ink, fontWeight:700, fontSize:14, marginTop:18, marginBottom:5, paddingTop:12, borderTop:"1px solid "+T.border }}>{clean}</div>;
-                    if (line.startsWith("- ")||line.startsWith("• ")) return <div key={i} style={{ paddingLeft:12, marginBottom:5, color:T.ink3, marginLeft:4, background:T.accentBg, border:`1px solid ${T.accent}22`, borderRadius:5, paddingTop:3, paddingBottom:3 }}>{line.slice(2)}</div>;
+                    if (isH) return <div key={i} style={{ color:"var(--ink-0)", fontFamily:"var(--serif)", fontStyle:"italic", fontWeight:500, fontSize:14, marginTop:18, marginBottom:5, paddingTop:12, borderTop:"1px solid var(--card-border)" }}>{clean}</div>;
+                    if (line.startsWith("- ")||line.startsWith("• ")) return <div key={i} style={{ paddingLeft:12, marginBottom:5, color:"var(--ink-2)", marginLeft:4, background:"var(--paper-2)", border:"1px solid var(--paper-3)", borderRadius:5, paddingTop:3, paddingBottom:3 }}>{line.slice(2)}</div>;
                     if (!line.trim()) return <div key={i} style={{ height:8 }} />;
                     return <div key={i} style={{ marginBottom:3 }}>{line}</div>;
                   })}
