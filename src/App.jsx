@@ -734,7 +734,8 @@ const GLOBAL_CSS = `
   @keyframes spin      { to { transform:rotate(360deg); } }
   @keyframes fadeUp    { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
   @keyframes slideIn   { from{opacity:0;transform:translateX(26px)} to{opacity:1;transform:translateX(0)} }
-  @keyframes scaleIn   { from{opacity:0;transform:scale(.93)} to{opacity:1;transform:scale(1)} }
+  @keyframes scaleIn      { from{opacity:0;transform:scale(.93)} to{opacity:1;transform:scale(1)} }
+  @keyframes stickerPulse { 0%{box-shadow:0 0 0 0 var(--terra)} 70%{box-shadow:0 0 0 6px transparent} 100%{box-shadow:0 0 0 0 transparent} }
   /* glowPulse: animate opacity on a pseudo-element instead of box-shadow (compositor-only) */
   @keyframes glowPulse { 0%,100%{opacity:.45} 50%{opacity:1} }
   @keyframes borderGlow{ 0%,100%{opacity:.4} 50%{opacity:1} }
@@ -916,6 +917,8 @@ const SK = {
   user:        "creativeboard-user",
   myboards:    "creativeboard-myboards",
   activeBoard: "creativeboard-activeboard",
+  stickerSeen: "ms-sticker-tab-seen",   // set to "1" after first sticker tab click
+  boardTipSeen:"ms-board-tip-seen",     // set to "1" after tip banner dismissed
 };
 
 export default function App() {
@@ -1991,6 +1994,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
   const [filterType, setFilterType]     = useState("");
   const [filterAuthor, setFilterAuthor] = useState("");
   const [concept, setConcept]           = useState({ title:board.conceptTitle||"", desc:board.conceptDesc||"" });
+  const [boardTipDismissed, setBoardTipDismissed] = useState(() => !!getL(SK.boardTipSeen, null));
   const cat = CATEGORIES.find(c => c.id===board.categoryId) || CATEGORIES[6];
   const isMobile = useIsMobile();
 
@@ -2496,6 +2500,25 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                   </button>
                 </>
               )}
+            </div>
+          )}
+
+          {/* Sticker discovery tip — shown once until dismissed */}
+          {!boardTipDismissed && viewMode === "kanban" && (
+            <div style={{ margin:"0 16px 0", padding:"10px 14px", background:T.amberBg,
+              border:`1px solid ${T.amber}44`, borderRadius:8,
+              display:"flex", gap:10, alignItems:"center", flexShrink:0 }}>
+              <span style={{ color:T.amber, fontSize:14, flexShrink:0 }}>▤</span>
+              <p style={{ color:T.ink3, fontSize:12, lineHeight:1.5, flex:1 }}>
+                <strong style={{ color:T.amber }}>Stickers de revisión:</strong>{" "}
+                abre cualquier tarjeta y ve a la pestaña{" "}
+                <strong style={{ color:T.ink }}>Stickers</strong> para agregar{" "}
+                opiniones, complementos, preguntas, objeciones o referencias tipificadas a la tarjeta de otro colaborador.
+              </p>
+              <button onClick={() => { setBoardTipDismissed(true); setL(SK.boardTipSeen, "1"); }}
+                style={{ background:"none", border:"none", color:T.ink4, cursor:"pointer",
+                  fontSize:16, lineHeight:1, flexShrink:0, padding:"0 4px" }}
+                aria-label="Cerrar tip">×</button>
             </div>
           )}
 
@@ -3227,6 +3250,7 @@ function EditCardModal({ card, cardComments, user, onSave, onDelete, onClose, on
   const [comment, setComment] = useState("");
   const [confirmDel, setConfirmDel] = useState(false);
   const fileRef = useRef();
+  const [stickerTabSeen, setStickerTabSeen] = useState(() => !!getL(SK.stickerSeen, null));
 
   const safeStickers = Array.isArray(card.stickers) ? card.stickers : [];
   const stickerCount = safeStickers.filter(s => s.status !== "discarded").length;
@@ -3267,12 +3291,31 @@ function EditCardModal({ card, cardComments, user, onSave, onDelete, onClose, on
           isOwner ? ["edit", "✎ Editar"] : null,
           ["comments", "◇ Comentarios" + (cardComments.length ? ` (${cardComments.length})` : "")],
           ["stickers", "▤ Stickers" + (stickerCount > 0 ? ` (${stickerCount})` : "")],
-        ].filter(Boolean).map(([id, lbl]) => (
-          <button key={id} onClick={() => setTab(id)}
-            style={{ background:"none", border:"none", borderBottom:"2px solid "+(tab===id?T.accent:"transparent"), color:tab===id?T.accent:T.ink3, padding:"8px 14px", cursor:"pointer", fontSize:13, fontWeight:tab===id?700:400, fontFamily:"var(--sans)", marginBottom:-1, transition:"all .15s" }}>
-            {lbl}
-          </button>
-        ))}
+        ].filter(Boolean).map(([id, lbl]) => {
+          const isSticker = id === "stickers";
+          const showPulse = isSticker && !stickerTabSeen;
+          return (
+            <button key={id}
+              onClick={() => {
+                setTab(id);
+                if (isSticker && !stickerTabSeen) {
+                  setStickerTabSeen(true);
+                  setL(SK.stickerSeen, "1");
+                }
+              }}
+              style={{ background:"none", border:"none", borderBottom:"2px solid "+(tab===id?T.accent:"transparent"),
+                color:tab===id?T.accent:T.ink3, padding:"8px 14px", cursor:"pointer", fontSize:13,
+                fontWeight:tab===id?700:400, fontFamily:"var(--sans)", marginBottom:-1,
+                transition:"all .15s", position:"relative", display:"flex", alignItems:"center", gap:5 }}>
+              {lbl}
+              {showPulse && (
+                <span style={{ width:6, height:6, borderRadius:"50%", background:T.amber,
+                  boxShadow:`0 0 0 0 ${T.amber}`, animation:"stickerPulse 1.5s infinite",
+                  display:"inline-block", flexShrink:0 }} />
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* READ-ONLY view of card content for non-owners */}
@@ -3365,13 +3408,40 @@ function StickerTree({ card, user, onAdd, onUpdate }) {
 
   return (
     <div>
-      {/* Explanation */}
-      <div style={{ background:T.accentBg, border:"1px solid "+T.accent+"33", borderRadius:8, padding:"10px 14px", marginBottom:16, display:"flex", gap:8 }}>
-        <span style={{ color:T.accent, fontSize:14, flexShrink:0 }}>▤</span>
-        <p style={{ color:T.accent, fontSize:12, lineHeight:1.5 }}>
-          Los stickers son anotaciones de otros usuarios conectadas a esta tarjeta. Se organizan en árbol — cada sticker puede recibir respuestas.
-        </p>
-      </div>
+      {/* Explanation — richer when empty, compact when there are stickers */}
+      {stickers.length === 0 ? (
+        <div style={{ background:"var(--paper-2)", border:"1px solid var(--card-border)", borderRadius:10, padding:"14px 16px", marginBottom:16 }}>
+          <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:8 }}>
+            <span style={{ color:T.amber, fontSize:15 }}>▤</span>
+            <span style={{ color:T.ink, fontWeight:700, fontSize:13 }}>Revisión colaborativa con Stickers</span>
+          </div>
+          <p style={{ color:T.ink3, fontSize:12, lineHeight:1.6, marginBottom:10 }}>
+            Los stickers son anotaciones tipificadas que cualquier colaborador puede agregar a la tarjeta de otro. A diferencia de los comentarios libres, cada sticker declara su intención:
+          </p>
+          <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+            {[
+              [STICKER_COLOR?.["opinión"]||T.blue,        "Opinión",     "Perspectiva subjetiva del colaborador"],
+              [STICKER_COLOR?.["complemento"]||T.green,   "Complemento", "Información adicional que enriquece la idea"],
+              [STICKER_COLOR?.["pregunta"]||T.amber,      "Pregunta",    "Duda que el autor principal debe resolver"],
+              [STICKER_COLOR?.["objeción"]||T.rose,       "Objeción",    "Contradicción o problema estructural detectado"],
+              [STICKER_COLOR?.["referencia"]||T.accent,   "Referencia",  "Fuente externa relevante para esta tarjeta"],
+            ].map(([color, type, desc]) => (
+              <div key={type} style={{ display:"flex", gap:8, alignItems:"baseline" }}>
+                <span style={{ width:7, height:7, borderRadius:"50%", background:color, flexShrink:0, marginTop:5 }} />
+                <span style={{ color, fontWeight:700, fontSize:11, fontFamily:"var(--mono)", minWidth:78, flexShrink:0 }}>{type}</span>
+                <span style={{ color:T.ink4, fontSize:11, lineHeight:1.4 }}>{desc}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div style={{ background:T.accentBg, border:"1px solid "+T.accent+"22", borderRadius:7, padding:"8px 12px", marginBottom:12, display:"flex", gap:8, alignItems:"center" }}>
+          <span style={{ color:T.accent, fontSize:12, flexShrink:0 }}>▤</span>
+          <p style={{ color:T.ink3, fontSize:11, lineHeight:1.4 }}>
+            Stickers de revisión — se organizan en árbol. Cada uno puede recibir respuestas.
+          </p>
+        </div>
+      )}
 
       {/* Card summary (what this is attached to) */}
       <div style={{ background:TYPE_BG[card.type], border:"1px solid "+TYPE_COLOR[card.type]+"30", borderRadius:8, padding:"10px 14px", marginBottom:16 }}>
