@@ -356,7 +356,7 @@ async function callAI(system, userMessages, maxTokens = 1200) {
         if (typeof gr === "string") return gr;
       }
       throw Object.assign(new Error("DAILY_QUOTA"), { code:"DAILY_QUOTA",
-        detail: "Cupo diario de Gemini agotado. El reinicio es a medianoche (hora del Pacífico, UTC-7/8), no UTC." +
+        detail: "Cupo diario de Gemini agotado. El reinicio es a medianoche UTC." +
           (hasGroq ? "" : " Configura una clave Groq gratuita para evitar este límite.") });
     }
     // rate_limit or generic error → try Groq immediately
@@ -422,7 +422,7 @@ function AIKeySetup({ onSaved }) {
       ) : (
         <p style={{ color:T.ink3, fontSize:11, lineHeight:1.6, marginBottom:12 }}>
           <strong style={{color:T.green}}>Google Gemini</strong> — gratis, sin tarjeta.<br/>
-          Límite: ~15 req/min · se reinicia medianoche Pacífico (UTC-7/8).<br/>
+          Límite: ~15 req/min · se reinicia medianoche UTC.<br/>
           1. Ve a <strong style={{color:T.green}}>aistudio.google.com/apikey</strong><br/>
           2. Crea una clave → cópiala aquí.
         </p>
@@ -2038,6 +2038,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
   const [toast, setToast]               = useState(null);
   const [saveStatus, setSaveStatus]     = useState(""); // "" | "saving" | "saved" | "error"
   const saveTimerRef                    = useRef(null);
+  const moveDebounceRef                 = useRef(null); // debounce timer for D&D card moves
   const [keyModal, setKeyModal]         = useState(false);
   const [readCard, setReadCard]         = useState(null);
   const [filterQuery, setFilterQuery]   = useState("");
@@ -2170,7 +2171,14 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
     setEditCard(null);
   }
 
-  async function moveCard(id, col) { await save(cards.map(c => c.id===id ? {...c, col} : c)); }
+  function moveCard(id, col) {
+    // Optimistic UI — update local state immediately
+    const newCards = cards.map(c => c.id===id ? {...c, col} : c);
+    setCards(newCards);
+    // Debounce the Supabase write: coalesces rapid D&D moves into one save
+    if (moveDebounceRef.current) clearTimeout(moveDebounceRef.current);
+    moveDebounceRef.current = setTimeout(() => { save(newCards); }, 600);
+  }
 
   async function addComment(cardId, text) {
     const comment = { id:genId(), cardId, author:user.name, text, ts:nowTs() };
@@ -2392,13 +2400,14 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
             <div style={{ width:24, height:1, background:"var(--paper-3)", margin:"4px 0" }} />
 
             <button onClick={() => setDocPanel(true)} title="Documento" aria-label="Abrir panel de documento"
-              style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
+              style={{ width:40, height:40, borderRadius:8, border:"none", cursor:"pointer",
                 background:"transparent", color:T.ink4,
-                fontSize:14, display:"flex", alignItems:"center", justifyContent:"center",
+                fontSize:13, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:1,
                 transition:"all .15s" }}
               onMouseEnter={e => { e.currentTarget.style.background="var(--paper-2)"; e.currentTarget.style.color=T.ink; }}
               onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color=T.ink4; }}>
               ▤
+              <span style={{ fontFamily:"var(--mono)", fontSize:7, letterSpacing:"0.04em", lineHeight:1 }}>doc</span>
             </button>
 
             {deletedCards.length > 0 && (
@@ -2420,11 +2429,12 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
 
             {cat.worldbuilding && (
               <button onClick={() => setWbPanel(true)} title="Worldbuilding" aria-label="Abrir panel de Worldbuilding"
-                style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
+                style={{ width:40, height:40, borderRadius:8, border:"none", cursor:"pointer",
                   background:T.amberBg, color:T.amber,
-                  fontSize:14, display:"flex", alignItems:"center", justifyContent:"center",
+                  fontSize:13, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:1,
                   transition:"all .15s" }}>
                 ◎
+                <span style={{ fontFamily:"var(--mono)", fontSize:7, letterSpacing:"0.04em", lineHeight:1 }}>world</span>
               </button>
             )}
 
@@ -2432,14 +2442,15 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
             <div style={{ width:24, height:1, background:"var(--paper-3)", margin:"4px 0" }} />
 
             <button onClick={() => setKeyModal(true)} title={getAIKey() ? "IA conectada — cambiar clave" : "Conectar IA"} aria-label={getAIKey() ? "IA conectada — cambiar clave API" : "Conectar IA — añadir clave API"}
-              style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
+              style={{ width:40, height:40, borderRadius:8, border:"none", cursor:"pointer",
                 background: getAIKey() ? T.greenBg : "transparent",
                 color: getAIKey() ? T.green : T.ink4,
-                fontSize:14, display:"flex", alignItems:"center", justifyContent:"center",
+                fontSize:13, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:1,
                 transition:"all .15s" }}
               onMouseEnter={e => { e.currentTarget.style.background=getAIKey()?T.greenBg:"var(--paper-2)"; e.currentTarget.style.color=getAIKey()?T.green:T.ink; }}
               onMouseLeave={e => { e.currentTarget.style.background=getAIKey()?T.greenBg:"transparent"; e.currentTarget.style.color=getAIKey()?T.green:T.ink4; }}>
               ⚿
+              <span style={{ fontFamily:"var(--mono)", fontSize:7, letterSpacing:"0.04em", lineHeight:1 }}>{getAIKey() ? "ia·on" : "ia·off"}</span>
             </button>
           </div>
         )}
@@ -2672,17 +2683,19 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                             fontFamily:"var(--mono)", border:"1px dashed var(--paper-3)",
                             borderRadius:10, marginTop:4 }}>sin resultados</div>
                         )}
-                        {addingTo !== col.id && (
+                        {/* Empty-state CTA — only shown when column has no cards */}
+                        {addingTo !== col.id && colCards.length === 0 && !hasFilter && (
                           <button onClick={() => setAddingTo(col.id)}
-                            style={{ width:"100%", marginTop:colCards.length?8:0,
-                              background:"transparent", border:"1px dashed var(--paper-3)",
-                              borderRadius:9, padding:"9px 0", cursor:"pointer", color:T.ink4,
+                            aria-label={`Añadir tarjeta en ${col.label}`}
+                            style={{ width:"100%", marginTop:0,
+                              background:"transparent", border:`1px dashed ${col.color}44`,
+                              borderRadius:9, padding:"14px 0", cursor:"pointer", color:col.color,
                               fontSize:12, fontFamily:"var(--sans)", transition:"all .15s",
-                              display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}
-                            onMouseEnter={e => { e.currentTarget.style.borderColor=`${col.color}55`; e.currentTarget.style.color=col.color; e.currentTarget.style.background=`${col.color}08`; }}
-                            onMouseLeave={e => { e.currentTarget.style.borderColor="var(--paper-3)"; e.currentTarget.style.color=T.ink4; e.currentTarget.style.background="transparent"; }}>
+                              display:"flex", alignItems:"center", justifyContent:"center", gap:6, opacity:0.65 }}
+                            onMouseEnter={e => { e.currentTarget.style.opacity="1"; e.currentTarget.style.background=`${col.color}08`; }}
+                            onMouseLeave={e => { e.currentTarget.style.opacity="0.65"; e.currentTarget.style.background="transparent"; }}>
                             <span style={{ fontSize:14, fontWeight:300, lineHeight:1 }}>+</span>
-                            <span>Nueva tarjeta</span>
+                            <span>Primera tarjeta</span>
                           </button>
                         )}
                       </div>
@@ -2780,6 +2793,24 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                   </span>
                 )}
               </button>
+
+              {/* UX-038: Hint de descubrimiento de conexiones — solo con 3+ tarjetas y sin conexiones */}
+              {activeCards.length >= 3 && connections.filter(c => c.status==="approved").length === 0 && (
+                <div style={{ marginTop:8, padding:"8px 10px", background:T.blueBg,
+                  border:`1px solid ${T.blue}28`, borderRadius:6 }}>
+                  <p style={{ color:T.ink3, fontSize:10, lineHeight:1.5, margin:"0 0 5px" }}>
+                    <strong style={{ color:T.blue }}>◈ {activeCards.length} ideas —</strong> ¿se conectan entre ellas?
+                  </p>
+                  <button onClick={() => setConnPanel(true)}
+                    style={{ background:"none", border:`1px solid ${T.blue}44`, color:T.blue,
+                      borderRadius:4, padding:"2px 8px", fontSize:10, cursor:"pointer",
+                      fontFamily:"var(--mono)", transition:"all .15s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background=T.blue; e.currentTarget.style.color="#fff"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background="none"; e.currentTarget.style.color=T.blue; }}>
+                    Buscar conexiones →
+                  </button>
+                </div>
+              )}
             </div>
 
             <div style={{ padding:"10px 14px", borderBottom:"1px solid var(--card-border)" }}>
@@ -2813,6 +2844,28 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 </>}
               </div>
             </div>
+
+            {/* ── UX-036: AI setup callout — solo si no hay clave configurada ── */}
+            {!getAIKey() && (
+              <div style={{ margin:"10px 10px 0", padding:"10px 12px", background:T.accentBg,
+                border:`1px solid ${T.accent}28`, borderRadius:8 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:5 }}>
+                  <span style={{ color:T.accent, fontSize:12 }}>✦</span>
+                  <span style={{ color:T.ink, fontWeight:700, fontSize:11 }}>Activa la IA</span>
+                </div>
+                <p style={{ color:T.ink3, fontFamily:"var(--sans)", fontSize:10, lineHeight:1.5, margin:"0 0 8px" }}>
+                  Conecta Gemini (gratis) para análisis de proyecto y worldbuilding.
+                </p>
+                <button onClick={() => setKeyModal(true)}
+                  style={{ width:"100%", background:T.accent, color:"var(--paper)", border:"none",
+                    borderRadius:5, padding:"5px 0", fontSize:11, fontWeight:700,
+                    fontFamily:"var(--sans)", cursor:"pointer", transition:"opacity .15s" }}
+                  onMouseEnter={e => e.currentTarget.style.opacity=".85"}
+                  onMouseLeave={e => e.currentTarget.style.opacity="1"}>
+                  Conectar IA →
+                </button>
+              </div>
+            )}
 
             <div style={{ flex:1, overflowY:"auto" }}>
               <button
@@ -2990,9 +3043,10 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
           )}
           <button onClick={e => { e.stopPropagation(); onEdit(); }} className="edit-ico"
             title={isOwner ? "Editar" : "Ver · Comentar · Sticker"}
+            aria-label={isOwner ? "Editar tarjeta" : "Ver tarjeta"}
             style={{ background:"transparent", border:"none", color:T.ink4, cursor:"pointer",
-              fontSize:12, padding:"1px 4px", borderRadius:4, flexShrink:0, transition:"all .12s",
-              lineHeight:1 }}
+              fontSize:12, padding:"2px 5px", borderRadius:4, flexShrink:0, transition:"all .12s",
+              lineHeight:1, minWidth:24, minHeight:24, display:"flex", alignItems:"center", justifyContent:"center" }}
             onMouseEnter={e => { e.currentTarget.style.color = T.ink; e.currentTarget.style.background = "var(--paper-2)"; }}
             onMouseLeave={e => { e.currentTarget.style.color = T.ink4; e.currentTarget.style.background = "transparent"; }}>
             {isOwner ? "✎" : "◯"}
@@ -4128,6 +4182,22 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
     return () => clearInterval(id);
   }, [status === "daily_quota"]);
 
+  const AI_LOADING_MSGS = [
+    "Leyendo el proyecto…",
+    "Identificando fortalezas y debilidades…",
+    "Evaluando viabilidad…",
+    "Buscando oportunidades de mercado…",
+    "Formulando preguntas editoriales…",
+    "Redactando recomendación…",
+  ];
+  const [aiLoadingMsg, setAiLoadingMsg] = useState(0);
+  useEffect(() => {
+    if (status !== "loading") return;
+    setAiLoadingMsg(0);
+    const id = setInterval(() => setAiLoadingMsg(m => (m + 1) % AI_LOADING_MSGS.length), 2500);
+    return () => clearInterval(id);
+  }, [status]);
+
   async function run() {
     setStatus("loading"); setResult(""); setScores(null); setCountdown(0);
     const cardText = cards.length ? cards.map(c => `- [${c.col.toUpperCase()}][${c.type}] ${c.title}${c.body?"\n  └ "+c.body:""}`).join("\n") : "Sin tarjetas.";
@@ -4181,7 +4251,7 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
                 <div className="spinner" style={{ width:48, height:48, border:`3px solid ${cat.color}22`, borderTop:`3px solid ${cat.color}`, borderRadius:"50%", position:"absolute", inset:0 }} />
                 <div style={{ width:16, height:16, background:cat.color+"33", borderRadius:"50%", position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)" }} />
               </div>
-              <p style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:12, letterSpacing:"0.05em" }}>Analizando…</p>
+              <p style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:12, letterSpacing:"0.05em", minHeight:18, transition:"opacity .4s" }}>{AI_LOADING_MSGS[aiLoadingMsg]}</p>
             </div>
           )}
           {status==="rate_limit" && (
@@ -4296,13 +4366,30 @@ const DOC_VER_KEY = (boardId) => `ms-doc-versions-${boardId}`;
 const MAX_DOC_VERSIONS = 5;
 
 function DocPanel({ board, concept, cards, comments, connections, cat, onClose }) {
-  const [status, setStatus] = useState("idle"); // idle | loading | done | error
+  const [status, setStatus] = useState("idle"); // idle | loading | done | error | no_key
   const [docContent, setDocContent] = useState("");
   const [docTitle, setDocTitle] = useState("");
+  const [docError, setDocError] = useState(""); // human-readable error detail
   const [versions, setVersions] = useState(() => {
     try { return JSON.parse(localStorage.getItem(DOC_VER_KEY(board.id)) || "[]"); } catch { return []; }
   });
   const [showVersions, setShowVersions] = useState(false);
+  const [loadingMsg, setLoadingMsg] = useState(0);
+
+  const DOC_LOADING_MSGS = [
+    "Leyendo tarjetas y conexiones…",
+    "Sintetizando ideas del proyecto…",
+    "Estructurando el documento maestro…",
+    "Construyendo narrativa coherente…",
+    "Casi listo — integrando detalles…",
+  ];
+
+  useEffect(() => {
+    if (status !== "loading") return;
+    setLoadingMsg(0);
+    const id = setInterval(() => setLoadingMsg(m => (m + 1) % DOC_LOADING_MSGS.length), 2800);
+    return () => clearInterval(id);
+  }, [status]);
 
   const approvedConns = connections.filter(c => c.status === "approved");
   const taskCards = cards.filter(c => c.type === "tarea");
@@ -4380,8 +4467,17 @@ Escribe en español. Usa markdown con headers (##), bullets (-) y énfasis (**).
       setDocTitle(board.name + " — Documento Maestro");
       setStatus("done");
     } catch(e) {
-      if (e.code==="NO_KEY"||e.code==="INVALID_KEY") setStatus("no_key");
-      else setStatus("error");
+      if (e.code==="NO_KEY"||e.code==="INVALID_KEY") { setStatus("no_key"); }
+      else if (e.code==="DAILY_QUOTA") {
+        setDocError("Cupo diario de Gemini agotado. El documento se generará automáticamente en el próximo reinicio (medianoche UTC), o configura una clave Groq.");
+        setStatus("error");
+      } else if (e.code==="RATE_LIMIT") {
+        setDocError("Límite de velocidad alcanzado. Espera unos segundos y reintenta.");
+        setStatus("error");
+      } else {
+        setDocError("Error de red o de la IA. Verifica tu conexión a internet y reintenta.");
+        setStatus("error");
+      }
     }
   }
 
@@ -4543,16 +4639,17 @@ Escribe en español. Usa markdown con headers (##), bullets (-) y énfasis (**).
             <div style={{ textAlign:"center", padding:"40px 0" }}>
               <div className="spinner" style={{ width:36, height:36, border:"3px solid "+T.border, borderTop:"3px solid "+T.green, borderRadius:"50%", margin:"0 auto 20px" }} />
               <p style={{ color:T.ink2, fontWeight:600, fontSize:15, marginBottom:6 }}>Compilando el documento…</p>
-              <p style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:12 }}>Leyendo tarjetas, conexiones y comentarios…</p>
+              <p style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:12, transition:"opacity .4s", minHeight:18 }}>{DOC_LOADING_MSGS[loadingMsg]}</p>
             </div>
           )}
 
           {status === "error" && (
             <div>
-              <div style={{ background:T.roseBg, border:"1px solid "+T.rose+"44", borderRadius:8, padding:"14px", color:T.rose, fontSize:13, marginBottom:16 }}>
-                Error al generar el documento. Intenta nuevamente.
+              <div style={{ background:T.roseBg, border:"1px solid "+T.rose+"44", borderRadius:8, padding:"14px", marginBottom:16 }}>
+                <div style={{ color:T.rose, fontWeight:700, fontSize:13, marginBottom:docError?6:0 }}>Error al generar el documento</div>
+                {docError && <div style={{ color:T.ink2, fontSize:12, lineHeight:1.55 }}>{docError}</div>}
               </div>
-              <OBtn full onClick={generate}>Reintentar</OBtn>
+              <OBtn full onClick={generate}>↻ Reintentar</OBtn>
             </div>
           )}
 
@@ -4837,7 +4934,7 @@ const CONN_COLORS = { complementa:T.accent, causa:T.amber, consecuencia:T.rose, 
 const CONN_LABELS = { complementa:"Comp.", causa:"Causa", consecuencia:"Consec.", contraste:"Contr.", refuerza:"Refuerza", secuencia:"Secu." };
 const CONN_ICONS  = { complementa:"◈", secuencia:"→", contraste:"⇄", refuerza:"◉" };
 
-function CanvasStickerNode({ s, sp, color, icon, onMouseDown, onTouchStart }) {
+const CanvasStickerNode = memo(function CanvasStickerNode({ s, sp, color, icon, onMouseDown, onTouchStart }) {
   const [open, setOpen] = useState(false);
   return (
     <div style={{
@@ -4880,7 +4977,7 @@ function CanvasStickerNode({ s, sp, color, icon, onMouseDown, onTouchStart }) {
       )}
     </div>
   );
-}
+});
 
 // ─── CANVAS VIEW ──────────────────────────────────────────────────────────────
 function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard, canvasPositions, onSavePositions, cat, onAddCard }) {
@@ -5428,7 +5525,7 @@ function CanvasCardNode({ card, p, tc, col, cc, sc, isOwner, onEditCard, onMouse
 }
 
 // ── Micelio card node — Mycelium rectangular sci-fi style ─────────────────────
-function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchStart }) {
+const CanvasSkillNode = memo(function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchStart }) {
   const [expanded, setExpanded] = useState(false);
   const pbd = NODE_PASTEL_BD[card.type] || "#E85200";
   const ico = NODE_ICONS[card.type] || "◈";
@@ -5508,7 +5605,7 @@ function CanvasSkillNode({ card, p, col, cc, sc, onOpen, onMouseDown, onTouchSta
       )}
     </div>
   );
-}
+});
 
 // ─── WORLDBUILDING PANEL ──────────────────────────────────────────────────────
 const WB_TABS = [
