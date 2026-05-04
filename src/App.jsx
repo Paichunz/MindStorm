@@ -2323,7 +2323,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
             display:"flex", flexDirection:"column", alignItems:"center",
             padding:"10px 0", gap:4, zIndex:10 }}>
 
-            <button onClick={onBack} title="Volver a Proyectos"
+            <button onClick={onBack} title="Volver a Proyectos" aria-label="Volver a Proyectos"
               style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
                 background:"transparent", color:T.ink4,
                 fontSize:15, display:"flex", alignItems:"center", justifyContent:"center",
@@ -2335,7 +2335,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
 
             <div style={{ width:24, height:1, background:"rgba(232,82,0,0.10)", margin:"4px 0" }} />
 
-            <button onClick={() => setViewMode("kanban")} title="Vista Kanban"
+            <button onClick={() => setViewMode("kanban")} title="Vista Kanban" aria-label="Vista Kanban" aria-pressed={viewMode==="kanban"}
               style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
                 background: viewMode==="kanban" ? T.accentBg : "transparent",
                 color: viewMode==="kanban" ? T.accent : T.ink4,
@@ -2346,7 +2346,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               ▦
             </button>
 
-            <button onClick={() => setViewMode("canvas")} title="Vista Canvas"
+            <button onClick={() => setViewMode("canvas")} title="Vista Canvas" aria-label="Vista Canvas (Micelio)" aria-pressed={viewMode==="canvas"}
               style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
                 background: viewMode==="canvas" ? T.accentBg : "transparent",
                 color: viewMode==="canvas" ? T.accent : T.ink4,
@@ -2359,7 +2359,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
 
             <div style={{ width:24, height:1, background:"var(--paper-3)", margin:"4px 0" }} />
 
-            <button onClick={() => setConnPanel(true)} title={`Conexiones${pendingConns.length>0?" ("+pendingConns.length+" pendientes)":""}`}
+            <button onClick={() => setConnPanel(true)} title={`Conexiones${pendingConns.length>0?" ("+pendingConns.length+" pendientes)":""}`} aria-label={`Conexiones${pendingConns.length>0?" ("+pendingConns.length+" pendientes)":""}`}
               style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer", position:"relative",
                 background: pendingConns.length>0 ? T.amberBg : "transparent",
                 color: pendingConns.length>0 ? T.amber : T.ink4,
@@ -2377,7 +2377,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               )}
             </button>
 
-            <button onClick={() => setAiPanel(true)} title="Análisis IA"
+            <button onClick={() => setAiPanel(true)} title="Análisis IA" aria-label="Análisis IA"
               className="ai-glow"
               style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
                 background:"var(--paper-2)",
@@ -2391,7 +2391,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
 
             <div style={{ width:24, height:1, background:"var(--paper-3)", margin:"4px 0" }} />
 
-            <button onClick={() => setDocPanel(true)} title="Documento"
+            <button onClick={() => setDocPanel(true)} title="Documento" aria-label="Abrir panel de documento"
               style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
                 background:"transparent", color:T.ink4,
                 fontSize:14, display:"flex", alignItems:"center", justifyContent:"center",
@@ -2402,7 +2402,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
             </button>
 
             {deletedCards.length > 0 && (
-              <button onClick={() => setTrashOpen(true)} title={`Papelera (${deletedCards.length})`}
+              <button onClick={() => setTrashOpen(true)} title={`Papelera (${deletedCards.length})`} aria-label={`Papelera — ${deletedCards.length} tarjeta${deletedCards.length!==1?"s":""} eliminada${deletedCards.length!==1?"s":""}`}
                 style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer", position:"relative",
                   background:"transparent", color:T.ink4,
                   fontSize:14, display:"flex", alignItems:"center", justifyContent:"center",
@@ -2419,7 +2419,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
             )}
 
             {cat.worldbuilding && (
-              <button onClick={() => setWbPanel(true)} title="Worldbuilding"
+              <button onClick={() => setWbPanel(true)} title="Worldbuilding" aria-label="Abrir panel de Worldbuilding"
                 style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
                   background:T.amberBg, color:T.amber,
                   fontSize:14, display:"flex", alignItems:"center", justifyContent:"center",
@@ -2431,7 +2431,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
             <div style={{ flex:1 }} />
             <div style={{ width:24, height:1, background:"var(--paper-3)", margin:"4px 0" }} />
 
-            <button onClick={() => setKeyModal(true)} title={getAIKey() ? "IA conectada — cambiar clave" : "Conectar IA"}
+            <button onClick={() => setKeyModal(true)} title={getAIKey() ? "IA conectada — cambiar clave" : "Conectar IA"} aria-label={getAIKey() ? "IA conectada — cambiar clave API" : "Conectar IA — añadir clave API"}
               style={{ width:36, height:36, borderRadius:8, border:"none", cursor:"pointer",
                 background: getAIKey() ? T.greenBg : "transparent",
                 color: getAIKey() ? T.green : T.ink4,
@@ -2783,7 +2783,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
             </div>
 
             <div style={{ padding:"10px 14px", borderBottom:"1px solid var(--card-border)" }}>
-              <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:6, minHeight:22 }}>
                 {saveStatus === "saving" && <>
                   <span className="spinner" style={{ display:"inline-block", width:8, height:8, border:"1.5px solid "+T.border, borderTop:"1.5px solid "+T.ink4, borderRadius:"50%" }} />
                   <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>Guardando…</span>
@@ -2793,8 +2793,19 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                   <span style={{ color:T.green, fontFamily:"var(--mono)", fontSize:10 }}>Guardado</span>
                 </>}
                 {saveStatus === "error" && <>
-                  <div style={{ width:7, height:7, borderRadius:"50%", background:T.rose }} />
-                  <span style={{ color:T.rose, fontFamily:"var(--mono)", fontSize:10 }}>Error al guardar</span>
+                  <div style={{ width:7, height:7, borderRadius:"50%", background:T.rose, flexShrink:0 }} />
+                  <span style={{ color:T.rose, fontFamily:"var(--mono)", fontSize:10, flex:1 }}>Error al guardar</span>
+                  <button
+                    onClick={() => save()}
+                    title="Reintentar guardar"
+                    aria-label="Reintentar guardar"
+                    style={{ background:T.roseBg, border:`1px solid ${T.rose}44`, color:T.rose,
+                      fontFamily:"var(--mono)", fontSize:9, padding:"2px 8px", borderRadius:4,
+                      cursor:"pointer", flexShrink:0, transition:"all .15s", lineHeight:1.6 }}
+                    onMouseEnter={e => { e.currentTarget.style.background=T.rose; e.currentTarget.style.color="#fff"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background=T.roseBg; e.currentTarget.style.color=T.rose; }}>
+                    Reintentar
+                  </button>
                 </>}
                 {!saveStatus && <>
                   <div style={{ width:7, height:7, borderRadius:"50%", background:T.ink4 }} />
@@ -2926,9 +2937,14 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
         transition:isDragging?"none":"opacity .15s, transform .15s, box-shadow .15s",
         pointerEvents:isDragging?"none":"auto" }}>
 
-      {/* Card header — always visible, click to expand */}
+      {/* Card header — always visible, click/Enter/Space to expand */}
       <div
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        aria-label={`${expanded ? "Colapsar" : "Expandir"} tarjeta: ${card.title}`}
         onClick={e => { e.stopPropagation(); setExpanded(p => !p); }}
+        onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); setExpanded(p => !p); } }}
         style={{ padding:"9px 10px 9px 11px", display:"flex", alignItems:"flex-start", gap:8, cursor:"pointer" }}>
 
         {/* Type badge */}
@@ -2940,7 +2956,10 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
 
         {/* Title */}
         <div
+          role="button"
+          tabIndex={0}
           onClick={e => { e.stopPropagation(); onOpen(); }}
+          onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); onOpen(); } }}
           title={card.title}
           style={{ color:T.ink, fontWeight:600, fontSize:13, lineHeight:1.4, flex:1, minWidth:0,
             overflow:"hidden", textOverflow:"ellipsis", whiteSpace:expanded?"normal":"nowrap",
@@ -5007,14 +5026,29 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
-  // Keyboard shortcuts: Cmd/Ctrl += zoom in, -= zoom out, 0 = reset, Shift+L = re-layout
+  // Keyboard shortcuts: arrows=pan, +/-=zoom (no mod), Cmd/Ctrl+0=reset, Shift+L=re-layout
   useEffect(() => {
     function onKey(e) {
       const mod = e.metaKey || e.ctrlKey;
-      if (!mod) return;
-      if (e.key === "=" || e.key === "+") { e.preventDefault(); zoomStep(1); }
-      else if (e.key === "-") { e.preventDefault(); zoomStep(-1); }
-      else if (e.key === "0") { e.preventDefault(); fitToView(posRef.current.cards); }
+      // Arrow key panning — only when canvas has focus (no mod, no active text input)
+      if (!mod && !e.shiftKey && ["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)) {
+        const tag = document.activeElement?.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA") return; // don't hijack text input
+        e.preventDefault();
+        const STEP = 60 / (zoomRef.current || 1);
+        const dx = e.key === "ArrowLeft" ? STEP : e.key === "ArrowRight" ? -STEP : 0;
+        const dy = e.key === "ArrowUp"   ? STEP : e.key === "ArrowDown"  ? -STEP : 0;
+        panRef.current = { x: panRef.current.x + dx, y: panRef.current.y + dy };
+        applyT(panRef.current.x, panRef.current.y, zoomRef.current);
+        return;
+      }
+      // Zoom without modifier
+      if (!mod && (e.key === "+" || e.key === "=")) { e.preventDefault(); zoomStep(1); return; }
+      if (!mod && e.key === "-") { e.preventDefault(); zoomStep(-1); return; }
+      // Modifier shortcuts
+      if (mod && (e.key === "=" || e.key === "+")) { e.preventDefault(); zoomStep(1); }
+      else if (mod && e.key === "-") { e.preventDefault(); zoomStep(-1); }
+      else if (mod && e.key === "0") { e.preventDefault(); fitToView(posRef.current.cards); }
       else if (e.shiftKey && e.key === "L") { e.preventDefault(); runLayout(); }
     }
     window.addEventListener("keydown", onKey);
@@ -5987,9 +6021,47 @@ function OGhostBtn({ children, small, full, onClick }) {
   );
 }
 function OOverlay({ children, onClose }) {
-  const downRef = useRef(false);
+  const downRef    = useRef(false);
+  const overlayRef = useRef(null);
+
+  useEffect(() => {
+    const el = overlayRef.current;
+    if (!el) return;
+    const prev = document.activeElement;
+
+    // Collect focusable elements inside the overlay
+    const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const getFocusable = () => Array.from(el.querySelectorAll(FOCUSABLE));
+
+    // Focus the first focusable child on mount
+    requestAnimationFrame(() => { getFocusable()[0]?.focus(); });
+
+    function onKeyDown(e) {
+      if (e.key === "Escape") { e.stopPropagation(); onClose(); return; }
+      if (e.key !== "Tab") return;
+      const focusable = getFocusable();
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last  = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last)  { e.preventDefault(); first.focus(); }
+      }
+    }
+
+    el.addEventListener("keydown", onKeyDown);
+    return () => {
+      el.removeEventListener("keydown", onKeyDown);
+      prev?.focus();
+    };
+  }, [onClose]);
+
   return (
     <div
+      ref={overlayRef}
+      role="dialog"
+      aria-modal="true"
       style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.65)", display:"flex", alignItems:"center",
         justifyContent:"center", zIndex:100, WebkitBackdropFilter:"blur(8px)", backdropFilter:"blur(8px)", padding:20 }}
       onMouseDown={e  => { downRef.current = (e.target === e.currentTarget); }}
