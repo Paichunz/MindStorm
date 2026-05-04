@@ -966,15 +966,10 @@ export default function App() {
   // Apply theme on first load
   useEffect(() => { Object.assign(T, THEMES[themeId]); }, []);
 
-  const loadBoards = useCallback(async (userName) => {
+  const loadBoards = useCallback(async () => {
     const allBoards = await dbGetBoards();
-    // Filter: show only boards owned by current user
-    const currentUser = userName || getL(SK.user, null);
-    const mine = currentUser
-      ? allBoards.filter(b => !b.createdBy || b.createdBy === currentUser.name)
-      : allBoards;
-    setBoards(mine);
-    return { mine, all: allBoards };
+    setBoards(allBoards);
+    return { mine: allBoards, all: allBoards };
   }, []);
 
   // Open a board by ID (used for shared links and normal navigation)
@@ -993,7 +988,7 @@ export default function App() {
   // Initial load — also restores active board after F5/refresh
   useEffect(() => {
     if (!user) return; // Wait for user to join
-    loadBoards(user).then(({ mine, all }) => {
+    loadBoards().then(({ all }) => {
       // Priority 1: shared link with ?board=ID
       if (sharedBoardId) {
         openBoardById(sharedBoardId, all).then(ok => {
