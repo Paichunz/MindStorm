@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo, createContext, useContext, memo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, createContext, useContext, memo, forwardRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 // ─── THEMES ──────────────────────────────────────────────────────────────────
@@ -6151,7 +6151,7 @@ function FamilyTreeSVG({ personajes, relaciones }) {
 }
 
 // ─── DESIGN SYSTEM ────────────────────────────────────────────────────────────
-const OInput = React.forwardRef(function OInput({ style, ...props }, ref) {
+const OInput = forwardRef(function OInput({ style, ...props }, ref) {
   return (
     <input ref={ref} {...props}
       style={{ background:T.bgCard, border:`1.5px solid ${T.border2}`, color:T.ink,
