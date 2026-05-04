@@ -107,6 +107,13 @@ const COLUMNS = [
 ];
 
 const CARD_TYPES = ["tarea","idea","pregunta","referencia","bloqueo"];
+const CARD_TYPE_DESCS = {
+  tarea:      "Acción concreta que debe completarse",
+  idea:       "Concepto o exploración sin definir aún",
+  pregunta:   "Una incógnita o duda del proceso creativo",
+  referencia: "Material de apoyo: libro, imagen, investigación",
+  bloqueo:    "Obstáculo o problema a resolver",
+};
 const TYPE_COLOR = { get tarea(){return T.accent}, get idea(){return T.amber}, get pregunta(){return T.blue}, get referencia(){return T.green}, get bloqueo(){return T.rose} };
 const TYPE_BG    = { get tarea(){return T.accentBg}, get idea(){return T.amberBg}, get pregunta(){return T.blueBg}, get referencia(){return T.greenBg}, get bloqueo(){return T.roseBg} };
 const REC_COLOR  = { get seguir(){return T.green}, get "rediseñar"(){return T.amber}, get simplificar(){return T.blue}, get pivotar(){return T.accent}, get pausar(){return T.orange}, get descartar(){return T.rose} };
@@ -1235,6 +1242,12 @@ function JoinScreen({ onJoin, sharedBoardId }) {
         <div style={{ background:"rgba(20,18,16,0.94)", border:`1px solid rgba(255,255,255,0.08)`,
           borderRadius:22, padding:"34px 30px", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)",
           boxShadow:"0 40px 100px rgba(0,0,0,.50), 0 0 0 1px rgba(255,255,255,0.05)" }}>
+          {!isInvite && (
+            <p style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:11, letterSpacing:"0.04em",
+              lineHeight:1.6, marginBottom:16, textAlign:"left", borderLeft:`2px solid ${T.accent}44`, paddingLeft:10 }}>
+              Tablero creativo para novelistas, worldbuilders y directores creativos — captura el caos de tus ideas y encuentra las conexiones que importan.
+            </p>
+          )}
           <p style={{ color:T.ink3, fontSize:14, marginBottom:20, lineHeight:1.5 }}>
             {isInvite ? "Elige tu nombre para entrar al tablero compartido" : "Elige tu nombre para comenzar"}
           </p>
@@ -1454,7 +1467,29 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
           {pwdModal && <PasswordModal board={pwdModal} onClose={() => setPwdModal(null)} onSubmit={async pwd => { const r = await onOpen(pwdModal, pwd); if (r==="wrong") return false; setPwdModal(null); return true; }} />}
           {deleteModal && <MonkeyDeleteModal board={deleteModal} onClose={() => setDeleteModal(null)} onConfirm={() => { onDelete(deleteModal.id); setDeleteModal(null); }} />}
           {allBoards.length === 0
-            ? <EmptyMsg>Aún no hay proyectos. Crea el primero → o importa un archivo .mindstorm.json</EmptyMsg>
+            ? (
+              <div style={{ textAlign:"center", padding:"56px 24px 40px", maxWidth:380, margin:"0 auto" }}>
+                <div style={{ fontSize:48, marginBottom:20, opacity:0.18, filter:"grayscale(1)" }}>◈</div>
+                <div style={{ color:T.ink, fontWeight:800, fontSize:18, marginBottom:8, fontFamily:"var(--serif)", fontStyle:"italic" }}>
+                  Tu primer proyecto
+                </div>
+                <p style={{ color:T.ink3, fontSize:13, lineHeight:1.6, marginBottom:28 }}>
+                  Crea un tablero para capturar ideas, organizarlas en columnas y descubrir conexiones con IA.
+                </p>
+                <button onClick={() => setCreating(true)}
+                  style={{ background:T.accent, color:"var(--paper)", border:"none", borderRadius:10,
+                    padding:"13px 28px", fontSize:14, fontWeight:700, cursor:"pointer",
+                    fontFamily:"var(--sans)", transition:"opacity .15s", display:"inline-flex",
+                    alignItems:"center", gap:8 }}
+                  onMouseEnter={e => e.currentTarget.style.opacity=".85"}
+                  onMouseLeave={e => e.currentTarget.style.opacity="1"}>
+                  <span>+</span> Crear primer proyecto
+                </button>
+                <p style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10, marginTop:16 }}>
+                  o importa un archivo .mindstorm.json
+                </p>
+              </div>
+            )
             : <BoardGrid boards={filtered(allBoards)} onOpen={handleOpen} isMobile={isMobile} onDeleteRequest={setDeleteModal} onExport={exportBoard} exporting={exporting} />
           }
         </div>
@@ -1961,7 +1996,7 @@ function CreateBoardModal({ onClose, onCreate }) {
           {/* Concept */}
           <OLabel>Idea central <span style={{ color:T.rose, fontFamily:"var(--sans)", textTransform:"none", letterSpacing:0 }}>*</span></OLabel>
           <OInput placeholder="En una frase: ¿qué es este proyecto?" value={conceptTitle} onChange={e => setConceptTitle(e.target.value)} style={{ marginBottom:12 }} />
-          <OTextarea placeholder="¿Qué problema resuelve? ¿Para quién? ¿Qué lo diferencia?…" value={conceptDesc} onChange={e => setConceptDesc(e.target.value)} rows={2} style={{ marginBottom:20 }} />
+          <OTextarea mono={false} placeholder="¿Qué problema resuelve? ¿Para quién? ¿Qué lo diferencia?…" value={conceptDesc} onChange={e => setConceptDesc(e.target.value)} rows={2} style={{ marginBottom:20 }} />
 
           {/* Password — collapsible */}
           <button onClick={() => setShowPwd(p=>!p)}
@@ -2040,6 +2075,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
   const saveTimerRef                    = useRef(null);
   const moveDebounceRef                 = useRef(null); // debounce timer for D&D card moves
   const [keyModal, setKeyModal]         = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [readCard, setReadCard]         = useState(null);
   const [filterQuery, setFilterQuery]   = useState("");
   const [filterType, setFilterType]     = useState("");
@@ -2110,6 +2146,11 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
           const el = document.querySelector(`[data-col="${colId}"]`);
           el?.scrollIntoView({ behavior:"smooth", inline:"center", block:"nearest" });
         }
+      }
+
+      // ? — open shortcuts reference
+      if (e.key==="?" && !e.metaKey && !e.ctrlKey) {
+        setShortcutsOpen(v => !v);
       }
     }
     window.addEventListener("keydown", onKey);
@@ -2296,6 +2337,17 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
         <div style={{ flex:1 }} />
         <div style={{ display:"flex", gap:8, alignItems:"center" }}>
           <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:12 }}>@{user.name}</span>
+          {/* Shortcuts hint button */}
+          {!isMobile && (
+            <button onClick={() => setShortcutsOpen(v => !v)} title="Atajos de teclado (?)" aria-label="Atajos de teclado"
+              style={{ background:"transparent", border:"1px solid "+T.border, color:T.ink4,
+                width:28, height:28, borderRadius:7, fontSize:12, cursor:"pointer", display:"flex",
+                alignItems:"center", justifyContent:"center", fontFamily:"var(--mono)", transition:"all .15s", flexShrink:0 }}
+              onMouseEnter={e => { e.currentTarget.style.background=T.bgHover; e.currentTarget.style.color=T.ink; }}
+              onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color=T.ink4; }}>
+              ?
+            </button>
+          )}
           <div style={{ position:"relative" }}>
             <button onClick={() => setShowShare(s => !s)}
               style={{ background:T.bgPanel, border:"1px solid "+T.border, color:T.ink3, padding:"7px 10px", borderRadius:8, fontSize:12, cursor:"pointer", display:"flex", alignItems:"center", gap:5, fontFamily:"var(--sans)", transition:"all .15s" }}
@@ -2626,7 +2678,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                             boxShadow:`0 0 8px ${col.color}cc, 0 0 16px ${col.color}44`, flexShrink:0 }} />
                           <div>
                             <div style={{ color:T.ink, fontWeight:700, fontSize:13, letterSpacing:"-0.01em" }}>{col.label}</div>
-                            <div style={{ color:T.ink4, fontSize:10, fontFamily:"var(--mono)", marginTop:1 }}>{col.desc}</div>
+                            <div style={{ color:T.ink3, fontSize:11, fontFamily:"var(--sans)", marginTop:2, lineHeight:1.4 }}>{col.desc}</div>
                           </div>
                         </div>
                         <div style={{ display:"flex", gap:6, alignItems:"center" }}>
@@ -2965,6 +3017,42 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
           </div>
         </div>
       )}
+
+      {/* ── Shortcuts reference modal — tecla ? ── */}
+      {shortcutsOpen && (
+        <OOverlay onClose={() => setShortcutsOpen(false)}>
+          <div onClick={e => e.stopPropagation()}
+            style={{ background:T.bgCard, border:`1px solid ${T.border}`, borderRadius:18,
+              padding:"24px 28px", width:"100%", maxWidth:420, boxShadow:"var(--shadow-3)",
+              animation:"scaleIn .22s cubic-bezier(.16,1,.3,1)" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
+              <span style={{ color:T.ink, fontWeight:800, fontSize:15 }}>Atajos de teclado</span>
+              <button onClick={() => setShortcutsOpen(false)} aria-label="Cerrar"
+                style={{ background:"none", border:"none", color:T.ink4, cursor:"pointer", fontSize:20 }}>&times;</button>
+            </div>
+            {[
+              { group:"Tablero",   items:[["C","Alternar Kanban ↔ Canvas"],["N","Nueva tarjeta (columna Concepto)"],["1–4","Ir a columna"],["Esc","Cerrar panel / limpiar filtros"]] },
+              { group:"Búsqueda",  items:[["⌘ K","Enfocar búsqueda"],["⌘ /","Enfocar búsqueda (alt)"]] },
+              { group:"Canvas",    items:[["↑ ↓ ← →","Paneo"],["+ / -","Zoom in / out"],["⌘ 0","Ajustar a vista"],["Shift L","Re-layout automático"]] },
+              { group:"General",   items:[["?","Mostrar este panel"],["⌘ Z","Deshacer última eliminación"]] },
+            ].map(({ group, items }) => (
+              <div key={group} style={{ marginBottom:14 }}>
+                <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.12em",
+                  textTransform:"uppercase", marginBottom:7 }}>{group}</div>
+                {items.map(([key, desc]) => (
+                  <div key={key} style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
+                    padding:"4px 0", borderBottom:`1px solid ${T.border}` }}>
+                    <span style={{ color:T.ink3, fontSize:12 }}>{desc}</span>
+                    <kbd style={{ fontFamily:"var(--mono)", fontSize:10, background:T.bgPanel,
+                      border:`1px solid ${T.border2}`, borderRadius:4, padding:"2px 7px",
+                      color:T.ink2, letterSpacing:"0.04em", flexShrink:0, marginLeft:12 }}>{key}</kbd>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </OOverlay>
+      )}
     </div>
   );
 }
@@ -3000,11 +3088,12 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
         onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); setExpanded(p => !p); } }}
         style={{ padding:"9px 10px 9px 11px", display:"flex", alignItems:"flex-start", gap:8, cursor:"pointer" }}>
 
-        {/* Type badge */}
+        {/* Type badge — icon + label */}
         <span style={{ background:tc+"15", color:tc, fontFamily:"var(--mono)", fontSize:8,
           padding:"2px 5px", borderRadius:3, border:`1px solid ${tc}28`,
-          letterSpacing:"0.1em", textTransform:"uppercase", flexShrink:0, marginTop:2, lineHeight:1.4 }}>
-          {card.type || "idea"}
+          letterSpacing:"0.08em", textTransform:"uppercase", flexShrink:0, marginTop:2, lineHeight:1.4,
+          display:"inline-flex", alignItems:"center", gap:2 }}>
+          <span style={{ fontSize:8 }}>{NODE_ICONS[card.type] || "◈"}</span>{card.type || "idea"}
         </span>
 
         {/* Title */}
@@ -3363,10 +3452,10 @@ function AddForm({ col, onAdd, onCancel }) {
       borderRadius:12, padding:"14px", boxShadow:`0 8px 32px rgba(0,0,0,.3), 0 0 0 1px ${T.accent}08`,
       backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)" }}>
       <OInput placeholder="Título *" value={title} onChange={e=>setTitle(e.target.value)} style={{ marginBottom:9 }} autoFocus />
-      <OTextarea placeholder="Descripción…" value={body} onChange={e=>setBody(e.target.value)} rows={2} style={{ marginBottom:9 }} />
+      <OTextarea mono={false} placeholder="Descripción…" value={body} onChange={e=>setBody(e.target.value)} rows={2} style={{ marginBottom:9 }} />
       <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginBottom:10 }}>
         {CARD_TYPES.map(t => (
-          <button key={t} onClick={() => setType(t)}
+          <button key={t} title={CARD_TYPE_DESCS[t]} onClick={() => setType(t)}
             style={{ background:type===t?TYPE_BG[t]:"transparent", border:"1.5px solid "+(type===t?TYPE_COLOR[t]:T.border), color:type===t?TYPE_COLOR[t]:T.ink3, fontSize:11, padding:"3px 9px", borderRadius:99, cursor:"pointer", fontFamily:"var(--mono)", transition:"all .15s" }}>
             {t}
           </button>
@@ -3421,12 +3510,15 @@ function EditCardModal({ card, cardComments, user, onSave, onDelete, onClose, on
 
       {/* Header shows owner badge or read-only notice */}
       {!isOwner && (
-        <div style={{ background:T.bgPanel, border:"1px solid "+T.border, borderRadius:8, padding:"10px 14px", marginBottom:16, display:"flex", gap:8, alignItems:"center" }}>
-          <span style={{ fontSize:14 }}>◯</span>
-          <div>
-            <span style={{ color:T.ink2, fontSize:13, fontWeight:600 }}>Tarjeta de @{card.author}</span>
-            <span style={{ color:T.ink4, fontSize:12 }}> · Puedes comentar y agregar stickers</span>
+        <div style={{ background:T.bgPanel, border:"1px solid "+T.border, borderRadius:8, padding:"10px 14px", marginBottom:16 }}>
+          <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:card.body?6:0 }}>
+            <span style={{ fontSize:14 }}>◯</span>
+            <div>
+              <span style={{ color:T.ink, fontSize:13, fontWeight:700 }}>{card.title}</span>
+              <span style={{ color:T.ink4, fontSize:12 }}> · @{card.author}</span>
+            </div>
           </div>
+          {card.body && <div style={{ color:T.ink3, fontSize:12, lineHeight:1.55, fontFamily:"var(--sans)", paddingLeft:22 }}>{card.body}</div>}
         </div>
       )}
 
@@ -3435,7 +3527,7 @@ function EditCardModal({ card, cardComments, user, onSave, onDelete, onClose, on
         {[
           isOwner ? ["edit", "✎ Editar"] : null,
           ["comments", "◇ Comentarios" + (cardComments.length ? ` (${cardComments.length})` : "")],
-          ["stickers", "▤ Stickers" + (stickerCount > 0 ? ` (${stickerCount})` : "")],
+          ["stickers", "▤ Stickers · notas" + (stickerCount > 0 ? ` (${stickerCount})` : "")],
         ].filter(Boolean).map(([id, lbl]) => {
           const isSticker = id === "stickers";
           const showPulse = isSticker && !stickerTabSeen;
@@ -3463,24 +3555,17 @@ function EditCardModal({ card, cardComments, user, onSave, onDelete, onClose, on
         })}
       </div>
 
-      {/* READ-ONLY view of card content for non-owners */}
-      {!isOwner && (
-        <div style={{ background:TYPE_BG[card.type], border:"1px solid "+TYPE_COLOR[card.type]+"30", borderRadius:8, padding:"12px 14px", marginBottom:16 }}>
-          <div style={{ color:T.ink, fontWeight:700, fontSize:15, marginBottom:card.body?8:0 }}>{card.title}</div>
-          {card.body && <div style={{ color:T.ink3, fontSize:13, lineHeight:1.6, fontFamily:"var(--sans)" }}>{card.body}</div>}
-        </div>
-      )}
 
       {tab==="edit" && isOwner && (
         <div>
           <OLabel>Título</OLabel>
           <OInput value={title} onChange={e=>setTitle(e.target.value)} style={{ marginBottom:12 }} autoFocus />
           <OLabel>Descripción</OLabel>
-          <OTextarea value={body} onChange={e=>setBody(e.target.value)} rows={4} style={{ marginBottom:14 }} />
+          <OTextarea mono={false} value={body} onChange={e=>setBody(e.target.value)} rows={4} style={{ marginBottom:14 }} />
           <OLabel>Tipo</OLabel>
           <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:16 }}>
             {CARD_TYPES.map(t => (
-              <button key={t} onClick={() => setType(t)}
+              <button key={t} title={CARD_TYPE_DESCS[t]} onClick={() => setType(t)}
                 style={{ background:type===t?TYPE_BG[t]:"transparent", border:"1.5px solid "+(type===t?TYPE_COLOR[t]:T.border), color:type===t?TYPE_COLOR[t]:T.ink3, fontSize:12, padding:"4px 12px", borderRadius:99, cursor:"pointer", fontFamily:"var(--mono)", transition:"all .15s" }}>
                 {t}
               </button>
@@ -3810,6 +3895,14 @@ function TrashPanel({ cards, onRestore, onDelete, onClose }) {
 const CONN_TYPE_LABELS  = { complementa:"Complementa", causa:"Causa", consecuencia:"Consecuencia", contraste:"Contrasta", refuerza:"Refuerza", secuencia:"Secuencia" };
 const CONN_TYPE_COLORS  = { complementa:T.accent, causa:T.amber, consecuencia:T.rose, contraste:T.orange, refuerza:T.blue, secuencia:T.green };
 const CONN_ALL_TYPES    = ["complementa","causa","consecuencia","contraste","refuerza","secuencia"];
+const CONN_TYPE_DESCS   = {
+  complementa:  "Una idea enriquece o completa a la otra — se suman sin contradecirse.",
+  causa:        "Una tarjeta genera o provoca directamente a la otra.",
+  consecuencia: "Una tarjeta resulta de o depende de la otra.",
+  contraste:    "Tensión, contradicción o conflicto productivo entre ambas ideas.",
+  refuerza:     "Mismo patrón o función en contextos distintos — se validan mutuamente.",
+  secuencia:    "Orden narrativo o cronológico: una precede a la otra.",
+};
 
 // ConnCard is a standalone component — NOT nested inside ConnectionsPanel
 function ConnCard({ conn, cards, connections, onUpdate, onAddAsTask }) {
@@ -3875,7 +3968,7 @@ function ConnCard({ conn, cards, connections, onUpdate, onAddAsTask }) {
           </div>
         ) : (
           <>
-            <span style={{ background:color+"20", color, fontFamily:"var(--mono)", fontSize:10, padding:"2px 8px", borderRadius:99, fontWeight:600 }}>{CONN_TYPE_LABELS[conn.type]||conn.type}</span>
+            <span title={CONN_TYPE_DESCS[conn.type]||""} style={{ background:color+"20", color, fontFamily:"var(--mono)", fontSize:10, padding:"2px 8px", borderRadius:99, fontWeight:600, cursor:"help" }}>{CONN_TYPE_LABELS[conn.type]||conn.type}</span>
             <div style={{ flex:1, height:1, background:color+"33" }} />
             <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>◆{conn.strength}/10</span>
           </>
@@ -4059,7 +4152,7 @@ function ConnectionsPanel({ cards, connections, onUpdate, onClose, cat, concept,
           <div>
             <div style={{ display:"flex", gap:8, alignItems:"center" }}>
               <span style={{ fontSize:17 }}>◎</span>
-              <span style={{ color:T.ink, fontWeight:800, fontSize:15 }}>Conexiones entre ideas</span>
+              <span style={{ color:T.ink, fontWeight:800, fontSize:15 }}>Conexiones IA</span>
             </div>
             <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10, marginTop:2, letterSpacing:"0.03em" }}>
               {pending.length} pendiente · {approved.length} aprobada · {inReview.length} en revisión · {discarded.length} descartada
@@ -6069,11 +6162,14 @@ const OInput = React.forwardRef(function OInput({ style, ...props }, ref) {
     />
   );
 });
-function OTextarea({ style, ...props }) {
+function OTextarea({ style, mono = true, ...props }) {
   return (
     <textarea {...props}
       style={{ background:T.bgCard, border:`1.5px solid ${T.border2}`, color:T.ink,
-        padding:"11px 14px", borderRadius:10, fontFamily:"var(--mono)", fontSize:13, width:"100%",
+        padding:"11px 14px", borderRadius:10,
+        fontFamily: mono ? "var(--mono)" : "var(--sans)",
+        fontSize: mono ? 13 : 14,
+        width:"100%",
         outline:"none", resize:"vertical", lineHeight:1.55, transition:"border-color .2s, box-shadow .2s", ...style }}
       onFocus={e => { e.target.style.borderColor = T.accent; e.target.style.boxShadow = `0 0 0 3px ${T.accentBg}`; }}
       onBlur={e  => { e.target.style.borderColor = T.border2; e.target.style.boxShadow = "none"; }}
