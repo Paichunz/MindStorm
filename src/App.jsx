@@ -391,6 +391,7 @@ function AIKeySetup({ onSaved }) {
   const [tab, setTab]         = useState("gemini"); // "gemini" | "groq"
   const [val, setVal]         = useState("");
   const [err, setErr]         = useState("");
+  const [copied, setCopied]   = useState(null); // null | "gemini" | "groq"
   const hasGemini = !!getAIKey(), hasGroq = !!getGroqKey();
 
   function save() {
@@ -398,6 +399,15 @@ function AIKeySetup({ onSaved }) {
     if (k.length < 20) { setErr("Clave inválida — debe tener más de 20 caracteres"); return; }
     if (tab === "groq") { saveGroqKey(k); } else { saveAIKey(k); }
     onSaved();
+  }
+
+  function copyKey(provider) {
+    const k = provider === "groq" ? getGroqKey() : getAIKey();
+    if (!k) return;
+    navigator.clipboard.writeText(k).then(() => {
+      setCopied(provider);
+      setTimeout(() => setCopied(null), 2500);
+    });
   }
 
   const isGroq = tab === "groq";
@@ -454,9 +464,29 @@ function AIKeySetup({ onSaved }) {
       </button>
 
       {(hasGemini||hasGroq) && (
-        <div style={{ marginTop:10, color:T.ink4, fontSize:10, fontFamily:"var(--mono)",
-          textAlign:"center", letterSpacing:"0.05em" }}>
-          {[hasGemini&&"Gemini ✓", hasGroq&&"Groq ✓"].filter(Boolean).join(" · ")} configuradas
+        <div style={{ marginTop:10 }}>
+          <div style={{ display:"flex", gap:6, justifyContent:"center" }}>
+            {hasGemini && (
+              <button onClick={() => copyKey("gemini")}
+                style={{ background:copied==="gemini"?T.greenBg:"transparent", border:"1px solid "+T.green+"44",
+                  color:copied==="gemini"?T.green:T.ink4, borderRadius:6, padding:"3px 10px",
+                  fontFamily:"var(--mono)", fontSize:10, cursor:"pointer", transition:"all .2s" }}>
+                {copied==="gemini" ? "✓ Copiada" : "📋 Gemini"}
+              </button>
+            )}
+            {hasGroq && (
+              <button onClick={() => copyKey("groq")}
+                style={{ background:copied==="groq"?T.blueBg:"transparent", border:"1px solid "+T.blue+"44",
+                  color:copied==="groq"?T.blue:T.ink4, borderRadius:6, padding:"3px 10px",
+                  fontFamily:"var(--mono)", fontSize:10, cursor:"pointer", transition:"all .2s" }}>
+                {copied==="groq" ? "✓ Copiada" : "📋 Groq"}
+              </button>
+            )}
+          </div>
+          <div style={{ marginTop:6, color:T.ink4, fontSize:9, fontFamily:"var(--mono)",
+            textAlign:"center", letterSpacing:"0.04em" }}>
+            Se guardan en este navegador — usa 📋 para copiar y pegar en otro
+          </div>
         </div>
       )}
     </div>
@@ -2488,16 +2518,16 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
             <div style={{ flex:1 }} />
             <div style={{ width:24, height:1, background:"var(--paper-3)", margin:"4px 0" }} />
 
-            <button onClick={() => setKeyModal(true)} title={getAIKey() ? "IA conectada — cambiar clave" : "Conectar IA"} aria-label={getAIKey() ? "IA conectada — cambiar clave API" : "Conectar IA — añadir clave API"}
+            <button onClick={() => setKeyModal(true)} title={(getAIKey()||getGroqKey()) ? "IA conectada — cambiar clave" : "Conectar IA"} aria-label={(getAIKey()||getGroqKey()) ? "IA conectada — cambiar clave API" : "Conectar IA — añadir clave API"}
               style={{ width:40, height:40, borderRadius:8, border:"none", cursor:"pointer",
-                background: getAIKey() ? T.greenBg : "transparent",
-                color: getAIKey() ? T.green : T.ink4,
+                background: (getAIKey()||getGroqKey()) ? T.greenBg : "transparent",
+                color: (getAIKey()||getGroqKey()) ? T.green : T.ink4,
                 fontSize:13, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:1,
                 transition:"all .15s" }}
-              onMouseEnter={e => { e.currentTarget.style.background=getAIKey()?T.greenBg:"var(--paper-2)"; e.currentTarget.style.color=getAIKey()?T.green:T.ink; }}
-              onMouseLeave={e => { e.currentTarget.style.background=getAIKey()?T.greenBg:"transparent"; e.currentTarget.style.color=getAIKey()?T.green:T.ink4; }}>
+              onMouseEnter={e => { e.currentTarget.style.background=(getAIKey()||getGroqKey())?T.greenBg:"var(--paper-2)"; e.currentTarget.style.color=(getAIKey()||getGroqKey())?T.green:T.ink; }}
+              onMouseLeave={e => { e.currentTarget.style.background=(getAIKey()||getGroqKey())?T.greenBg:"transparent"; e.currentTarget.style.color=(getAIKey()||getGroqKey())?T.green:T.ink4; }}>
               ⚿
-              <span style={{ fontFamily:"var(--mono)", fontSize:7, letterSpacing:"0.04em", lineHeight:1 }}>{getAIKey() ? "ia·on" : "ia·off"}</span>
+              <span style={{ fontFamily:"var(--mono)", fontSize:7, letterSpacing:"0.04em", lineHeight:1 }}>{(getAIKey()||getGroqKey()) ? "ia·on" : "ia·off"}</span>
             </button>
           </div>
         )}
@@ -2806,11 +2836,11 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
               <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:8 }}>ESTADO IA</div>
               <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
                 <div style={{ width:7, height:7, borderRadius:"50%",
-                  background: getAIKey() ? T.green : T.ink4,
-                  boxShadow: getAIKey() ? `0 0 5px ${T.green}88` : "none",
+                  background: (getAIKey()||getGroqKey()) ? T.green : T.ink4,
+                  boxShadow: (getAIKey()||getGroqKey()) ? `0 0 5px ${T.green}88` : "none",
                   flexShrink:0 }} />
-                <span style={{ color: getAIKey() ? T.green : T.ink4, fontSize:11, fontWeight:600 }}>
-                  {getAIKey() ? "IA conectada" : "IA desconectada"}
+                <span style={{ color: (getAIKey()||getGroqKey()) ? T.green : T.ink4, fontSize:11, fontWeight:600 }}>
+                  {(getAIKey()||getGroqKey()) ? "IA conectada" : "IA desconectada"}
                 </span>
               </div>
               <button onClick={() => setAiPanel(true)}
@@ -2893,7 +2923,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
             </div>
 
             {/* ── UX-036: AI setup callout — solo si no hay clave configurada ── */}
-            {!getAIKey() && (
+            {!(getAIKey()||getGroqKey()) && (
               <div style={{ margin:"10px 10px 0", padding:"10px 12px", background:T.accentBg,
                 border:`1px solid ${T.accent}28`, borderRadius:8 }}>
                 <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:5 }}>
@@ -2995,15 +3025,15 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,5,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,backdropFilter:"blur(8px)"}}>
           <div style={{background:T.bgPanel,border:"1px solid "+T.border2,borderRadius:16,padding:28,maxWidth:420,width:"100%",boxShadow:"0 30px 80px rgba(0,0,0,.6)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
-              <div style={{color:T.ink,fontWeight:800,fontSize:16}}>✦ Conectar IA — Google Gemini</div>
+              <div style={{color:T.ink,fontWeight:800,fontSize:16}}>✦ Configurar IA</div>
               <button onClick={()=>setKeyModal(false)} style={{background:"none",border:"none",color:T.ink4,cursor:"pointer",fontSize:20}}>&times;</button>
             </div>
             <AIKeySetup onSaved={() => { setKeyModal(false); showToast("✓ Clave guardada"); }} />
-            {getAIKey() && (
+            {(getAIKey()||getGroqKey()) && (
               <div style={{marginTop:14,display:"flex",justifyContent:"space-between",alignItems:"center",
                 background:T.greenBg,border:"1px solid "+T.green+"44",borderRadius:8,padding:"10px 14px"}}>
-                <span style={{color:T.green,fontSize:12}}>✓ Clave configurada</span>
-                <button onClick={()=>{saveAIKey("");showToast("Clave eliminada");setKeyModal(false);}}
+                <span style={{color:T.green,fontSize:12}}>✓ {[getAIKey()&&"Gemini",getGroqKey()&&"Groq"].filter(Boolean).join(" + ")} configurada{getAIKey()&&getGroqKey()?"s":""}</span>
+                <button onClick={()=>{saveAIKey("");saveGroqKey("");showToast("Claves eliminadas");setKeyModal(false);}}
                   style={{background:"none",border:"none",color:T.rose,cursor:"pointer",fontSize:12,fontFamily:"var(--sans)"}}>
                   Eliminar
                 </button>
@@ -4238,6 +4268,17 @@ function EditConceptModal({ concept, onSave, onClose, cat }) {
   );
 }
 
+// Inline bold: splits "text **word** text" into spans
+function inlineBold(text) {
+  const parts = text.split(/\*\*(.+?)\*\*/);
+  if (parts.length === 1) return text;
+  return parts.map((p, j) =>
+    j % 2 === 1
+      ? <strong key={j} style={{ color:"var(--ink-0)", fontWeight:700 }}>{p}</strong>
+      : p
+  );
+}
+
 // ─── AI PANEL ─────────────────────────────────────────────────────────────────
 function AIPanel({ board, concept, cards, cat, onClose }) {
   const [status, setStatus]       = useState("idle");
@@ -4394,13 +4435,32 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
                 </div>
               ) : (
                 <div style={{ color:"var(--ink-1)", fontSize:13, lineHeight:1.75, fontFamily:"var(--body)" }}>
-                  {result.split("\n").map((line,i) => {
-                    const isH = line.startsWith("##")||(line.startsWith("**")&&line.endsWith("**"));
-                    const clean = line.replace(/\*\*/g,"").replace(/^#+\s*/,"");
-                    if (isH) return <div key={i} style={{ color:"var(--ink-0)", fontFamily:"var(--serif)", fontStyle:"italic", fontWeight:500, fontSize:14, marginTop:18, marginBottom:5, paddingTop:12, borderTop:"1px solid var(--card-border)" }}>{clean}</div>;
-                    if (line.startsWith("- ")||line.startsWith("• ")) return <div key={i} style={{ paddingLeft:12, marginBottom:5, color:"var(--ink-2)", marginLeft:4, background:"var(--paper-2)", border:"1px solid var(--paper-3)", borderRadius:5, paddingTop:3, paddingBottom:3 }}>{line.slice(2)}</div>;
-                    if (!line.trim()) return <div key={i} style={{ height:8 }} />;
-                    return <div key={i} style={{ marginBottom:3 }}>{line}</div>;
+                  {result.split("\n").map((line, i) => {
+                    const trimmed = line.trim();
+                    // Section heading: ##, full-line **…**, or "1. UPPERCASE…"
+                    const isH = trimmed.startsWith("##")
+                      || (trimmed.startsWith("**") && trimmed.endsWith("**") && trimmed.slice(2,-2).indexOf("**") === -1)
+                      || /^\d+\.\s+[A-ZÁÉÍÓÚÑ]/.test(trimmed);
+                    if (isH) {
+                      const clean = trimmed.replace(/\*\*/g,"").replace(/^#+\s*/,"");
+                      return (
+                        <div key={i} style={{ color:"var(--ink-0)", fontFamily:"var(--serif)", fontStyle:"italic",
+                          fontWeight:700, fontSize:14.5, marginTop:22, marginBottom:7, paddingBottom:6,
+                          borderBottom:"1px solid var(--card-border)" }}>
+                          {clean}
+                        </div>
+                      );
+                    }
+                    if (trimmed.startsWith("- ") || trimmed.startsWith("• ")) {
+                      return (
+                        <div key={i} style={{ display:"flex", gap:8, marginBottom:5, paddingLeft:2 }}>
+                          <span style={{ color:T.ink4, fontSize:9, flexShrink:0, marginTop:4, lineHeight:1 }}>◆</span>
+                          <span style={{ color:"var(--ink-2)", fontSize:12.5, lineHeight:1.7 }}>{inlineBold(trimmed.slice(2))}</span>
+                        </div>
+                      );
+                    }
+                    if (!trimmed) return <div key={i} style={{ height:7 }} />;
+                    return <p key={i} style={{ margin:"0 0 5px", color:"var(--ink-1)", fontSize:13, lineHeight:1.75 }}>{inlineBold(trimmed)}</p>;
                   })}
                 </div>
               )}
@@ -4924,13 +4984,14 @@ function layoutTree(cards, connections) {
   return pos;
 }
 
+// Graph layout — positions are circle CENTERS (not top-left corners)
 function layoutMicelio(cards, connections, W, H) {
   if (!cards.length) return {};
   const CX = W / 2, CY = H / 2;
-  const approved = connections.filter(c => c.status === "approved");
+  // Use ALL connections (not just approved) so every link influences the layout
   const adj = {};
   cards.forEach(c => { adj[c.id] = []; });
-  approved.forEach(c => {
+  connections.forEach(c => {
     if (adj[c.cardA]) adj[c.cardA].push(c.cardB);
     if (adj[c.cardB]) adj[c.cardB].push(c.cardA);
   });
@@ -4940,32 +5001,32 @@ function layoutMicelio(cards, connections, W, H) {
   const pos = {};
   const bfsQ = [{ id: root.id, depth: 0, angle: -Math.PI/2, spread: Math.PI * 2 }];
   placed.add(root.id);
-  pos[root.id] = { x: CX - CARD_W/2, y: CY - CARD_H/2, vx:0, vy:0 };
+  pos[root.id] = { x: CX, y: CY, vx:0, vy:0 }; // circle center
   while (bfsQ.length) {
     const { id, depth, angle, spread } = bfsQ.shift();
     const children = adj[id].filter(nid => !placed.has(nid));
     if (!children.length) continue;
-    const r = 200 + depth * 150;
+    const r = 90 + depth * 80;
     const step = spread / children.length;
     const start = angle - spread/2 + step/2;
     children.forEach((cid, i) => {
       placed.add(cid);
       const a = start + i * step + (Math.random()-0.5)*0.18;
-      pos[cid] = { x: CX + r*Math.cos(a) - CARD_W/2, y: CY + r*Math.sin(a) - CARD_H/2, vx:0, vy:0 };
+      pos[cid] = { x: CX + r*Math.cos(a), y: CY + r*Math.sin(a), vx:0, vy:0 };
       bfsQ.push({ id:cid, depth:depth+1, angle:a, spread:Math.max(step*0.75, 0.5) });
     });
   }
-  // Unconnected cards: golden-angle spiral for organic distribution
+  // Unconnected cards: golden-angle spiral
   const goldenAngle = Math.PI * (3 - Math.sqrt(5));
   let spiralIdx = 0;
   cards.filter(c => !placed.has(c.id)).forEach((card) => {
-    const r = 140 + Math.sqrt(spiralIdx + 1) * 120;
+    const r = 80 + Math.sqrt(spiralIdx + 1) * 80;
     const a = spiralIdx * goldenAngle;
-    pos[card.id] = { x: CX + r*Math.cos(a) - CARD_W/2, y: CY + r*Math.sin(a) - CARD_H/2, vx:0, vy:0 };
+    pos[card.id] = { x: CX + r*Math.cos(a), y: CY + r*Math.sin(a), vx:0, vy:0 };
     spiralIdx++;
   });
-  // Force iterations
-  const ITER=100, REP=16000, SPK=0.06, SPL=280, DAMP=0.7, GRAV=0.01;
+  // Force simulation — parameters tuned for small circle nodes
+  const ITER=130, REP=5000, SPK=0.05, SPL=110, DAMP=0.72, GRAV=0.014;
   for (let k=0; k<ITER; k++) {
     const alpha = 1 - k/ITER;
     const ids = Object.keys(pos);
@@ -4976,7 +5037,7 @@ function layoutMicelio(cards, connections, W, H) {
       const f=(REP*alpha)/(d*d);
       pi.vx+=dx/d*f;pi.vy+=dy/d*f;pj.vx-=dx/d*f;pj.vy-=dy/d*f;
     }
-    approved.forEach(c=>{
+    connections.forEach(c=>{
       const pa=pos[c.cardA],pb=pos[c.cardB];
       if(!pa||!pb)return;
       const dx=pb.x-pa.x,dy=pb.y-pa.y;
@@ -4986,10 +5047,11 @@ function layoutMicelio(cards, connections, W, H) {
     });
     ids.forEach(id=>{
       const p=pos[id];
-      p.vx+=(CX-CARD_W/2-p.x)*GRAV;p.vy+=(CY-CARD_H/2-p.y)*GRAV;
+      const R=24;
+      p.vx+=(CX-p.x)*GRAV;p.vy+=(CY-p.y)*GRAV;
       p.vx*=DAMP;p.vy*=DAMP;
-      p.x=Math.max(20,Math.min(W-CARD_W-20,p.x+p.vx));
-      p.y=Math.max(20,Math.min(H-CARD_H-20,p.y+p.vy));
+      p.x=Math.max(R,Math.min(W-R,p.x+p.vx));
+      p.y=Math.max(R,Math.min(H-R,p.y+p.vy));
     });
   }
   return Object.fromEntries(Object.entries(pos).map(([id,p])=>[id,{x:Math.round(p.x),y:Math.round(p.y)}]));
@@ -5067,12 +5129,39 @@ const CanvasStickerNode = memo(function CanvasStickerNode({ s, sp, color, icon, 
   );
 });
 
-// ─── CANVAS VIEW ──────────────────────────────────────────────────────────────
+// ─── CANVAS VIEW (Obsidian Graph View) ────────────────────────────────────────
+const GNODE_BASE_R = 6;  // min circle radius
+const GNODE_MAX_R  = 20; // max circle radius
+
 function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard, canvasPositions, onSavePositions, cat, onAddCard }) {
   const initPos = { cards:{...canvasPositions.cards}, stickers:{...canvasPositions.stickers} };
   const posRef      = useRef(initPos);
   const [pos, setPos] = useState(initPos);
   const [running, setRunning] = useState(false);
+  const [hoveredId, setHoveredId] = useState(null);
+  const dragFlagsRef = useRef({});
+
+  // Degree map for node sizing
+  const graphDeg = useMemo(() => {
+    const d = {};
+    cards.forEach(c => { d[c.id] = 0; });
+    connections.forEach(c => {
+      if (d[c.cardA] !== undefined) d[c.cardA]++;
+      if (d[c.cardB] !== undefined) d[c.cardB]++;
+    });
+    return d;
+  }, [cards, connections]);
+
+  // Neighbors of the hovered node
+  const hoveredNeighbors = useMemo(() => {
+    if (!hoveredId) return new Set();
+    const ns = new Set();
+    connections.forEach(c => {
+      if (c.cardA === hoveredId) ns.add(c.cardB);
+      if (c.cardB === hoveredId) ns.add(c.cardA);
+    });
+    return ns;
+  }, [hoveredId, connections]);
   const [zoomPct, setZoomPct] = useState(100);
   const containerRef = useRef(null);
   const transformRef = useRef(null); // DOM-only transform layer
@@ -5111,20 +5200,20 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
     const missing = cards.filter(c => !posRef.current.cards[c.id]);
     if (!missing.length) return;
     const existing = Object.values(posRef.current.cards);
-    // Centroid of existing cards (or canvas center)
     const el = containerRef.current;
     const CX = el ? el.clientWidth / 2  : 500;
     const CY = el ? el.clientHeight / 2 : 350;
+    // Centroid of existing positions (circle centers)
     const cx = existing.length ? existing.reduce((s,p)=>s+p.x,0)/existing.length : CX;
     const cy = existing.length ? existing.reduce((s,p)=>s+p.y,0)/existing.length : CY;
     const goldenAngle = Math.PI * (3 - Math.sqrt(5));
     const newCards = { ...posRef.current.cards };
     missing.forEach((card, i) => {
-      const r = 180 + Math.sqrt(i + 1) * 100;
+      const r = 120 + Math.sqrt(i + 1) * 80;
       const a = i * goldenAngle;
       newCards[card.id] = {
-        x: Math.round(cx + r * Math.cos(a) - CARD_W / 2),
-        y: Math.round(cy + r * Math.sin(a) - CARD_H / 2)
+        x: Math.round(cx + r * Math.cos(a)), // circle center
+        y: Math.round(cy + r * Math.sin(a))
       };
     });
     const np = { cards: newCards, stickers: posRef.current.stickers };
@@ -5139,15 +5228,17 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
     if (!pts.length) return;
     const el = containerRef.current;
     if (!el) return;
-    const minX = Math.min(...pts.map(p => p.x));
-    const maxX = Math.max(...pts.map(p => p.x + CARD_W));
-    const minY = Math.min(...pts.map(p => p.y));
-    const maxY = Math.max(...pts.map(p => p.y + CARD_H));
+    // Positions are circle centers — pad by max possible radius + label
+    const PAD_R = GNODE_MAX_R + 20;
+    const minX = Math.min(...pts.map(p => p.x - PAD_R));
+    const maxX = Math.max(...pts.map(p => p.x + PAD_R));
+    const minY = Math.min(...pts.map(p => p.y - PAD_R));
+    const maxY = Math.max(...pts.map(p => p.y + PAD_R));
     const vw = el.clientWidth, vh = el.clientHeight;
     const pad = 80;
     const scaleX = (vw - pad * 2) / Math.max(1, maxX - minX);
     const scaleY = (vh - pad * 2) / Math.max(1, maxY - minY);
-    const nz = Math.min(1.0, Math.max(0.15, Math.min(scaleX, scaleY)));
+    const nz = Math.min(2.0, Math.max(0.15, Math.min(scaleX, scaleY)));
     const pw = (maxX - minX) * nz;
     const ph = (maxY - minY) * nz;
     const px = (vw - pw) / 2 - minX * nz;
@@ -5303,6 +5394,7 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
   // Drag card/sticker — correct coordinate math
   function startDrag(e, type, id, parentId) {
     e.preventDefault(); e.stopPropagation();
+    dragFlagsRef.current[id] = false;
     const cur = type==="card" ? posRef.current.cards[id] : (posRef.current.stickers[parentId]||{})[id];
     if (!cur) return;
     const rect = containerRef.current.getBoundingClientRect();
@@ -5313,6 +5405,7 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
       const sx = ev.clientX - r.left, sy = ev.clientY - r.top;
       const nx = ox + (sx - sx0) / zoomRef.current;
       const ny = oy + (sy - sy0) / zoomRef.current;
+      if (Math.abs(nx - ox) + Math.abs(ny - oy) > 4) dragFlagsRef.current[id] = true;
       const np = { cards:{...posRef.current.cards}, stickers:{...posRef.current.stickers} };
       if (type==="card") np.cards[id]={x:nx,y:ny};
       else np.stickers[parentId]={...(np.stickers[parentId]||{}),[id]:{x:nx,y:ny}};
@@ -5408,11 +5501,11 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
     containerRef.current.addEventListener("touchend",  onEnd);
   }
 
-  const allStickers = cards.flatMap(card => {
-    const active = (card.stickers||[]).filter(s=>s.status!=="discarded");
-    return active.map((s, idx) => ({...s, cardId:card.id, cardStickerIdx:idx}));
-  });
-  const approvedConns = connections.filter(c => c.status==="approved" && pos.cards[c.cardA] && pos.cards[c.cardB]);
+  // All visible edges (positions are circle centers)
+  const allEdges = connections.filter(c => pos.cards[c.cardA] && pos.cards[c.cardB]);
+  const hoveredEdges = hoveredId
+    ? new Set(allEdges.filter(c => c.cardA===hoveredId || c.cardB===hoveredId).map(c=>c.id))
+    : new Set();
 
   return (
     <div ref={containerRef}
@@ -5421,7 +5514,6 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
         backgroundImage: `radial-gradient(${T.border2} 1px, transparent 1px)`,
         backgroundSize: "28px 28px",
         backgroundPosition: "0 0"}}
-      onMouseDown={startPan}
       onTouchStart={onTouchStart}
     >
       {/* ── HUD Toolbar top-left ── */}
@@ -5440,21 +5532,30 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
         )}
       </div>
 
-      {/* ── HUD zoom bottom-right ── */}
-      <div style={{position:"absolute",bottom:14,right:14,zIndex:20,
-        fontFamily:"var(--mono)",fontSize:10,letterSpacing:".13em",
-        color:"var(--ink-3)",
-        background:"var(--card)",
-        border:"1px solid var(--card-border)",
-        boxShadow:"var(--shadow-1)",
-        borderRadius:8,padding:"8px 12px",lineHeight:1.7}}>
-        <div style={{color:"var(--ink-2)",fontWeight:700,marginBottom:4}}>
-          {zoomPct}%
-        </div>
-        <div style={{display:"flex",gap:5}}>
-          <button onClick={()=>zoomStep(-1)} className="hud-btn" style={{padding:"2px 8px",fontSize:12,letterSpacing:0}}>−</button>
-          <button onClick={()=>fitToView()} className="hud-btn" style={{padding:"2px 6px",fontSize:10,letterSpacing:0}} title="Encuadrar todo">↔</button>
-          <button onClick={()=>zoomStep(+1)} className="hud-btn" style={{padding:"2px 8px",fontSize:12,letterSpacing:0}}>+</button>
+      {/* ── HUD bottom-right: zoom + legend ── */}
+      <div style={{position:"absolute",bottom:14,right:14,zIndex:20,display:"flex",flexDirection:"column",gap:8,alignItems:"flex-end"}}>
+        {/* Legend */}
+        {hoveredId === null && cards.length > 0 && (
+          <div style={{background:"var(--card)",border:"1px solid var(--card-border)",borderRadius:8,
+            padding:"8px 12px",display:"flex",flexDirection:"column",gap:4}}>
+            {Object.entries(TYPE_COLOR).map(([t,c])=>(
+              <div key={t} style={{display:"flex",alignItems:"center",gap:5}}>
+                <div style={{width:7,height:7,borderRadius:"50%",background:c,flexShrink:0}}/>
+                <span style={{color:T.ink4,fontSize:9,fontFamily:"var(--mono)"}}>{t}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {/* Zoom */}
+        <div style={{fontFamily:"var(--mono)",fontSize:10,letterSpacing:".13em",
+          color:"var(--ink-3)",background:"var(--card)",border:"1px solid var(--card-border)",
+          boxShadow:"var(--shadow-1)",borderRadius:8,padding:"8px 12px",lineHeight:1.7}}>
+          <div style={{color:"var(--ink-2)",fontWeight:700,marginBottom:4}}>{zoomPct}%</div>
+          <div style={{display:"flex",gap:5}}>
+            <button onClick={()=>zoomStep(-1)} className="hud-btn" style={{padding:"2px 8px",fontSize:12,letterSpacing:0}}>−</button>
+            <button onClick={()=>fitToView()} className="hud-btn" style={{padding:"2px 6px",fontSize:10,letterSpacing:0}} title="Encuadrar todo">↔</button>
+            <button onClick={()=>zoomStep(+1)} className="hud-btn" style={{padding:"2px 8px",fontSize:12,letterSpacing:0}}>+</button>
+          </div>
         </div>
       </div>
 
@@ -5469,96 +5570,90 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
       )}
 
       {/* Transform layer — DOM controlled only, NOT React state */}
-      <div ref={transformRef} style={{position:"absolute",inset:0,transformOrigin:"0 0"}}
-        onMouseDown={e=>{ e.stopPropagation(); startPan(e); }}>
+      <div ref={transformRef} style={{position:"absolute",inset:0,transformOrigin:"0 0"}}>
+        {/* Full-canvas SVG — Obsidian Graph View style */}
+        <svg style={{position:"absolute",left:0,top:0,width:"100%",height:"100%",overflow:"visible"}}
+          onMouseDown={e => { e.stopPropagation(); startPan(e); }}>
 
-        {/* SVG: connections + sticker strings */}
-        <svg style={{position:"absolute",left:0,top:0,width:0,height:0,overflow:"visible",pointerEvents:"none",zIndex:2}}>
-          <defs>
-            <marker id="cv-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-              <path d="M1 1L9 5L1 9" fill="none" stroke="context-stroke" strokeWidth="1.8" strokeLinecap="round"/>
-            </marker>
-          </defs>
-          {approvedConns.map(conn=>{
-            const pa=pos.cards[conn.cardA], pb=pos.cards[conn.cardB];
-            const acx=pa.x+CARD_W/2, acy=pa.y+CARD_H/2;
-            const bcx=pb.x+CARD_W/2, bcy=pb.y+CARD_H/2;
-            const ep1=edgePt(acx,acy,bcx,bcy);
-            const ep2=edgePt(bcx,bcy,acx,acy);
-            const mx=(ep1.x+ep2.x)/2, my=(ep1.y+ep2.y)/2;
-            const dx=ep2.x-ep1.x, dy=ep2.y-ep1.y;
-            const connColor = CONN_COLORS[conn.type] || "var(--line)";
-            const organicD = Math.abs(dx) >= Math.abs(dy)
-              ? `M${ep1.x},${ep1.y} C${ep1.x+dx*0.45},${ep1.y} ${ep2.x-dx*0.45},${ep2.y} ${ep2.x},${ep2.y}`
-              : `M${ep1.x},${ep1.y} C${ep1.x},${ep1.y+dy*0.45} ${ep2.x},${ep2.y-dy*0.45} ${ep2.x},${ep2.y}`;
+          {/* ── Edges layer (rendered first — nodes sit on top) ── */}
+          {allEdges.map(conn => {
+            const pa = pos.cards[conn.cardA], pb = pos.cards[conn.cardB];
+            const isApproved = conn.status === "approved";
+            const isHovEdge  = hoveredEdges.has(conn.id);
+            const anyHovered = !!hoveredId;
+            const connColor  = CONN_COLORS[conn.type] || T.border2;
+            const stroke     = isHovEdge ? connColor : (anyHovered ? T.border : (isApproved ? connColor : T.border2));
+            const sw         = isHovEdge ? 1.8 : (isApproved ? 1.0 : 0.6);
+            const op         = isHovEdge ? 0.9 : (anyHovered ? 0.12 : (isApproved ? 0.5 : 0.22));
             return (
-              <g key={conn.id}>
-                <path d={organicD} stroke={connColor} strokeWidth="1.5" fill="none" opacity="0.50"/>
-                <circle cx={ep1.x} cy={ep1.y} r="2.5" fill={connColor} opacity="0.55"/>
-                <circle cx={ep2.x} cy={ep2.y} r="2.5" fill={connColor} opacity="0.55"/>
-                <circle cx={mx} cy={my} r="3.5" fill={connColor} opacity="0.40"/>
-                <text x={mx} y={my-7} textAnchor="middle" fontSize="7"
-                  fontFamily="'Quicksand',system-ui" fontWeight="600"
-                  fill={connColor} letterSpacing="0.05em" opacity="0.65">
-                  {CONN_LABELS[conn.type]}
-                </text>
-              </g>
+              <line key={conn.id}
+                x1={pa.x} y1={pa.y} x2={pb.x} y2={pb.y}
+                stroke={stroke} strokeWidth={sw} opacity={op}
+              />
             );
           })}
-          {/* Sticker threads — card right edge → sticker left edge (horizontal) */}
-          {allStickers.map(s=>{
-            const cp=pos.cards[s.cardId];
-            const spp=(pos.stickers[s.cardId]||{})[s.id]||(cp?{
-              x:Math.round(cp.x+STKR_DX),
-              y:Math.round(cp.y+s.cardStickerIdx*STKR_ROW)
-            }:null);
-            if(!cp||!spp)return null;
-            const color=STKR_COLOR[s.type]||T.blue;
-            // Horizontal connector: card right edge → sticker left edge
-            const midY = spp.y + 22; // vertical center of sticker (~half its height)
-            const cx=cp.x+CARD_W, cy=midY;
-            const sx=spp.x,       sy=midY;
+
+          {/* ── Hovered edge type labels ── */}
+          {hoveredId && allEdges.filter(c => hoveredEdges.has(c.id)).map(conn => {
+            const pa = pos.cards[conn.cardA], pb = pos.cards[conn.cardB];
+            const mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2;
+            const connColor = CONN_COLORS[conn.type] || T.ink4;
             return (
-              <g key={s.id}>
-                <path d={`M${cx},${cy} L${sx},${sy}`}
-                  fill="none" stroke={color} strokeWidth="1.2" strokeOpacity="0.30"/>
-                <circle cx={sx} cy={sy} r="2" fill={color} opacity="0.45"/>
+              <text key={conn.id+"lbl"} x={mx} y={my - 5} textAnchor="middle"
+                fontSize={8} fontFamily="var(--mono)" fill={connColor} fontWeight={700} opacity={0.85}>
+                {CONN_LABELS[conn.type] || ""}
+              </text>
+            );
+          })}
+
+          {/* ── Nodes layer ── */}
+          {cards.map(card => {
+            const p = pos.cards[card.id];
+            if (!p) return null;
+            const deg        = graphDeg[card.id] || 0;
+            const r          = Math.min(GNODE_MAX_R, GNODE_BASE_R + deg * 1.8);
+            const color      = TYPE_COLOR[card.type] || T.accent;
+            const isHov      = hoveredId === card.id;
+            const isNeighbor = hoveredNeighbors.has(card.id);
+            const isDimmed   = !!hoveredId && !isHov && !isNeighbor;
+            const label      = card.title.length > 18 ? card.title.slice(0,16)+"…" : card.title;
+            const showLabel  = !hoveredId || isHov || isNeighbor;
+
+            return (
+              <g key={card.id} style={{cursor:"pointer"}}
+                onMouseEnter={() => setHoveredId(card.id)}
+                onMouseLeave={() => setHoveredId(null)}
+                onMouseDown={e => { e.stopPropagation(); startDrag(e,"card",card.id,null); }}
+                onClick={() => { if (!dragFlagsRef.current[card.id]) (onReadCard||onEditCard)(card); }}>
+                {/* Glow ring on hover */}
+                {isHov && (
+                  <circle cx={p.x} cy={p.y} r={r+7}
+                    fill="none" stroke={color} strokeWidth={1} opacity={0.25} />
+                )}
+                {/* Main node circle */}
+                <circle cx={p.x} cy={p.y} r={isHov ? r+2 : r}
+                  fill={color + (isDimmed ? "33" : isHov ? "ee" : isNeighbor ? "cc" : "99")}
+                  stroke={color}
+                  strokeWidth={isHov ? 2 : isNeighbor ? 1.5 : 0.8}
+                  opacity={isDimmed ? 0.25 : 1}
+                />
+                {/* Label */}
+                {showLabel && (
+                  <text x={p.x} y={p.y + (isHov ? r+2 : r) + 12}
+                    textAnchor="middle"
+                    fontSize={isHov ? 11 : isNeighbor ? 10 : 9}
+                    fontFamily="var(--sans)"
+                    fontWeight={isHov ? 700 : 400}
+                    fill={isHov ? T.ink : isNeighbor ? T.ink3 : T.ink4}
+                    opacity={isDimmed ? 0.2 : 1}
+                    style={{pointerEvents:"none",userSelect:"none"}}>
+                    {label}
+                  </text>
+                )}
               </g>
             );
           })}
         </svg>
-
-        {/* Card nodes */}
-        {cards.map(card=>{
-          const p=pos.cards[card.id];
-          if(!p)return null;
-          const col=COLUMNS.find(c=>c.id===card.col);
-          const cc=(comments[card.id]||[]).length;
-          const sc=(card.stickers||[]).filter(s=>s.status!=="discarded").length;
-          return (
-            <CanvasSkillNode key={card.id} card={card} p={p} col={col} cc={cc} sc={sc}
-              onOpen={onReadCard || onEditCard}
-              onMouseDown={e=>startDrag(e,"card",card.id,null)}
-              onTouchStart={e=>startTouchDrag(e,"card",card.id,null)}/>
-          );
-        })}
-
-        {/* Sticker suggestion cards */}
-        {allStickers.map(s=>{
-          const cardPos=pos.cards[s.cardId];
-          const sp=(pos.stickers[s.cardId]||{})[s.id]||(cardPos?{
-            x:Math.round(cardPos.x+STKR_DX),
-            y:Math.round(cardPos.y+s.cardStickerIdx*STKR_ROW)
-          }:null);
-          if(!sp)return null;
-          const color=STKR_COLOR[s.type]||T.blue;
-          return (
-            <CanvasStickerNode key={s.id} s={s} sp={sp} color={color}
-              icon={STKR_ICON[s.type]||"◇"}
-              onMouseDown={e=>startDrag(e,"sticker",s.id,s.cardId)}
-              onTouchStart={e=>startTouchDrag(e,"sticker",s.id,s.cardId)}/>
-          );
-        })}
       </div>
     </div>
   );
