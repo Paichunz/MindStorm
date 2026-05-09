@@ -5025,8 +5025,8 @@ function layoutMicelio(cards, connections, W, H) {
     pos[card.id] = { x: CX + r*Math.cos(a), y: CY + r*Math.sin(a), vx:0, vy:0 };
     spiralIdx++;
   });
-  // Force simulation — parameters tuned for small circle nodes
-  const ITER=130, REP=5000, SPK=0.05, SPL=110, DAMP=0.72, GRAV=0.014;
+  // Force simulation — parameters tuned for card-tile layout (180×80px tiles)
+  const ITER=140, REP=32000, SPK=0.04, SPL=240, DAMP=0.75, GRAV=0.011;
   for (let k=0; k<ITER; k++) {
     const alpha = 1 - k/ITER;
     const ids = Object.keys(pos);
@@ -5047,7 +5047,7 @@ function layoutMicelio(cards, connections, W, H) {
     });
     ids.forEach(id=>{
       const p=pos[id];
-      const R=24;
+      const R=110; // half card-width margin
       p.vx+=(CX-p.x)*GRAV;p.vy+=(CY-p.y)*GRAV;
       p.vx*=DAMP;p.vy*=DAMP;
       p.x=Math.max(R,Math.min(W-R,p.x+p.vx));
@@ -5129,9 +5129,100 @@ const CanvasStickerNode = memo(function CanvasStickerNode({ s, sp, color, icon, 
   );
 });
 
-// ─── CANVAS VIEW (Obsidian Graph View) ────────────────────────────────────────
-const GNODE_BASE_R = 6;  // min circle radius
-const GNODE_MAX_R  = 20; // max circle radius
+// ─── MIXBOARD CARD TILE ────────────────────────────────────────────────────────
+const MX_W      = 184; // card width
+const MX_H_HALF = 46;  // approx half-height (for vertical centering)
+
+const MixCard = memo(function MixCard({
+  card, p, col, cc, sc,
+  isHovered, isNeighbor, anyHovered,
+  onHover, onUnhover, onOpen, onMouseDown, onTouchStart, onClick
+}) {
+  const tc  = TYPE_COLOR[card.type] || T.accent;
+  const tbg = TYPE_BG[card.type]    || T.accentBg;
+  const isDimmed = anyHovered && !isHovered && !isNeighbor;
+
+  return (
+    <div
+      onMouseEnter={onHover}
+      onMouseLeave={onUnhover}
+      onMouseDown={e => { e.stopPropagation(); onMouseDown(e); }}
+      onTouchStart={onTouchStart}
+      onClick={onClick}
+      style={{
+        position: "absolute",
+        left: p.x - MX_W / 2,
+        top:  p.y - MX_H_HALF,
+        width: MX_W,
+        background: T.bgCard,
+        border: `1px solid ${isHovered ? tc + "77" : T.border}`,
+        borderRadius: 16,
+        boxShadow: isHovered
+          ? `0 10px 32px rgba(0,0,0,.13), 0 0 0 1.5px ${tc}33`
+          : "0 2px 12px rgba(0,0,0,.07)",
+        cursor: "grab",
+        padding: "12px 14px",
+        zIndex: isHovered ? 10 : 5,
+        opacity: isDimmed ? 0.3 : 1,
+        transform: isHovered ? "translateY(-2px)" : "none",
+        transition: "box-shadow .18s, border-color .18s, opacity .18s, transform .18s",
+        userSelect: "none",
+      }}>
+      {/* ── Header: type pill + column badge ── */}
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+        <span style={{ background:tbg, color:tc, borderRadius:99, padding:"2px 9px",
+          fontSize:9, fontFamily:"var(--mono)", fontWeight:700, letterSpacing:"0.05em" }}>
+          {card.type}
+        </span>
+        {col && (
+          <div style={{ display:"flex", alignItems:"center", gap:3 }}>
+            <div style={{ width:5, height:5, borderRadius:"50%", background:col.color, flexShrink:0 }}/>
+            <span style={{ color:T.ink4, fontSize:8, fontFamily:"var(--mono)" }}>{col.label}</span>
+          </div>
+        )}
+      </div>
+
+      {/* ── Title ── */}
+      <div style={{ color:T.ink, fontWeight:700, fontSize:13, lineHeight:1.3,
+        marginBottom: card.body ? 5 : 0 }}>
+        {card.title}
+      </div>
+
+      {/* ── Body excerpt (2 lines max) ── */}
+      {card.body && (
+        <div style={{ color:T.ink3, fontSize:11, lineHeight:1.5,
+          overflow:"hidden", display:"-webkit-box",
+          WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>
+          {card.body}
+        </div>
+      )}
+
+      {/* ── Footer: meta + open button ── */}
+      <div style={{ marginTop:9, display:"flex", alignItems:"center",
+        justifyContent:"space-between", minHeight:18 }}>
+        <div style={{ display:"flex", gap:5, alignItems:"center" }}>
+          {cc > 0 && <span style={{ color:T.ink4, fontSize:9, fontFamily:"var(--mono)" }}>◇ {cc}</span>}
+          {sc > 0 && <span style={{ color:T.blue,  fontSize:9, fontFamily:"var(--mono)" }}>▤ {sc}</span>}
+          {cc === 0 && sc === 0 && (
+            <span style={{ color:T.ink4, fontSize:9, fontFamily:"var(--mono)" }}>@{card.author}</span>
+          )}
+        </div>
+        {isHovered && (
+          <button
+            onClick={e => { e.stopPropagation(); onOpen(card); }}
+            style={{ background:tc+"1a", border:`1px solid ${tc}44`, color:tc,
+              borderRadius:7, padding:"2px 9px", fontSize:9, cursor:"pointer",
+              fontFamily:"var(--mono)", fontWeight:700, flexShrink:0,
+              transition:"background .15s" }}>
+            Abrir →
+          </button>
+        )}
+      </div>
+    </div>
+  );
+});
+
+// ─── CANVAS VIEW (Mixboard style) ─────────────────────────────────────────────
 
 function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard, canvasPositions, onSavePositions, cat, onAddCard }) {
   const initPos = { cards:{...canvasPositions.cards}, stickers:{...canvasPositions.stickers} };
@@ -5141,18 +5232,7 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
   const [hoveredId, setHoveredId] = useState(null);
   const dragFlagsRef = useRef({});
 
-  // Degree map for node sizing
-  const graphDeg = useMemo(() => {
-    const d = {};
-    cards.forEach(c => { d[c.id] = 0; });
-    connections.forEach(c => {
-      if (d[c.cardA] !== undefined) d[c.cardA]++;
-      if (d[c.cardB] !== undefined) d[c.cardB]++;
-    });
-    return d;
-  }, [cards, connections]);
-
-  // Neighbors of the hovered node
+  // Neighbors of the hovered card (for connection highlighting)
   const hoveredNeighbors = useMemo(() => {
     if (!hoveredId) return new Set();
     const ns = new Set();
@@ -5228,12 +5308,12 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
     if (!pts.length) return;
     const el = containerRef.current;
     if (!el) return;
-    // Positions are circle centers — pad by max possible radius + label
-    const PAD_R = GNODE_MAX_R + 20;
+    // Positions are card centers — pad by half card width + margin
+    const PAD_R = MX_W / 2 + 20;
     const minX = Math.min(...pts.map(p => p.x - PAD_R));
     const maxX = Math.max(...pts.map(p => p.x + PAD_R));
-    const minY = Math.min(...pts.map(p => p.y - PAD_R));
-    const maxY = Math.max(...pts.map(p => p.y + PAD_R));
+    const minY = Math.min(...pts.map(p => p.y - MX_H_HALF - 10));
+    const maxY = Math.max(...pts.map(p => p.y + MX_H_HALF + 30));
     const vw = el.clientWidth, vh = el.clientHeight;
     const pad = 80;
     const scaleX = (vw - pad * 2) / Math.max(1, maxX - minX);
@@ -5501,7 +5581,7 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
     containerRef.current.addEventListener("touchend",  onEnd);
   }
 
-  // All visible edges (positions are circle centers)
+  // All visible edges (connections between positioned cards)
   const allEdges = connections.filter(c => pos.cards[c.cardA] && pos.cards[c.cardB]);
   const hoveredEdges = hoveredId
     ? new Set(allEdges.filter(c => c.cardA===hoveredId || c.cardB===hoveredId).map(c=>c.id))
@@ -5511,9 +5591,9 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
     <div ref={containerRef}
       style={{position:"relative",flex:1,overflow:"hidden",cursor:"grab",touchAction:"none",
         background: T.bg,
-        backgroundImage: `radial-gradient(${T.border2} 1px, transparent 1px)`,
-        backgroundSize: "28px 28px",
-        backgroundPosition: "0 0"}}
+        backgroundImage: `radial-gradient(${T.border2}88 1px, transparent 1px)`,
+        backgroundSize: "32px 32px"}}
+      onMouseDown={startPan}
       onTouchStart={onTouchStart}
     >
       {/* ── HUD Toolbar top-left ── */}
@@ -5532,50 +5612,35 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
         )}
       </div>
 
-      {/* ── HUD bottom-right: zoom + legend ── */}
-      <div style={{position:"absolute",bottom:14,right:14,zIndex:20,display:"flex",flexDirection:"column",gap:8,alignItems:"flex-end"}}>
-        {/* Legend */}
-        {hoveredId === null && cards.length > 0 && (
-          <div style={{background:"var(--card)",border:"1px solid var(--card-border)",borderRadius:8,
-            padding:"8px 12px",display:"flex",flexDirection:"column",gap:4}}>
-            {Object.entries(TYPE_COLOR).map(([t,c])=>(
-              <div key={t} style={{display:"flex",alignItems:"center",gap:5}}>
-                <div style={{width:7,height:7,borderRadius:"50%",background:c,flexShrink:0}}/>
-                <span style={{color:T.ink4,fontSize:9,fontFamily:"var(--mono)"}}>{t}</span>
-              </div>
-            ))}
-          </div>
-        )}
-        {/* Zoom */}
-        <div style={{fontFamily:"var(--mono)",fontSize:10,letterSpacing:".13em",
-          color:"var(--ink-3)",background:"var(--card)",border:"1px solid var(--card-border)",
-          boxShadow:"var(--shadow-1)",borderRadius:8,padding:"8px 12px",lineHeight:1.7}}>
-          <div style={{color:"var(--ink-2)",fontWeight:700,marginBottom:4}}>{zoomPct}%</div>
-          <div style={{display:"flex",gap:5}}>
-            <button onClick={()=>zoomStep(-1)} className="hud-btn" style={{padding:"2px 8px",fontSize:12,letterSpacing:0}}>−</button>
-            <button onClick={()=>fitToView()} className="hud-btn" style={{padding:"2px 6px",fontSize:10,letterSpacing:0}} title="Encuadrar todo">↔</button>
-            <button onClick={()=>zoomStep(+1)} className="hud-btn" style={{padding:"2px 8px",fontSize:12,letterSpacing:0}}>+</button>
-          </div>
+      {/* ── HUD zoom bottom-right ── */}
+      <div style={{position:"absolute",bottom:14,right:14,zIndex:20,
+        fontFamily:"var(--mono)",fontSize:10,letterSpacing:".13em",
+        color:"var(--ink-3)",background:"var(--card)",border:"1px solid var(--card-border)",
+        boxShadow:"var(--shadow-1)",borderRadius:8,padding:"8px 12px",lineHeight:1.7}}>
+        <div style={{color:"var(--ink-2)",fontWeight:700,marginBottom:4}}>{zoomPct}%</div>
+        <div style={{display:"flex",gap:5}}>
+          <button onClick={()=>zoomStep(-1)} className="hud-btn" style={{padding:"2px 8px",fontSize:12,letterSpacing:0}}>−</button>
+          <button onClick={()=>fitToView()} className="hud-btn" style={{padding:"2px 6px",fontSize:10,letterSpacing:0}} title="Encuadrar todo">↔</button>
+          <button onClick={()=>zoomStep(+1)} className="hud-btn" style={{padding:"2px 8px",fontSize:12,letterSpacing:0}}>+</button>
         </div>
       </div>
 
       {/* Empty state */}
       {cards.length===0 && (
         <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:12}}>
-          <div style={{fontSize:44,opacity:0.2,color:T.ink4}}>◯</div>
+          <div style={{fontSize:44,opacity:0.2,color:T.ink4}}>◻</div>
           <div style={{fontFamily:"var(--mono)",fontSize:13,color:T.ink4}}>
             Sin tarjetas — créalas en la vista Kanban
           </div>
         </div>
       )}
 
-      {/* Transform layer — DOM controlled only, NOT React state */}
+      {/* Transform layer — DOM controlled only */}
       <div ref={transformRef} style={{position:"absolute",inset:0,transformOrigin:"0 0"}}>
-        {/* Full-canvas SVG — Obsidian Graph View style */}
-        <svg style={{position:"absolute",left:0,top:0,width:"100%",height:"100%",overflow:"visible"}}
-          onMouseDown={e => { e.stopPropagation(); startPan(e); }}>
 
-          {/* ── Edges layer (rendered first — nodes sit on top) ── */}
+        {/* ── SVG: connection lines (rendered UNDER cards) ── */}
+        <svg style={{position:"absolute",left:0,top:0,width:"100%",height:"100%",
+          overflow:"visible",pointerEvents:"none",zIndex:1}}>
           {allEdges.map(conn => {
             const pa = pos.cards[conn.cardA], pb = pos.cards[conn.cardB];
             const isApproved = conn.status === "approved";
@@ -5583,77 +5648,56 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
             const anyHovered = !!hoveredId;
             const connColor  = CONN_COLORS[conn.type] || T.border2;
             const stroke     = isHovEdge ? connColor : (anyHovered ? T.border : (isApproved ? connColor : T.border2));
-            const sw         = isHovEdge ? 1.8 : (isApproved ? 1.0 : 0.6);
-            const op         = isHovEdge ? 0.9 : (anyHovered ? 0.12 : (isApproved ? 0.5 : 0.22));
+            const sw         = isHovEdge ? 2 : (isApproved ? 1.2 : 0.7);
+            const op         = isHovEdge ? 0.9 : (anyHovered ? 0.08 : (isApproved ? 0.45 : 0.18));
+            const mx         = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2;
             return (
-              <line key={conn.id}
-                x1={pa.x} y1={pa.y} x2={pb.x} y2={pb.y}
-                stroke={stroke} strokeWidth={sw} opacity={op}
-              />
-            );
-          })}
-
-          {/* ── Hovered edge type labels ── */}
-          {hoveredId && allEdges.filter(c => hoveredEdges.has(c.id)).map(conn => {
-            const pa = pos.cards[conn.cardA], pb = pos.cards[conn.cardB];
-            const mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2;
-            const connColor = CONN_COLORS[conn.type] || T.ink4;
-            return (
-              <text key={conn.id+"lbl"} x={mx} y={my - 5} textAnchor="middle"
-                fontSize={8} fontFamily="var(--mono)" fill={connColor} fontWeight={700} opacity={0.85}>
-                {CONN_LABELS[conn.type] || ""}
-              </text>
-            );
-          })}
-
-          {/* ── Nodes layer ── */}
-          {cards.map(card => {
-            const p = pos.cards[card.id];
-            if (!p) return null;
-            const deg        = graphDeg[card.id] || 0;
-            const r          = Math.min(GNODE_MAX_R, GNODE_BASE_R + deg * 1.8);
-            const color      = TYPE_COLOR[card.type] || T.accent;
-            const isHov      = hoveredId === card.id;
-            const isNeighbor = hoveredNeighbors.has(card.id);
-            const isDimmed   = !!hoveredId && !isHov && !isNeighbor;
-            const label      = card.title.length > 18 ? card.title.slice(0,16)+"…" : card.title;
-            const showLabel  = !hoveredId || isHov || isNeighbor;
-
-            return (
-              <g key={card.id} style={{cursor:"pointer"}}
-                onMouseEnter={() => setHoveredId(card.id)}
-                onMouseLeave={() => setHoveredId(null)}
-                onMouseDown={e => { e.stopPropagation(); startDrag(e,"card",card.id,null); }}
-                onClick={() => { if (!dragFlagsRef.current[card.id]) (onReadCard||onEditCard)(card); }}>
-                {/* Glow ring on hover */}
-                {isHov && (
-                  <circle cx={p.x} cy={p.y} r={r+7}
-                    fill="none" stroke={color} strokeWidth={1} opacity={0.25} />
+              <g key={conn.id}>
+                <line x1={pa.x} y1={pa.y} x2={pb.x} y2={pb.y}
+                  stroke={stroke} strokeWidth={sw} opacity={op} />
+                {/* Midpoint dot for approved connections */}
+                {isApproved && !anyHovered && (
+                  <circle cx={mx} cy={my} r={2.5} fill={connColor} opacity={0.35}/>
                 )}
-                {/* Main node circle */}
-                <circle cx={p.x} cy={p.y} r={isHov ? r+2 : r}
-                  fill={color + (isDimmed ? "33" : isHov ? "ee" : isNeighbor ? "cc" : "99")}
-                  stroke={color}
-                  strokeWidth={isHov ? 2 : isNeighbor ? 1.5 : 0.8}
-                  opacity={isDimmed ? 0.25 : 1}
-                />
-                {/* Label */}
-                {showLabel && (
-                  <text x={p.x} y={p.y + (isHov ? r+2 : r) + 12}
-                    textAnchor="middle"
-                    fontSize={isHov ? 11 : isNeighbor ? 10 : 9}
-                    fontFamily="var(--sans)"
-                    fontWeight={isHov ? 700 : 400}
-                    fill={isHov ? T.ink : isNeighbor ? T.ink3 : T.ink4}
-                    opacity={isDimmed ? 0.2 : 1}
-                    style={{pointerEvents:"none",userSelect:"none"}}>
-                    {label}
-                  </text>
+                {/* Edge label on hover */}
+                {isHovEdge && (
+                  <g>
+                    <rect x={mx-18} y={my-13} width={36} height={14} rx={4}
+                      fill={connColor} opacity={0.12}/>
+                    <text x={mx} y={my-3} textAnchor="middle"
+                      fontSize={8} fontFamily="var(--mono)" fill={connColor}
+                      fontWeight={700} opacity={0.95}>
+                      {CONN_LABELS[conn.type] || ""}
+                    </text>
+                  </g>
                 )}
               </g>
             );
           })}
         </svg>
+
+        {/* ── MixCard tiles (rendered ON TOP of SVG lines) ── */}
+        {cards.map(card => {
+          const p = pos.cards[card.id];
+          if (!p) return null;
+          const col = COLUMNS.find(c => c.id === card.col);
+          const cc  = (comments[card.id]||[]).length;
+          const sc  = (card.stickers||[]).filter(s => s.status!=="discarded").length;
+          return (
+            <MixCard key={card.id}
+              card={card} p={p} col={col} cc={cc} sc={sc}
+              isHovered={hoveredId === card.id}
+              isNeighbor={hoveredNeighbors.has(card.id)}
+              anyHovered={!!hoveredId}
+              onHover={() => setHoveredId(card.id)}
+              onUnhover={() => setHoveredId(null)}
+              onOpen={onReadCard || onEditCard}
+              onMouseDown={e => startDrag(e,"card",card.id,null)}
+              onTouchStart={e => startTouchDrag(e,"card",card.id,null)}
+              onClick={() => { if (!dragFlagsRef.current[card.id]) (onReadCard||onEditCard)(card); }}
+            />
+          );
+        })}
       </div>
     </div>
   );
