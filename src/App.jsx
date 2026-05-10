@@ -471,7 +471,7 @@ function AIKeySetup({ onSaved }) {
                 style={{ background:copied==="gemini"?T.greenBg:"transparent", border:"1px solid "+T.green+"44",
                   color:copied==="gemini"?T.green:T.ink4, borderRadius:6, padding:"3px 10px",
                   fontFamily:"var(--mono)", fontSize:10, cursor:"pointer", transition:"all .2s" }}>
-                {copied==="gemini" ? "✓ Copiada" : "📋 Gemini"}
+                {copied==="gemini" ? "✓ Copiada" : "↗ Gemini"}
               </button>
             )}
             {hasGroq && (
@@ -479,13 +479,13 @@ function AIKeySetup({ onSaved }) {
                 style={{ background:copied==="groq"?T.blueBg:"transparent", border:"1px solid "+T.blue+"44",
                   color:copied==="groq"?T.blue:T.ink4, borderRadius:6, padding:"3px 10px",
                   fontFamily:"var(--mono)", fontSize:10, cursor:"pointer", transition:"all .2s" }}>
-                {copied==="groq" ? "✓ Copiada" : "📋 Groq"}
+                {copied==="groq" ? "✓ Copiada" : "↗ Groq"}
               </button>
             )}
           </div>
           <div style={{ marginTop:6, color:T.ink4, fontSize:9, fontFamily:"var(--mono)",
             textAlign:"center", letterSpacing:"0.04em" }}>
-            Se guardan en este navegador — usa 📋 para copiar y pegar en otro
+            Se guardan en este navegador — usa ↗ para copiar y pegar en otro
           </div>
         </div>
       )}
@@ -721,8 +721,9 @@ const GLOBAL_CSS = `
   .mcard-exp .hud-c::before, .mcard-exp .hud-c::after { opacity:0; }
 
   /* ── HUD toolbar buttons — pill blanca + sombra ── */
-  .hud-btn { font-family:var(--sans); background:var(--card); border:1px solid var(--card-border); color:var(--ink-2); padding:6px 14px; text-transform:none; letter-spacing:0; font-size:12px; font-weight:500; cursor:pointer; transition:.15s; border-radius:var(--r-pill); box-shadow:var(--shadow-1); display:inline-flex; align-items:center; gap:5px; }
+  .hud-btn { font-family:var(--sans); background:var(--card); border:1px solid var(--card-border); color:var(--ink-2); padding:6px 14px; text-transform:none; letter-spacing:0; font-size:12px; font-weight:500; cursor:pointer; transition:transform .2s cubic-bezier(.16,1,.3,1), box-shadow .2s, background .15s, border-color .15s, color .15s; border-radius:var(--r-pill); box-shadow:var(--shadow-1); display:inline-flex; align-items:center; gap:5px; }
   .hud-btn:hover { box-shadow:var(--shadow-2); transform:translateY(-1px); color:var(--ink-0); }
+  .hud-btn:active:not(.hud-btn-active) { transform:translateY(1px) scale(0.98) !important; box-shadow:var(--shadow-1) !important; transition-duration:.08s !important; }
   .hud-btn-active { background:var(--noir) !important; border-color:var(--noir) !important; color:var(--paper) !important; box-shadow:none !important; transform:none !important; }
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
   :root { --sans:'Quicksand',sans-serif; --body:'Lora',Georgia,serif; --mono:'JetBrains Mono',monospace; }
@@ -798,18 +799,24 @@ const GLOBAL_CSS = `
   @keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
   @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
   @keyframes popIn     { from{opacity:0;transform:scale(.88)} to{opacity:1;transform:scale(1)} }
+  @keyframes staggerIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
 
   .tile {
     background: var(--card);
     border: 1px solid var(--card-border);
     box-shadow: var(--shadow-1);
-    transition: transform .2s cubic-bezier(.25,.46,.45,.94), box-shadow .2s;
+    transition: transform .22s cubic-bezier(.16,1,.3,1), box-shadow .22s;
     cursor:pointer;
     position: relative;
   }
   .tile:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-2) !important;
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-3) !important;
+  }
+  .tile:active {
+    transform: translateY(1px) scale(0.99) !important;
+    box-shadow: var(--shadow-1) !important;
+    transition-duration: .08s !important;
   }
   .wcard {
     transition: transform .16s cubic-bezier(.25,.46,.45,.94), box-shadow .16s, border-color .16s;
@@ -1242,46 +1249,167 @@ function JoinScreen({ onJoin, sharedBoardId }) {
   const [name, setName] = useState("");
   const { themeId } = useTheme();
   const inputRef = useRef(null);
+  const isMobile = useIsMobile();
   const isInvite = !!sharedBoardId;
-  useEffect(() => { const t = setTimeout(() => inputRef.current?.focus(), 80); return () => clearTimeout(t); }, []);
+  useEffect(() => { const t = setTimeout(() => inputRef.current?.focus(), 120); return () => clearTimeout(t); }, []);
+
+  // Editorial left panel — 5 rotating phrases that cycle on mount
+  const phrases = ["El caos también tiene estructura.", "Conecta lo que nadie más ve.", "Tus ideas merecen un espacio real.", "Del caos a la claridad, un nodo a la vez."];
+  const [phraseIdx] = useState(() => Math.floor(Math.random() * phrases.length));
+
   return (
-    <div className="orb-bg" style={{ minHeight:"100vh", background:T.bg, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"var(--sans)", position:"relative" }}>
+    <div style={{ minHeight:"100dvh", background:T.bg, display:"flex", fontFamily:"var(--sans)", position:"relative", overflow:"hidden" }}>
       <style>{GLOBAL_CSS}</style>
       <style>{getThemeCSS(themeId)}</style>
-      <div style={{ position:"absolute", width:400, height:400, top:"50%", left:"50%", transform:"translate(-50%,-50%)",
-        background:"radial-gradient(circle, rgba(0,0,0,0.03) 0%, transparent 70%)",
-        borderRadius:"50%", pointerEvents:"none", animation:"orb3 15s ease-in-out infinite" }} />
-      <div style={{ textAlign:"center", maxWidth:400, width:"100%", padding:"0 24px", position:"relative", zIndex:1 }}>
-        <div style={{ display:"flex", justifyContent:"center", marginBottom:36 }}>
-          <MindStormLogo size="md" />
-        </div>
-        {isInvite && (
-          <div style={{ background:T.accentBg, border:`1px solid ${T.accent}44`, borderRadius:12,
-            padding:"12px 16px", marginBottom:16, textAlign:"left" }}>
-            <div style={{ color:T.accent, fontFamily:"var(--mono)", fontSize:10, letterSpacing:1, marginBottom:4 }}>HAS SIDO INVITADO</div>
-            <p style={{ color:T.ink2, fontSize:13, lineHeight:1.5, margin:0 }}>
-              Alguien te compartió un tablero de MindStorm. Elige tu nombre para entrar como colaborador — podrás leer las tarjetas, dejar comentarios y agregar stickers.
+
+      {/* ── Left editorial panel (hidden on mobile) ── */}
+      {!isMobile && (
+        <div style={{
+          flex:"0 0 58%", minHeight:"100dvh", background:T.bg,
+          display:"flex", flexDirection:"column", justifyContent:"space-between",
+          padding:"56px 72px 48px 64px", position:"relative", overflow:"hidden",
+          borderRight:`1px solid ${T.border}`,
+        }}>
+          {/* Subtle dot grid just in this panel */}
+          <div style={{ position:"absolute", inset:0, backgroundImage:"radial-gradient(circle, var(--line-dot) 1px, transparent 1px)", backgroundSize:"22px 22px", opacity:0.6, pointerEvents:"none" }} />
+
+          {/* Organic orb accent */}
+          <div style={{ position:"absolute", width:480, height:480, top:"-80px", right:"-120px",
+            background:`radial-gradient(circle, ${T.accent}08 0%, transparent 65%)`,
+            borderRadius:"50%", pointerEvents:"none", animation:"orb1 28s ease-in-out infinite" }} />
+          <div style={{ position:"absolute", width:320, height:320, bottom:"10%", left:"-60px",
+            background:`radial-gradient(circle, ${T.blue}07 0%, transparent 65%)`,
+            borderRadius:"50%", pointerEvents:"none", animation:"orb2 34s ease-in-out infinite" }} />
+
+          {/* Top: logo */}
+          <div style={{ position:"relative", zIndex:1 }}>
+            <MindStormLogo size="sm" light />
+          </div>
+
+          {/* Center: big editorial headline */}
+          <div style={{ position:"relative", zIndex:1 }}>
+            <div style={{
+              fontFamily:"var(--serif)", fontStyle:"italic", fontWeight:600,
+              fontSize:"clamp(42px, 4.5vw, 68px)", lineHeight:1.06,
+              letterSpacing:"-0.03em", color:"var(--ink-0)",
+              marginBottom:28,
+            }}>
+              {isInvite
+                ? <>Has sido<br/>invitado<br/>a colaborar.</>
+                : <>Captura<br/>el caos.<br/>Halla el orden.</>
+              }
+            </div>
+            <p style={{
+              fontFamily:"var(--body)", fontStyle:"italic",
+              fontSize:16, lineHeight:1.65, color:T.ink3,
+              maxWidth:"52ch", marginBottom:40,
+            }}>
+              {isInvite
+                ? "Un compañero compartió su tablero contigo. Entra como colaborador — podrás leer las tarjetas, dejar comentarios y agregar stickers."
+                : "Tablero creativo para novelistas, worldbuilders y directores — captura ideas, organízalas y descubre conexiones con IA."
+              }
             </p>
+            {/* Rotating phrase — like a random aphorism */}
+            <div style={{ display:"flex", alignItems:"flex-start", gap:12 }}>
+              <div style={{ width:2, height:36, background:`linear-gradient(to bottom, ${T.accent}, ${T.accent}00)`, flexShrink:0, marginTop:2 }} />
+              <p style={{
+                fontFamily:"var(--mono)", fontSize:11, color:T.ink4,
+                lineHeight:1.6, letterSpacing:"0.04em",
+              }}>
+                {phrases[phraseIdx]}
+              </p>
+            </div>
+          </div>
+
+          {/* Bottom: category badges */}
+          <div style={{ position:"relative", zIndex:1 }}>
+            <div style={{ fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.18em", color:T.ink4, marginBottom:10, textTransform:"uppercase" }}>
+              Pensado para
+            </div>
+            <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+              {["Novela", "Worldbuilding", "Startup", "Guión", "Diseño", "Podcast"].map(tag => (
+                <span key={tag} style={{
+                  fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.08em",
+                  padding:"4px 10px", borderRadius:99,
+                  background:"transparent", border:`1px solid ${T.border2}`,
+                  color:T.ink4,
+                }}>{tag}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Right form panel ── */}
+      <div style={{
+        flex:isMobile ? "1" : "0 0 42%", minHeight:"100dvh",
+        background:T.bgCard,
+        display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center",
+        padding:isMobile ? "40px 28px" : "56px 56px",
+        position:"relative",
+      }}>
+        {/* Mobile-only: logo at top */}
+        {isMobile && (
+          <div style={{ position:"absolute", top:28, left:28 }}>
+            <MindStormLogo size="sm" light />
           </div>
         )}
-        <div style={{ background:"rgba(20,18,16,0.94)", border:`1px solid rgba(255,255,255,0.08)`,
-          borderRadius:22, padding:"34px 30px", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)",
-          boxShadow:"0 40px 100px rgba(0,0,0,.50), 0 0 0 1px rgba(255,255,255,0.05)" }}>
-          {!isInvite && (
-            <p style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:11, letterSpacing:"0.04em",
-              lineHeight:1.6, marginBottom:16, textAlign:"left", borderLeft:`2px solid ${T.accent}44`, paddingLeft:10 }}>
-              Tablero creativo para novelistas, worldbuilders y directores creativos — captura el caos de tus ideas y encuentra las conexiones que importan.
+
+        <div style={{ width:"100%", maxWidth:320, animation:"fadeUp .45s cubic-bezier(.16,1,.3,1) both" }}>
+          {/* Heading */}
+          <div style={{ marginBottom:32 }}>
+            <div style={{ fontFamily:"var(--serif)", fontStyle:"italic", fontWeight:600,
+              fontSize:isMobile ? 28 : 26, letterSpacing:"-0.02em", color:"var(--ink-0)",
+              lineHeight:1.15, marginBottom:10 }}>
+              {isInvite ? "Elige tu nombre" : "Elige tu nombre"}
+            </div>
+            <p style={{ color:T.ink3, fontSize:13, lineHeight:1.55, fontFamily:"var(--body)" }}>
+              {isInvite
+                ? "Entrarás como colaborador — tu nombre aparecerá en los comentarios y stickers."
+                : "Se guarda solo en este dispositivo. No necesitas cuenta ni contraseña."
+              }
             </p>
-          )}
-          <p style={{ color:T.ink3, fontSize:14, marginBottom:20, lineHeight:1.5 }}>
-            {isInvite ? "Elige tu nombre para entrar al tablero compartido" : "Elige tu nombre para comenzar"}
-          </p>
-          <OInput ref={inputRef} placeholder="Tu nombre…" aria-label="Tu nombre de usuario" value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key==="Enter" && name.trim() && onJoin({name:name.trim()})} autoFocus style={{ marginBottom:12, textAlign:"center", fontSize:16 }} />
+          </div>
+
+          {/* Input */}
+          <div style={{ marginBottom:12 }}>
+            <label style={{ display:"block", fontFamily:"var(--mono)", fontSize:10,
+              letterSpacing:"0.12em", color:T.ink4, marginBottom:6, textTransform:"uppercase" }}>
+              Nombre
+            </label>
+            <OInput
+              ref={inputRef}
+              placeholder="Tu nombre…"
+              aria-label="Tu nombre de usuario"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              onKeyDown={e => e.key==="Enter" && name.trim() && onJoin({name:name.trim()})}
+              style={{ fontSize:15 }}
+            />
+          </div>
+
+          {/* CTA button */}
           <OBtn full onClick={() => name.trim() && onJoin({name:name.trim()})}>
-            {isInvite ? "Entrar como colaborador →" : "Entrar al espacio →"}
+            {isInvite ? "Entrar al tablero →" : "Comenzar →"}
           </OBtn>
+
+          {/* Footer note */}
+          <p style={{ color:T.ink4, fontSize:10, marginTop:20, fontFamily:"var(--mono)",
+            letterSpacing:"0.05em", textAlign:"center" }}>
+            Tu nombre se guarda en este dispositivo
+          </p>
+
+          {/* Mobile-only: invite banner */}
+          {isMobile && isInvite && (
+            <div style={{ background:T.accentBg, border:`1px solid ${T.accent}44`, borderRadius:10,
+              padding:"12px 14px", marginTop:24 }}>
+              <div style={{ color:T.accent, fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.1em", marginBottom:4, textTransform:"uppercase" }}>Invitación</div>
+              <p style={{ color:T.ink2, fontSize:12, lineHeight:1.55, margin:0, fontFamily:"var(--body)" }}>
+                Podrás leer las tarjetas, dejar comentarios y agregar stickers.
+              </p>
+            </div>
+          )}
         </div>
-        <p style={{ color:T.ink4, fontSize:10, marginTop:16, fontFamily:"var(--mono)", letterSpacing:"0.05em" }}>Tu nombre se guarda en este dispositivo</p>
       </div>
     </div>
   );
@@ -1418,10 +1546,14 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
           </div>
         )}
         <div style={{ maxWidth: isMobile ? "100%" : 860 }}>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18, flexWrap:"wrap", gap:10 }}>
+          <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginBottom:24, flexWrap:"wrap", gap:10 }}>
             <div>
-              <h2 style={{ fontFamily:"var(--serif)", fontStyle:"italic", fontWeight:500, fontSize:isMobile?22:26, marginBottom:3, letterSpacing:"-0.02em", color:"var(--ink-0)" }}>Proyectos</h2>
-              <p style={{ color:T.ink4, fontSize:13, fontFamily:"var(--mono)" }}>{allBoards.length} proyecto{allBoards.length!==1?"s":""}</p>
+              <h2 style={{ fontFamily:"var(--serif)", fontStyle:"italic", fontWeight:600, fontSize:isMobile?24:30, marginBottom:4, letterSpacing:"-0.025em", lineHeight:1.1, color:"var(--ink-0)" }}>
+                {allBoards.length === 0 ? "Tu primer proyecto" : "Proyectos"}
+              </h2>
+              <p style={{ color:T.ink4, fontSize:11, fontFamily:"var(--mono)", letterSpacing:"0.06em" }}>
+                {allBoards.length} proyecto{allBoards.length!==1?"s":""}
+              </p>
             </div>
             <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
               {/* Import button */}
@@ -1431,7 +1563,7 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
                 style={{ background:T.bgPanel, border:"1px solid "+T.border2, color:T.ink3, padding:"7px 12px", borderRadius:8, fontSize:12, cursor:"pointer", fontFamily:"var(--sans)", fontWeight:600, display:"flex", alignItems:"center", gap:5, transition:"all .15s" }}
                 onMouseEnter={e=>{e.currentTarget.style.background=T.bgHover;e.currentTarget.style.color=T.ink;}}
                 onMouseLeave={e=>{e.currentTarget.style.background=T.bgPanel;e.currentTarget.style.color=T.ink3;}}>
-                {importing ? "⏳ Importando…" : "↑ Importar"}
+                {importing ? "· Importando…" : "↑ Importar"}
               </button>
               {/* Export all */}
               {allBoards.length > 0 && (
@@ -1439,7 +1571,7 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
                   style={{ background:T.bgPanel, border:"1px solid "+T.border2, color:T.ink3, padding:"7px 12px", borderRadius:8, fontSize:12, cursor:"pointer", fontFamily:"var(--sans)", fontWeight:600, display:"flex", alignItems:"center", gap:5, transition:"all .15s" }}
                   onMouseEnter={e=>{e.currentTarget.style.background=T.bgHover;e.currentTarget.style.color=T.ink;}}
                   onMouseLeave={e=>{e.currentTarget.style.background=T.bgPanel;e.currentTarget.style.color=T.ink3;}}>
-                  {exportAll ? "⏳ Exportando…" : "↓ Exportar todo"}
+                  {exportAll ? "· Exportando…" : "↓ Exportar todo"}
                 </button>
               )}
               {!isMobile && <OGhostBtn small onClick={onRefresh}>↻ Actualizar</OGhostBtn>}
@@ -1493,26 +1625,29 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
           {deleteModal && <MonkeyDeleteModal board={deleteModal} onClose={() => setDeleteModal(null)} onConfirm={() => { onDelete(deleteModal.id); setDeleteModal(null); }} />}
           {allBoards.length === 0
             ? (
-              <div style={{ textAlign:"center", padding:"56px 24px 40px", maxWidth:380, margin:"0 auto" }}>
-                <div style={{ fontSize:48, marginBottom:20, opacity:0.18, filter:"grayscale(1)" }}>◈</div>
-                <div style={{ color:T.ink, fontWeight:800, fontSize:18, marginBottom:8, fontFamily:"var(--serif)", fontStyle:"italic" }}>
-                  Tu primer proyecto
+              <div style={{ padding:"64px 0 40px", maxWidth:440, animation:"fadeUp .45s cubic-bezier(.16,1,.3,1) both" }}>
+                {/* Decorative node graph — reuses logo SVG motif */}
+                <svg width={56} height={56} viewBox="0 0 56 56" style={{ display:"block", marginBottom:24, opacity:0.18 }}>
+                  <line x1={14} y1={42} x2={28} y2={10} stroke="var(--ink-0)" strokeWidth={2} strokeLinecap="round"/>
+                  <line x1={28} y1={10} x2={44} y2={42} stroke="var(--ink-0)" strokeWidth={2} strokeLinecap="round"/>
+                  <line x1={14} y1={42} x2={44} y2={42} stroke="var(--ink-0)" strokeWidth={2} strokeLinecap="round"/>
+                  <circle cx={28} cy={10} r={4} fill="none" stroke="var(--ink-0)" strokeWidth={2}/>
+                  <circle cx={14} cy={42} r={4} fill="none" stroke="var(--ink-0)" strokeWidth={2}/>
+                  <circle cx={44} cy={42} r={4} fill="none" stroke="var(--ink-0)" strokeWidth={2}/>
+                </svg>
+                <div style={{ fontFamily:"var(--serif)", fontStyle:"italic", fontWeight:600,
+                  fontSize:22, marginBottom:10, letterSpacing:"-0.02em", color:"var(--ink-0)", lineHeight:1.2 }}>
+                  Todavía no hay nada aquí.
                 </div>
-                <p style={{ color:T.ink3, fontSize:13, lineHeight:1.6, marginBottom:28 }}>
-                  Crea un tablero para capturar ideas, organizarlas en columnas y descubrir conexiones con IA.
+                <p style={{ color:T.ink3, fontSize:13, lineHeight:1.65, marginBottom:28, fontFamily:"var(--body)", maxWidth:"42ch" }}>
+                  Crea tu primer tablero para capturar ideas, organizarlas en columnas y descubrir conexiones con IA.
                 </p>
-                <button onClick={() => setCreating(true)}
-                  style={{ background:T.accent, color:"var(--paper)", border:"none", borderRadius:10,
-                    padding:"13px 28px", fontSize:14, fontWeight:700, cursor:"pointer",
-                    fontFamily:"var(--sans)", transition:"opacity .15s", display:"inline-flex",
-                    alignItems:"center", gap:8 }}
-                  onMouseEnter={e => e.currentTarget.style.opacity=".85"}
-                  onMouseLeave={e => e.currentTarget.style.opacity="1"}>
-                  <span>+</span> Crear primer proyecto
-                </button>
-                <p style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10, marginTop:16 }}>
-                  o importa un archivo .mindstorm.json
-                </p>
+                <div style={{ display:"flex", gap:10, alignItems:"center", flexWrap:"wrap" }}>
+                  <OBtn onClick={() => setCreating(true)}>+ Crear primer proyecto</OBtn>
+                  <span style={{ color:T.ink4, fontSize:11, fontFamily:"var(--mono)" }}>
+                    o importa un .mindstorm.json
+                  </span>
+                </div>
               </div>
             )
             : <BoardGrid boards={filtered(allBoards)} onOpen={handleOpen} isMobile={isMobile} onDeleteRequest={setDeleteModal} onExport={exportBoard} exporting={exporting} />
@@ -1578,75 +1713,94 @@ function Sidebar({ user, boards, onOpen, onSignOut }) {
 function BoardGrid({ boards, onOpen, isMobile, onDeleteRequest, onExport, exporting }) {
   const isTablet = useIsTablet();
   if (!boards.length) return <EmptyMsg>Sin proyectos</EmptyMsg>;
-  const cols = isMobile ? "1fr" : isTablet ? "repeat(2,1fr)" : "repeat(auto-fill,minmax(230px,1fr))";
+  const cols = isMobile ? "1fr" : isTablet ? "repeat(2,1fr)" : "repeat(auto-fill,minmax(290px,1fr))";
   return (
-    <div style={{ display:"grid", gridTemplateColumns:cols, gap:16 }}>
-      {boards.map(b => <BoardTile key={b.id} board={b} onOpen={onOpen} onDeleteRequest={onDeleteRequest} onExport={onExport} exporting={exporting} />)}
+    <div style={{ display:"grid", gridTemplateColumns:cols, gap:14 }}>
+      {boards.map((b, i) => <BoardTile key={b.id} board={b} index={i} onOpen={onOpen} onDeleteRequest={onDeleteRequest} onExport={onExport} exporting={exporting} />)}
     </div>
   );
 }
 
-function BoardTile({ board, onOpen, onDeleteRequest, onExport, exporting }) {
+function BoardTile({ board, index, onOpen, onDeleteRequest, onExport, exporting }) {
   const cat = CATEGORIES.find(c => c.id===board.categoryId) || CATEGORIES[6];
+  const delay = Math.min(index, 7) * 55; // cap stagger at 385ms
   return (
-    <div className="tile hud-c" onClick={() => onOpen(board)}
+    <div className="tile" onClick={() => onOpen(board)}
       role="button" tabIndex={0}
       aria-label={`Abrir proyecto: ${board.name}`}
       onKeyDown={e => (e.key==="Enter"||e.key===" ") && onOpen(board)}
-      style={{ background:"var(--card)",
-        border:`1px solid var(--card-border)`, borderLeft:`3px solid ${cat.color}`,
-        borderRadius:10, padding:"16px 18px 14px",
-        position:"relative", overflow:"hidden",
+      style={{
+        background:"var(--card)",
+        border:`1px solid var(--card-border)`,
+        borderRadius:14, overflow:"hidden",
         boxShadow:"var(--shadow-1)",
-        transition:"box-shadow .18s, transform .18s" }}>
-      {/* Category line */}
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-        <div style={{ fontFamily:"var(--mono)", fontSize:9, color:cat.color, letterSpacing:"0.14em",
-          textTransform:"uppercase", fontWeight:600 }}>
-          {cat.label.replace(/^[^A-Za-záéíóúàèìòùñÁÉÍÓÚÀÈÌÒÙÑ]+/, "").trim()}
+        animation:`staggerIn .4s cubic-bezier(.16,1,.3,1) ${delay}ms both`,
+      }}>
+      {/* Top accent strip — full width, no side stripe */}
+      <div style={{ height:3, background:`linear-gradient(90deg, ${cat.color}, ${cat.color}80)`, flexShrink:0 }} />
+
+      <div style={{ padding:"14px 16px 14px" }}>
+        {/* Category line + actions */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+            <div style={{ width:6, height:6, borderRadius:"50%", background:cat.color, flexShrink:0 }} />
+            <div style={{ fontFamily:"var(--mono)", fontSize:9, color:cat.color, letterSpacing:"0.12em",
+              textTransform:"uppercase", fontWeight:600 }}>
+              {cat.label.replace(/^[^A-Za-záéíóúàèìòùñÁÉÍÓÚÀÈÌÒÙÑ]+/, "").trim()}
+            </div>
+            {board.password && <span style={{ color:"var(--ink-4)", fontFamily:"var(--mono)", fontSize:9, marginLeft:2 }}>⚿</span>}
+          </div>
+          <div style={{ display:"flex", gap:4, alignItems:"center" }}>
+            <button
+              onClick={e => { e.stopPropagation(); onExport && onExport(board); }}
+              title="Exportar"
+              className="hud-btn"
+              style={{ padding:"2px 7px", fontSize:10 }}
+              onMouseEnter={e => { e.currentTarget.style.color=T.green; e.currentTarget.style.borderColor=T.green+"55"; }}
+              onMouseLeave={e => { e.currentTarget.style.color="var(--ink-2)"; e.currentTarget.style.borderColor="var(--card-border)"; }}
+            >{exporting === board.id ? "…" : "↓"}</button>
+            <button
+              onClick={e => { e.stopPropagation(); onDeleteRequest(board); }}
+              title="Eliminar"
+              className="hud-btn"
+              style={{ padding:"2px 7px", fontSize:10 }}
+              onMouseEnter={e => { e.currentTarget.style.color=T.rose; e.currentTarget.style.borderColor=T.rose+"55"; }}
+              onMouseLeave={e => { e.currentTarget.style.color="var(--ink-2)"; e.currentTarget.style.borderColor="var(--card-border)"; }}
+            >✕</button>
+          </div>
         </div>
-        <div style={{ display:"flex", gap:5, alignItems:"center" }}>
-          {board.password && <span style={{ color:"var(--ink-3)", fontFamily:"var(--mono)", fontSize:9 }}>⚿</span>}
-          <button
-            onClick={e => { e.stopPropagation(); onExport && onExport(board); }}
-            title="Exportar"
-            className="hud-btn"
-            style={{ padding:"2px 7px", fontSize:10, letterSpacing:".08em" }}
-            onMouseEnter={e => { e.currentTarget.style.color=T.green; e.currentTarget.style.borderColor=T.green+"55"; }}
-            onMouseLeave={e => { e.currentTarget.style.color="var(--ink-2)"; e.currentTarget.style.borderColor="var(--card-border)"; }}
-          >{exporting === board.id ? "…" : "↓"}</button>
-          <button
-            onClick={e => { e.stopPropagation(); onDeleteRequest(board); }}
-            title="Eliminar"
-            className="hud-btn"
-            style={{ padding:"2px 7px", fontSize:10, letterSpacing:".08em" }}
-            onMouseEnter={e => { e.currentTarget.style.color=T.rose; e.currentTarget.style.borderColor=T.rose+"55"; }}
-            onMouseLeave={e => { e.currentTarget.style.color="var(--ink-2)"; e.currentTarget.style.borderColor="var(--card-border)"; }}
-          >✕</button>
+
+        {/* Title */}
+        <div style={{ fontFamily:"var(--serif)", fontStyle:"italic", fontWeight:600, fontSize:19,
+          marginBottom:7, lineHeight:1.18, letterSpacing:"-0.015em", color:"var(--ink-0)" }}>
+          {board.name}
         </div>
-      </div>
-      {/* Title */}
-      <div style={{ fontFamily:"var(--serif)", fontStyle:"italic", fontWeight:500, fontSize:18,
-        marginBottom:6, lineHeight:1.2, letterSpacing:"-0.01em", color:"var(--ink-0)" }}>
-        {board.name}
-      </div>
-      <div style={{ color:"var(--ink-2)", fontSize:12, marginBottom:12, lineHeight:1.55,
-        display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden",
-        fontFamily:"var(--body)" }}>
-        {board.conceptTitle || <span style={{ color:"var(--ink-4)", fontStyle:"italic" }}>Sin concepto base</span>}
-      </div>
-      <div style={{ display:"flex", gap:4, flexWrap:"wrap", marginBottom:10 }}>
-        {(board.subcategories||[]).slice(0,2).map(s => (
-          <span key={s} style={{ fontFamily:"var(--mono)", fontSize:9, padding:"2px 8px",
-            background:`${cat.color}10`, border:`1px solid ${cat.color}28`,
-            color:cat.color, borderRadius:99, letterSpacing:".06em" }}>{s}</span>
-        ))}
-      </div>
-      <div style={{ color:"var(--ink-4)", fontFamily:"var(--mono)", fontSize:9, letterSpacing:".08em",
-        display:"flex", justifyContent:"space-between",
-        borderTop:"1px solid var(--paper-3)", paddingTop:8 }}>
-        <span>@{board.createdBy}</span>
-        <span>{fmtDate(board.createdAt)}</span>
+
+        {/* Concept excerpt */}
+        <div style={{ color:"var(--ink-2)", fontSize:12, marginBottom:12, lineHeight:1.58,
+          display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden",
+          fontFamily:"var(--body)" }}>
+          {board.conceptTitle || <span style={{ color:"var(--ink-4)", fontStyle:"italic" }}>Sin concepto base</span>}
+        </div>
+
+        {/* Subcategory pills */}
+        {(board.subcategories||[]).length > 0 && (
+          <div style={{ display:"flex", gap:4, flexWrap:"wrap", marginBottom:12 }}>
+            {(board.subcategories||[]).slice(0,2).map(s => (
+              <span key={s} style={{ fontFamily:"var(--mono)", fontSize:9, padding:"2px 8px",
+                background:`${cat.color}0F`, border:`1px solid ${cat.color}24`,
+                color:cat.color, borderRadius:99, letterSpacing:".06em" }}>{s}</span>
+            ))}
+          </div>
+        )}
+
+        {/* Footer: author + date */}
+        <div style={{ color:"var(--ink-4)", fontFamily:"var(--mono)", fontSize:9, letterSpacing:".06em",
+          display:"flex", justifyContent:"space-between",
+          borderTop:"1px solid var(--card-border)", paddingTop:9 }}>
+          <span>@{board.createdBy}</span>
+          <span>{fmtDate(board.createdAt)}</span>
+        </div>
       </div>
     </div>
   );
@@ -6324,12 +6478,14 @@ function OBtn({ children, full, small, disabled, onClick }) {
     cursor: disabled ? "default" : "pointer",
     boxShadow: disabled ? "none" : "0 1px 3px rgba(0,0,0,0.18)",
     width: full ? "100%" : "auto",
-    transition: "background .15s, box-shadow .15s, transform .12s",
+    transition: "background .18s, box-shadow .18s cubic-bezier(.16,1,.3,1), transform .18s cubic-bezier(.16,1,.3,1)",
   };
   return (
     <button onClick={onClick} disabled={disabled} style={base}
-      onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background=T.accentHover; e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,0.22)"; e.currentTarget.style.transform="translateY(-1px)"; }}}
-      onMouseLeave={e => { e.currentTarget.style.background=disabled?T.bgHover:T.ink; e.currentTarget.style.boxShadow=disabled?"none":"0 1px 3px rgba(0,0,0,0.18)"; e.currentTarget.style.transform="translateY(0)"; }}>
+      onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background=T.accentHover; e.currentTarget.style.boxShadow="0 3px 10px rgba(0,0,0,0.24)"; e.currentTarget.style.transform="translateY(-1px)"; }}}
+      onMouseLeave={e => { e.currentTarget.style.background=disabled?T.bgHover:T.ink; e.currentTarget.style.boxShadow=disabled?"none":"0 1px 3px rgba(0,0,0,0.18)"; e.currentTarget.style.transform="translateY(0)"; }}
+      onMouseDown={e => { if (!disabled) { e.currentTarget.style.transform="translateY(1px) scale(0.98)"; e.currentTarget.style.boxShadow="none"; e.currentTarget.style.transitionDuration=".08s"; }}}
+      onMouseUp={e => { if (!disabled) { e.currentTarget.style.transitionDuration=".18s"; }}}>
       {children}
     </button>
   );
@@ -6339,10 +6495,13 @@ function OGhostBtn({ children, small, full, onClick }) {
     <button onClick={onClick}
       style={{ background:"transparent", border:`1px solid ${T.border2}`, color:T.ink3,
         padding:small?"6px 14px":"9px 20px", borderRadius:99, fontFamily:"var(--sans)",
-        fontSize:small?12:13, cursor:"pointer", width:full?"100%":"auto", transition:"all .15s",
+        fontSize:small?12:13, cursor:"pointer", width:full?"100%":"auto",
+        transition:"transform .18s cubic-bezier(.16,1,.3,1), box-shadow .18s, background .15s, border-color .15s, color .15s",
         fontWeight:500 }}
-      onMouseEnter={e => { e.currentTarget.style.background=T.bgHover; e.currentTarget.style.color=T.ink; e.currentTarget.style.borderColor=T.ink4; }}
-      onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color=T.ink3; e.currentTarget.style.borderColor=T.border2; }}>
+      onMouseEnter={e => { e.currentTarget.style.background=T.bgHover; e.currentTarget.style.color=T.ink; e.currentTarget.style.borderColor=T.ink4; e.currentTarget.style.transform="translateY(-1px)"; }}
+      onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color=T.ink3; e.currentTarget.style.borderColor=T.border2; e.currentTarget.style.transform="translateY(0)"; }}
+      onMouseDown={e => { e.currentTarget.style.transform="translateY(1px) scale(0.98)"; e.currentTarget.style.transitionDuration=".08s"; }}
+      onMouseUp={e => { e.currentTarget.style.transitionDuration=".18s"; }}>
       {children}
     </button>
   );
