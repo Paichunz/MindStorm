@@ -2363,6 +2363,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
     const card = { id:genId(), col, author:user.name, ts:nowTs(), type:"tarea", attachments:[], deleted:false, ...cardData };
     await save([...cards, card]);
     setAddingTo(null);
+    return card; // needed by canvas quick-add (C-05)
   }
 
   async function softDeleteCard(id) {
@@ -2828,7 +2829,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 canvasPositions={data.canvasPositions || { cards:{}, stickers:{} }}
                 onSavePositions={saveCanvasPositions}
                 cat={cat}
-                onAddCard={() => { setViewMode("kanban"); setAddingTo("concepto"); }}
+                onCreateCard={addCard}
               />
             : <div style={{ display:"flex", flex:1, overflow:"hidden", position:"relative" }}>
               <div style={{ display:"flex", flexDirection:isMobile?"column":"row", gap:isMobile?12:14,
@@ -5351,7 +5352,7 @@ const MixCard = memo(function MixCard({
         </div>
       )}
 
-      {/* ── Footer: meta + open button ── */}
+      {/* ── Footer: meta + open button (always visible — C-04) ── */}
       <div style={{ marginTop:9, display:"flex", alignItems:"center",
         justifyContent:"space-between", minHeight:18 }}>
         <div style={{ display:"flex", gap:5, alignItems:"center" }}>
@@ -5361,16 +5362,18 @@ const MixCard = memo(function MixCard({
             <span style={{ color:T.ink4, fontSize:9, fontFamily:"var(--mono)" }}>@{card.author}</span>
           )}
         </div>
-        {isHovered && (
-          <button
-            onClick={e => { e.stopPropagation(); onOpen(card); }}
-            style={{ background:tc+"1a", border:`1px solid ${tc}44`, color:tc,
-              borderRadius:7, padding:"2px 9px", fontSize:9, cursor:"pointer",
-              fontFamily:"var(--mono)", fontWeight:700, flexShrink:0,
-              transition:"background .15s" }}>
-            Abrir →
-          </button>
-        )}
+        {/* Always rendered — opacity signals interactivity even before hover */}
+        <button
+          onClick={e => { e.stopPropagation(); onOpen(card); }}
+          style={{ background: isHovered ? tc+"1a" : "transparent",
+            border:`1px solid ${isHovered ? tc+"55" : T.border}`,
+            color: isHovered ? tc : T.ink4,
+            borderRadius:7, padding:"2px 9px", fontSize:9, cursor:"pointer",
+            fontFamily:"var(--mono)", fontWeight:700, flexShrink:0,
+            opacity: isHovered ? 1 : 0.55,
+            transition:"background .15s, border-color .15s, color .15s, opacity .15s" }}>
+          ↗
+        </button>
       </div>
     </div>
   );
@@ -5378,13 +5381,57 @@ const MixCard = memo(function MixCard({
 
 // ─── CANVAS VIEW (Mixboard style) ─────────────────────────────────────────────
 
-function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard, canvasPositions, onSavePositions, cat, onAddCard }) {
+function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard, canvasPositions, onSavePositions, cat, onCreateCard }) {
   const initPos = { cards:{...canvasPositions.cards}, stickers:{...canvasPositions.stickers} };
   const posRef      = useRef(initPos);
   const [pos, setPos] = useState(initPos);
   const [running, setRunning] = useState(false);
   const [hoveredId, setHoveredId] = useState(null);
+  const [quickAdd, setQuickAdd] = useState(null); // null | { qaTitle, qaType }
+  const [qaTitle, setQaTitle]   = useState("");
+  const [qaType,  setQaType]    = useState("idea");
+  const [qaLoading, setQaLoading] = useState(false);
+  const qaTitleRef = useRef(null);
   const dragFlagsRef = useRef({});
+
+  // Canvas-space coordinate of current viewport center (for placing new cards)
+  function getViewportCenter() {
+    const el = containerRef.current;
+    const vx = (el?.clientWidth  || 800) / 2;
+    const vy = (el?.clientHeight || 500) / 2;
+    return {
+      x: (vx - panRef.current.x) / zoomRef.current,
+      y: (vy - panRef.current.y) / zoomRef.current,
+    };
+  }
+
+  function openQuickAdd() {
+    setQaTitle(""); setQaType("idea"); setQuickAdd(true);
+    requestAnimationFrame(() => qaTitleRef.current?.focus());
+  }
+
+  async function submitQuickAdd() {
+    const t = qaTitle.trim();
+    if (!t || qaLoading) return;
+    setQaLoading(true);
+    try {
+      const card = await onCreateCard("concepto", { title: t, type: qaType });
+      if (card?.id) {
+        // Place new card at current viewport center
+        const center = getViewportCenter();
+        const np = {
+          cards:    { ...posRef.current.cards,    [card.id]: center },
+          stickers: { ...posRef.current.stickers },
+        };
+        posRef.current = np;
+        setPos({ ...np });
+        onSavePositions(np);
+      }
+    } finally {
+      setQaLoading(false);
+      setQuickAdd(null);
+    }
+  }
 
   // Neighbors of the hovered card (for connection highlighting)
   const hoveredNeighbors = useMemo(() => {
@@ -5625,28 +5672,36 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
     document.addEventListener("mouseup",   onUp);
   }
 
-  // Drag card/sticker — correct coordinate math
+  // Drag card/sticker — RAF-throttled to ≤60 renders/s (C-02)
   function startDrag(e, type, id, parentId) {
     e.preventDefault(); e.stopPropagation();
-    dragFlagsRef.current[id] = false;
+    dragFlagsRef.current[id] = false;                          // C-01 equivalent for mouse
     const cur = type==="card" ? posRef.current.cards[id] : (posRef.current.stickers[parentId]||{})[id];
     if (!cur) return;
     const rect = containerRef.current.getBoundingClientRect();
     const sx0 = e.clientX - rect.left, sy0 = e.clientY - rect.top;
     const ox = cur.x, oy = cur.y;
+    let rafId = null;
     function onMove(ev) {
       const r  = containerRef.current.getBoundingClientRect();
       const sx = ev.clientX - r.left, sy = ev.clientY - r.top;
       const nx = ox + (sx - sx0) / zoomRef.current;
       const ny = oy + (sy - sy0) / zoomRef.current;
       if (Math.abs(nx - ox) + Math.abs(ny - oy) > 4) dragFlagsRef.current[id] = true;
-      const np = { cards:{...posRef.current.cards}, stickers:{...posRef.current.stickers} };
-      if (type==="card") np.cards[id]={x:nx,y:ny};
-      else np.stickers[parentId]={...(np.stickers[parentId]||{}),[id]:{x:nx,y:ny}};
-      posRef.current = np;
-      setPos({...np});
+      // Mutate ref immediately so edges can follow; schedule one React flush per frame
+      if (type==="card") posRef.current.cards[id] = {x:nx, y:ny};
+      else { if (!posRef.current.stickers[parentId]) posRef.current.stickers[parentId]={};
+             posRef.current.stickers[parentId][id] = {x:nx, y:ny}; }
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          setPos({ cards:{...posRef.current.cards}, stickers:{...posRef.current.stickers} });
+          rafId = null;
+        });
+      }
     }
     function onUp() {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      setPos({ cards:{...posRef.current.cards}, stickers:{...posRef.current.stickers} });
       debouncedSave(posRef.current);
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup",   onUp);
@@ -5703,16 +5758,18 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
     }
   }
 
-  // Touch drag for cards/stickers
+  // Touch drag for cards/stickers — C-01 flag reset + C-02 RAF throttle
   function startTouchDrag(e, type, id, parentId) {
     if (e.touches.length !== 1) return;
     e.stopPropagation();
+    dragFlagsRef.current[id] = false;                          // C-01: reset so tap-after-drag works
     const cur = type==="card" ? posRef.current.cards[id] : (posRef.current.stickers[parentId]||{})[id];
     if (!cur) return;
     const rect = containerRef.current.getBoundingClientRect();
     const t0   = e.touches[0];
     const sx0  = t0.clientX - rect.left, sy0 = t0.clientY - rect.top;
     const ox   = cur.x, oy = cur.y;
+    let rafId = null;
     function onMove(ev) {
       if (ev.touches.length !== 1) return;
       ev.preventDefault();
@@ -5720,13 +5777,20 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
       const sx = ev.touches[0].clientX - r.left, sy = ev.touches[0].clientY - r.top;
       const nx = ox + (sx - sx0) / zoomRef.current;
       const ny = oy + (sy - sy0) / zoomRef.current;
-      const np = { cards:{...posRef.current.cards}, stickers:{...posRef.current.stickers} };
-      if (type==="card") np.cards[id]={x:nx,y:ny};
-      else np.stickers[parentId]={...(np.stickers[parentId]||{}),[id]:{x:nx,y:ny}};
-      posRef.current = np;
-      setPos({...np});
+      if (Math.abs(nx - ox) + Math.abs(ny - oy) > 4) dragFlagsRef.current[id] = true;
+      if (type==="card") posRef.current.cards[id] = {x:nx, y:ny};
+      else { if (!posRef.current.stickers[parentId]) posRef.current.stickers[parentId]={};
+             posRef.current.stickers[parentId][id] = {x:nx, y:ny}; }
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          setPos({ cards:{...posRef.current.cards}, stickers:{...posRef.current.stickers} });
+          rafId = null;
+        });
+      }
     }
     function onEnd() {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      setPos({ cards:{...posRef.current.cards}, stickers:{...posRef.current.stickers} });
       debouncedSave(posRef.current);
       containerRef.current.removeEventListener("touchmove", onMove);
       containerRef.current.removeEventListener("touchend",  onEnd);
@@ -5752,19 +5816,94 @@ function CanvasView({ cards, connections, comments, user, onEditCard, onReadCard
     >
       {/* ── HUD Toolbar top-left ── */}
       <div style={{position:"absolute",top:14,left:14,zIndex:20,display:"flex",gap:6,alignItems:"center"}}>
-        <button className="hud-btn hud-btn-active" onClick={runLayout} disabled={running} title="Reorganizar">
-          {running ? "Organizando…" : "↺ Reorganizar"}
+        <button className={`hud-btn${running ? " hud-btn-active" : ""}`} onClick={runLayout} disabled={running} title="Reorganizar">
+          {running ? "· Organizando…" : "↺ Reorganizar"}
         </button>
         <button className="hud-btn" onClick={()=>fitToView()} title="Centrar vista"
           disabled={!Object.keys(posRef.current.cards).length}>
           ⊙ Centrar
         </button>
-        {onAddCard && (
-          <button className="hud-btn" onClick={onAddCard} style={{fontWeight:600}}>
+        {onCreateCard && (
+          <button className="hud-btn" onClick={openQuickAdd} style={{fontWeight:600}} title="Añadir tarjeta (sin salir del canvas)">
             + Tarjeta
           </button>
         )}
       </div>
+
+      {/* ── Quick-add overlay (C-05) — positioned above the canvas, not in the transform layer ── */}
+      {quickAdd && (
+        <div style={{ position:"absolute", inset:0, zIndex:30,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          background:"rgba(0,0,0,0.18)", backdropFilter:"blur(2px)" }}
+          onMouseDown={e => { if (e.target === e.currentTarget) setQuickAdd(null); }}>
+          <div style={{ background:T.bgCard, border:`1px solid ${T.border2}`,
+            borderRadius:18, padding:"22px 24px", width:300,
+            boxShadow:"0 20px 60px rgba(0,0,0,.22), 0 0 0 1px rgba(0,0,0,.04)",
+            animation:"scaleIn .18s cubic-bezier(.16,1,.3,1)" }}
+            onMouseDown={e => e.stopPropagation()}
+            onKeyDown={e => {
+              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitQuickAdd(); }
+              if (e.key === "Escape") setQuickAdd(null);
+            }}>
+            <div style={{ fontFamily:"var(--serif)", fontStyle:"italic", fontWeight:600,
+              fontSize:16, color:T.ink, marginBottom:16, letterSpacing:"-0.01em" }}>
+              Nueva tarjeta
+            </div>
+            {/* Title input */}
+            <label style={{ display:"block", fontFamily:"var(--mono)", fontSize:9,
+              letterSpacing:"0.12em", color:T.ink4, marginBottom:5, textTransform:"uppercase" }}>
+              Título
+            </label>
+            <input ref={qaTitleRef} value={qaTitle} onChange={e => setQaTitle(e.target.value)}
+              placeholder="¿Qué tienes en mente?"
+              style={{ background:T.bgPanel, border:`1.5px solid ${T.border2}`, color:T.ink,
+                padding:"9px 12px", borderRadius:9, fontFamily:"var(--sans)", fontSize:13,
+                width:"100%", outline:"none", marginBottom:12, boxSizing:"border-box",
+                transition:"border-color .15s" }}
+              onFocus={e => { e.target.style.borderColor = T.accent; }}
+              onBlur={e  => { e.target.style.borderColor = T.border2; }} />
+            {/* Type selector */}
+            <label style={{ display:"block", fontFamily:"var(--mono)", fontSize:9,
+              letterSpacing:"0.12em", color:T.ink4, marginBottom:5, textTransform:"uppercase" }}>
+              Tipo
+            </label>
+            <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginBottom:18 }}>
+              {CARD_TYPES.map(t => {
+                const tc2 = TYPE_COLOR[t] || T.accent;
+                const sel = qaType === t;
+                return (
+                  <button key={t} onClick={() => setQaType(t)}
+                    style={{ fontFamily:"var(--mono)", fontSize:9, padding:"3px 10px",
+                      borderRadius:99, cursor:"pointer", fontWeight: sel ? 700 : 500,
+                      background: sel ? tc2+"22" : "transparent",
+                      border:`1px solid ${sel ? tc2+"66" : T.border2}`,
+                      color: sel ? tc2 : T.ink3,
+                      transition:"all .13s" }}>
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Actions */}
+            <div style={{ display:"flex", gap:8 }}>
+              <button onClick={submitQuickAdd} disabled={!qaTitle.trim() || qaLoading}
+                style={{ flex:1, background: qaTitle.trim() ? T.ink : T.bgHover,
+                  color: qaTitle.trim() ? "#fff" : T.ink4,
+                  border:"none", borderRadius:9, padding:"9px 0",
+                  fontFamily:"var(--sans)", fontWeight:700, fontSize:13, cursor:"pointer",
+                  transition:"background .15s" }}>
+                {qaLoading ? "· Creando…" : "Crear →"}
+              </button>
+              <button onClick={() => setQuickAdd(null)}
+                style={{ background:"transparent", border:`1px solid ${T.border2}`, color:T.ink3,
+                  borderRadius:9, padding:"9px 14px", fontFamily:"var(--sans)",
+                  fontSize:13, cursor:"pointer" }}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── HUD zoom bottom-right ── */}
       <div style={{position:"absolute",bottom:14,right:14,zIndex:20,
