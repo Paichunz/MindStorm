@@ -973,6 +973,8 @@ const SK = {
   activeBoard: "creativeboard-activeboard",
   stickerSeen: "ms-sticker-tab-seen",   // set to "1" after first sticker tab click
   boardTipSeen:"ms-board-tip-seen",     // set to "1" after tip banner dismissed
+  actlog:      (id) => `ms-actlog-${id}`,    // per-board activity log (Feature 1)
+  role:        (id) => `ms-role-${id}`,      // per-board user role (Feature 3)
 };
 
 export default function App() {
@@ -2250,6 +2252,25 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
   const [viewMode, setViewMode]         = useState("kanban");
   const [wbPanel, setWbPanel]           = useState(false);
   const [toast, setToast]               = useState(null);
+  const [activityToast, setActivityToast] = useState(null);
+  const activityTimerRef                = useRef(null);
+  const [activityLog, setActivityLog]   = useState(() => {
+    try { return JSON.parse(localStorage.getItem(SK.actlog(board.id)) || "[]"); } catch { return []; }
+  });
+  const [activityPanel, setActivityPanel] = useState(false);
+  // Roles — auto-director if user created the board, else stored or null (shows picker)
+  const [userRole, setUserRole]         = useState(() => {
+    const stored = getL(SK.role(board.id), null);
+    if (stored) return stored;
+    const myboards = getL(SK.myboards, []);
+    return myboards.includes(board.id) ? "director" : null;
+  });
+  const [rolePickerOpen, setRolePickerOpen] = useState(() => {
+    const stored = getL(SK.role(board.id), null);
+    if (stored) return false;
+    const myboards = getL(SK.myboards, []);
+    return !myboards.includes(board.id);
+  });
   const [saveStatus, setSaveStatus]     = useState(""); // "" | "saving" | "saved" | "error"
   const saveTimerRef                    = useRef(null);
   const moveDebounceRef                 = useRef(null); // debounce timer for D&D card moves
@@ -2359,10 +2380,58 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
     }
   }, [data, onSave, cards, comments, connections]);
 
+  // ── Activity toast helpers ───────────────────────────────────────
+  function actActionColor(action) {
+    if (action==="card")    return T.terra;   // warm orange for new cards
+    if (action==="comment") return "#4A90D9"; // calm blue for comments
+    if (action==="sticker") return T.amber;   // amber for stickers/flags
+    return T.accent;
+  }
+  function actActionLabel(action) {
+    if (action==="card")    return "Tarjeta creada";
+    if (action==="comment") return "Comentario añadido";
+    if (action==="sticker") return "Sticker añadido";
+    return "Elemento añadido";
+  }
+  function fmtActivityTime(ts) {
+    // ts is a number (Date.now()) or ISO string
+    const d = ts ? new Date(ts) : new Date();
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    const hh = String(d.getHours()).padStart(2,"0");
+    const mm = String(d.getMinutes()).padStart(2,"0");
+    if (isToday) return `hoy, ${hh}:${mm}`;
+    const months = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+    return `${d.getDate()} ${months[d.getMonth()]}, ${hh}:${mm}`;
+  }
+  function showActivity(action, subject, author) {
+    if (activityTimerRef.current) clearTimeout(activityTimerRef.current);
+    const entry = { id: genId(), action, subject, author, ts: Date.now() };
+    setActivityToast(entry);
+    activityTimerRef.current = setTimeout(() => setActivityToast(null), 4500);
+    // Persist to local activity log (max 150 entries)
+    setActivityLog(prev => {
+      const next = [entry, ...prev].slice(0, 150);
+      try { localStorage.setItem(SK.actlog(board.id), JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }
+  function selectRole(role) {
+    setUserRole(role);
+    setRolePickerOpen(false);
+    setL(SK.role(board.id), role);
+  }
+  // Role-based permission flags
+  const canEdit   = userRole !== "colaborador";   // director + editor can create/edit cards
+  const canDelete = userRole === "director";       // only director can delete cards
+  const canManage = userRole === "director";       // only director can edit board settings
+  // ── End activity toast helpers ───────────────────────────────────
+
   async function addCard(col, cardData) {
     const card = { id:genId(), col, author:user.name, ts:nowTs(), type:"tarea", attachments:[], deleted:false, ...cardData };
     await save([...cards, card]);
     setAddingTo(null);
+    showActivity("card", card.title || "Sin título", card.author);
     return card; // needed by canvas quick-add (C-05)
   }
 
@@ -2405,12 +2474,16 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
     const comment = { id:genId(), cardId, author:user.name, text, ts:nowTs() };
     const updated = { ...comments, [cardId]: [...(comments[cardId]||[]), comment] };
     await save(undefined, updated);
+    const cardTitle = cards.find(c => c.id===cardId)?.title || "tarjeta";
+    showActivity("comment", cardTitle, user.name);
   }
 
   async function addSticker(cardId, parentId, stickerData) {
     const sticker = { id:genId(), parentId: parentId || null, author:user.name, ts:nowTs(), status:"pending", ...stickerData };
     const updated = cards.map(c => c.id===cardId ? { ...c, stickers:[...(c.stickers||[]), sticker] } : c);
     await save(updated);
+    const cardTitle = cards.find(c => c.id===cardId)?.title || "tarjeta";
+    showActivity("sticker", cardTitle, user.name);
   }
 
   async function updateStickerStatus(cardId, stickerId, status) {
@@ -2493,6 +2566,180 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
         </div>
       )}
 
+      {/* Activity Toast — top-right notification for card/comment/sticker creation */}
+      {activityToast && (() => {
+        const ac = activityToast;
+        const color = actActionColor(ac.action);
+        return (
+          <div style={{
+            position:"fixed", top:72, right:20, zIndex:999,
+            width:272, borderRadius:"var(--r-md)",
+            background:"var(--card)", border:"1px solid var(--card-border)",
+            boxShadow:"var(--shadow-3)",
+            overflow:"hidden",
+            animation:"slideIn .32s cubic-bezier(.16,1,.3,1)",
+            fontFamily:"var(--sans)",
+          }}>
+            {/* 3px top accent strip (no side stripe — per design law) */}
+            <div style={{ height:3, background:color }} />
+            <div style={{ padding:"12px 14px 13px" }}>
+              {/* Action label */}
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:5 }}>
+                <span style={{
+                  fontFamily:"var(--mono)", fontSize:10, fontWeight:600,
+                  letterSpacing:".09em", textTransform:"uppercase",
+                  color:color,
+                }}>{actActionLabel(ac.action)}</span>
+                <button onClick={() => setActivityToast(null)}
+                  style={{ background:"none", border:"none", cursor:"pointer", color:"var(--ink-4)", fontSize:15, padding:"0 2px", lineHeight:1, marginLeft:6 }}>×</button>
+              </div>
+              {/* Subject title */}
+              <div style={{
+                fontFamily:"var(--serif)", fontStyle:"italic", fontWeight:600,
+                fontSize:15, color:"var(--ink-0)", lineHeight:1.3,
+                overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
+                marginBottom:7,
+              }}>{ac.subject}</div>
+              {/* Footer: author · timestamp */}
+              <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                <span style={{
+                  fontFamily:"var(--mono)", fontSize:11, color:"var(--ink-3)",
+                }}>@{ac.author}</span>
+                <span style={{ color:"var(--card-border)", fontSize:11 }}>·</span>
+                <span style={{
+                  fontFamily:"var(--mono)", fontSize:11, color:"var(--ink-4)",
+                }}>{fmtActivityTime(ac.ts)}</span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Activity Panel */}
+      {activityPanel && (
+        <div style={{ position:"fixed", inset:0, zIndex:200 }} onClick={() => setActivityPanel(false)}>
+          <div onClick={e => e.stopPropagation()}
+            style={{ position:"absolute", top:0, right:0, bottom:0, width:Math.min(380, window.innerWidth),
+              background:T.bgCard, borderLeft:"1px solid var(--card-border)",
+              display:"flex", flexDirection:"column", overflow:"hidden",
+              boxShadow:"-6px 0 28px rgba(0,0,0,.13)",
+              animation:"slideIn .28s cubic-bezier(.16,1,.3,1)" }}>
+            {/* Panel header */}
+            <div style={{ padding:"18px 20px 14px", borderBottom:"1px solid var(--card-border)", flexShrink:0 }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                <div>
+                  <div style={{ fontFamily:"var(--serif)", fontStyle:"italic", fontWeight:600, fontSize:18, color:T.ink, letterSpacing:"-0.02em" }}>Historial</div>
+                  <div style={{ fontFamily:"var(--mono)", fontSize:10, color:T.ink4, letterSpacing:"0.06em", marginTop:2 }}>
+                    {activityLog.length} evento{activityLog.length!==1?"s":""} · este dispositivo
+                  </div>
+                </div>
+                <div style={{ display:"flex", gap:6 }}>
+                  {activityLog.length > 0 && (
+                    <button onClick={() => { setActivityLog([]); try { localStorage.removeItem(SK.actlog(board.id)); } catch {} }}
+                      style={{ background:"none", border:"1px solid "+T.border, color:T.ink4, padding:"5px 10px", borderRadius:6, cursor:"pointer", fontSize:11, fontFamily:"var(--mono)" }}>
+                      limpiar
+                    </button>
+                  )}
+                  <button onClick={() => setActivityPanel(false)}
+                    style={{ background:"none", border:"none", color:T.ink4, cursor:"pointer", fontSize:18, padding:"2px 6px", lineHeight:1 }}>×</button>
+                </div>
+              </div>
+            </div>
+            {/* Log entries */}
+            <div style={{ flex:1, overflowY:"auto", padding:"12px 0" }}>
+              {activityLog.length === 0 ? (
+                <div style={{ padding:"48px 20px", textAlign:"center" }}>
+                  <div style={{ color:T.ink4, fontFamily:"var(--serif)", fontStyle:"italic", fontSize:15, marginBottom:6 }}>Sin actividad aún</div>
+                  <div style={{ color:T.ink4, fontFamily:"var(--sans)", fontSize:12, lineHeight:1.55 }}>El historial se construye a medida que el equipo trabaja.</div>
+                </div>
+              ) : (() => {
+                // Group entries by date label
+                const groups = [];
+                let lastLabel = null;
+                activityLog.forEach(entry => {
+                  const d = new Date(entry.ts);
+                  const now = new Date();
+                  let label;
+                  const isToday = d.toDateString() === now.toDateString();
+                  const yesterday = new Date(now); yesterday.setDate(now.getDate()-1);
+                  const isYest = d.toDateString() === yesterday.toDateString();
+                  if (isToday) label = "Hoy";
+                  else if (isYest) label = "Ayer";
+                  else { const months=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"]; label = `${d.getDate()} ${months[d.getMonth()]}`; }
+                  if (label !== lastLabel) { groups.push({ label, entries:[] }); lastLabel = label; }
+                  groups[groups.length-1].entries.push(entry);
+                });
+                return groups.map(g => (
+                  <div key={g.label}>
+                    <div style={{ padding:"6px 20px 4px", fontFamily:"var(--mono)", fontSize:9, color:T.ink4, letterSpacing:"0.1em", textTransform:"uppercase", position:"sticky", top:0, background:T.bgCard, borderBottom:"1px solid var(--card-border)", zIndex:1 }}>
+                      {g.label}
+                    </div>
+                    {g.entries.map(entry => {
+                      const color = actActionColor(entry.action);
+                      const hh = String(new Date(entry.ts).getHours()).padStart(2,"0");
+                      const mm = String(new Date(entry.ts).getMinutes()).padStart(2,"0");
+                      return (
+                        <div key={entry.id} style={{ display:"flex", gap:12, alignItems:"flex-start", padding:"10px 20px", borderBottom:"1px solid var(--card-border)" }}>
+                          <div style={{ width:8, height:8, borderRadius:"50%", background:color, flexShrink:0, marginTop:5 }} />
+                          <div style={{ flex:1, minWidth:0 }}>
+                            <div style={{ display:"flex", gap:6, alignItems:"baseline", flexWrap:"wrap" }}>
+                              <span style={{ fontFamily:"var(--mono)", fontSize:9, color:color, letterSpacing:"0.08em", textTransform:"uppercase" }}>{actActionLabel(entry.action)}</span>
+                              <span style={{ fontFamily:"var(--mono)", fontSize:9, color:T.ink4 }}>{hh}:{mm}</span>
+                            </div>
+                            <div style={{ fontFamily:"var(--serif)", fontStyle:"italic", fontWeight:600, fontSize:13, color:T.ink, marginTop:2, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                              {entry.subject}
+                            </div>
+                            <div style={{ fontFamily:"var(--mono)", fontSize:10, color:T.ink4, marginTop:1 }}>@{entry.author}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Role Picker Modal — shown once per non-owned board */}
+      {rolePickerOpen && (
+        <OOverlay onClose={() => { if (userRole) setRolePickerOpen(false); }}>
+          <OModalBox>
+            <div style={{ textAlign:"center", marginBottom:20 }}>
+              <div style={{ fontFamily:"var(--serif)", fontStyle:"italic", fontWeight:600, fontSize:22, color:T.ink, letterSpacing:"-0.02em", marginBottom:6 }}>¿Cuál es tu rol?</div>
+              <div style={{ color:T.ink4, fontSize:13, lineHeight:1.55 }}>Define lo que puedes editar en <strong style={{ color:T.ink }}>{board.name}</strong>.</div>
+            </div>
+            <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+              {[
+                { id:"director",    icon:"◆", label:"Director",     desc:"Control total — crear, editar, eliminar, configurar el proyecto", color:T.amber,  bg:T.amberBg },
+                { id:"editor",      icon:"◈", label:"Editor",       desc:"Crear y editar tarjetas propias — sin eliminar ni configurar",     color:T.blue,   bg:T.blueBg  },
+                { id:"colaborador", icon:"◇", label:"Colaborador",  desc:"Solo comentar y añadir stickers a tarjetas del equipo",            color:T.ink3,   bg:T.bgPanel },
+              ].map(r => (
+                <button key={r.id} onClick={() => selectRole(r.id)}
+                  style={{ display:"flex", gap:12, alignItems:"center", padding:"12px 16px",
+                    background: userRole===r.id ? r.bg : T.bgCard,
+                    border:`1.5px solid ${userRole===r.id ? r.color+"66" : T.border}`,
+                    borderRadius:10, cursor:"pointer", textAlign:"left", transition:"all .18s", width:"100%" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = r.bg; e.currentTarget.style.borderColor = r.color+"66"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = userRole===r.id ? r.bg : T.bgCard; e.currentTarget.style.borderColor = userRole===r.id ? r.color+"66" : T.border; }}>
+                  <span style={{ color:r.color, fontSize:16, flexShrink:0 }}>{r.icon}</span>
+                  <div>
+                    <div style={{ fontWeight:700, fontSize:14, color:T.ink, fontFamily:"var(--sans)", marginBottom:2 }}>{r.label}</div>
+                    <div style={{ fontSize:12, color:T.ink3, lineHeight:1.45 }}>{r.desc}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+            {userRole && (
+              <div style={{ marginTop:14, textAlign:"right" }}>
+                <OGhostBtn small onClick={() => setRolePickerOpen(false)}>Cancelar</OGhostBtn>
+              </div>
+            )}
+          </OModalBox>
+        </OOverlay>
+      )}
+
       {/* ── NEW TOP BAR (simplified) ── */}
       <div style={{ display:"flex", alignItems:"center", gap:isMobile?8:12,
         padding:isMobile?"9px 12px":"10px 20px",
@@ -2516,6 +2763,18 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
         {showPwd && board.password && <span style={{ background:T.amberBg, color:T.amber, fontFamily:"var(--mono)", fontSize:12, padding:"4px 11px", borderRadius:7, userSelect:"all", border:`1px solid ${T.amber}33` }}>{board.password}</span>}
         <div style={{ flex:1 }} />
         <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+          {/* Role badge */}
+          {userRole && (
+            <button onClick={() => setRolePickerOpen(true)}
+              title={`Tu rol: ${userRole} — clic para cambiar`}
+              style={{ background: userRole==="director" ? T.amberBg : userRole==="editor" ? T.blueBg : T.bgPanel,
+                border: `1px solid ${userRole==="director" ? T.amber+"44" : userRole==="editor" ? T.blue+"44" : T.border}`,
+                color: userRole==="director" ? T.amber : userRole==="editor" ? T.blue : T.ink4,
+                fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.08em", textTransform:"uppercase",
+                padding:"3px 9px", borderRadius:99, cursor:"pointer", transition:"all .15s", flexShrink:0 }}>
+              {userRole==="director" ? "◆ director" : userRole==="editor" ? "◈ editor" : "◇ colaborador"}
+            </button>
+          )}
           <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:12 }}>@{user.name}</span>
           {/* Shortcuts hint button */}
           {!isMobile && (
@@ -2658,6 +2917,26 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 </span>
               </button>
             )}
+
+            {/* Activity log button — shows count badge */}
+            <button onClick={() => setActivityPanel(true)} title="Historial de actividad" aria-label="Historial de actividad"
+              style={{ width:40, height:40, borderRadius:8, border:"none", cursor:"pointer", position:"relative",
+                background: activityLog.length > 0 ? "transparent" : "transparent",
+                color:T.ink4,
+                fontSize:13, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:1,
+                transition:"all .15s" }}
+              onMouseEnter={e => { e.currentTarget.style.background="var(--paper-2)"; e.currentTarget.style.color=T.ink; }}
+              onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color=T.ink4; }}>
+              ◷
+              <span style={{ fontFamily:"var(--mono)", fontSize:7, letterSpacing:"0.04em", lineHeight:1 }}>historial</span>
+              {activityLog.length > 0 && (
+                <span style={{ position:"absolute", top:3, right:3, background:T.blue, color:"#fff",
+                  fontSize:7, fontWeight:800, width:13, height:13, borderRadius:"50%",
+                  display:"flex", alignItems:"center", justifyContent:"center", lineHeight:1 }}>
+                  {Math.min(activityLog.length, 99)}
+                </span>
+              )}
+            </button>
 
             {cat.worldbuilding && (
               <button onClick={() => setWbPanel(true)} title="Worldbuilding" aria-label="Abrir panel de Worldbuilding"
@@ -2829,7 +3108,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 canvasPositions={data.canvasPositions || { cards:{}, stickers:{} }}
                 onSavePositions={saveCanvasPositions}
                 cat={cat}
-                onCreateCard={addCard}
+                onCreateCard={canEdit ? addCard : null}
               />
             : <div style={{ display:"flex", flex:1, overflow:"hidden", position:"relative" }}>
               <div style={{ display:"flex", flexDirection:isMobile?"column":"row", gap:isMobile?12:14,
@@ -2865,7 +3144,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                           <span style={{ background:`${col.color}20`, color:col.color,
                             fontFamily:"var(--mono)", fontSize:11, padding:"3px 10px",
                             borderRadius:99, border:`1px solid ${col.color}44`, fontWeight:700 }}>{colCards.length}</span>
-                          {addingTo !== col.id && (
+                          {addingTo !== col.id && canEdit && (
                             <button onClick={() => setAddingTo(col.id)} title="Añadir tarjeta"
                               style={{ background:`${col.color}18`, border:`1px solid ${col.color}44`,
                                 color:col.color, width:26, height:26, borderRadius:8, cursor:"pointer",
@@ -2878,7 +3157,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                           )}
                         </div>
                       </div>
-                      {addingTo===col.id && (
+                      {addingTo===col.id && canEdit && (
                         <div style={{ marginBottom:9 }}>
                           <AddForm col={col.id} onAdd={addCard} onCancel={() => setAddingTo(null)} />
                         </div>
@@ -2889,10 +3168,12 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                             commentCount={(comments[card.id]||[]).length}
                             connCount={connections.filter(c=>(c.cardA===card.id||c.cardB===card.id)&&c.status==="approved").length}
                             isOwner={card.author === user.name}
+                            canEdit={canEdit}
+                            canDelete={canDelete}
                             onOpen={() => setReadCard(card)}
                             onEdit={() => setEditCard(card)}
                             onMove={c => moveCard(card.id, c)}
-                            onDragStart={() => setDragCard(card.id)}
+                            onDragStart={() => canEdit && setDragCard(card.id)}
                             onDragEnd={() => { setDragCard(null); setDragOver(null); dragCountRef.current={}; }}
                             isDragging={dragCard===card.id}
                             currentCol={col.id} />
@@ -2916,7 +3197,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                             borderRadius:10, marginTop:4 }}>sin resultados</div>
                         )}
                         {/* Empty-state CTA — only shown when column has no cards */}
-                        {addingTo !== col.id && colCards.length === 0 && !hasFilter && (
+                        {addingTo !== col.id && canEdit && colCards.length === 0 && !hasFilter && (
                           <button onClick={() => setAddingTo(col.id)}
                             aria-label={`Añadir tarjeta en ${col.label}`}
                             style={{ width:"100%", marginTop:0,
@@ -3169,7 +3450,7 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
           onEdit={() => setEditCard(live)}
           onClose={() => setReadCard(null)} />;
       })()}
-      {editCard && (() => { const liveCard = activeCards.find(c => c.id === editCard.id) || editCard; return <EditCardModal card={liveCard} cardComments={comments[liveCard.id]||[]} user={user} onSave={updateCard} onDelete={softDeleteCard} onClose={() => setEditCard(null)} onAddComment={addComment} allCards={activeCards} onAddSticker={(parentId, data) => addSticker(liveCard.id, parentId, data)} onUpdateSticker={(stickerId, status) => updateStickerStatus(liveCard.id, stickerId, status)} />; })()}
+      {editCard && (() => { const liveCard = activeCards.find(c => c.id === editCard.id) || editCard; return <EditCardModal card={liveCard} cardComments={comments[liveCard.id]||[]} user={user} onSave={updateCard} onDelete={softDeleteCard} onClose={() => setEditCard(null)} onAddComment={addComment} allCards={activeCards} onAddSticker={(parentId, data) => addSticker(liveCard.id, parentId, data)} onUpdateSticker={(stickerId, status) => updateStickerStatus(liveCard.id, stickerId, status)} canEdit={canEdit} canDelete={canDelete} />; })()}
       {editConcept && <EditConceptModal concept={concept} onSave={c => { setConcept(c); setEditConcept(false); }} onClose={() => setEditConcept(false)} cat={cat} />}
       {aiPanel && <AIPanel board={board} concept={concept} cards={activeCards} cat={cat} onClose={() => setAiPanel(false)} />}
       {connPanel && <ConnectionsPanel cards={activeCards} connections={connections} onUpdate={updateConnections} onClose={() => setConnPanel(false)} cat={cat} concept={concept} onAddAsTask={addConnectionAsTask} />}
@@ -3238,12 +3519,13 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
 }
 
 // ─── WORK CARD ────────────────────────────────────────────────────────────────
-function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDragStart, onDragEnd, isDragging, currentCol, isOwner }) {
+function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDragStart, onDragEnd, isDragging, currentCol, isOwner, canEdit=true, canDelete=true }) {
   const [expanded, setExpanded] = useState(false);
   const tc  = TYPE_COLOR[card.type] || T.accent;
   const tbg = TYPE_BG[card.type]    || T.accentBg;
   const imgs  = (card.attachments||[]).filter(a => a.type==="image");
-  const files = (card.attachments||[]).filter(a => a.type!=="image");
+  const files = (card.attachments||[]).filter(a => a.type!=="image" && a.type!=="url");
+  const urls  = (card.attachments||[]).filter(a => a.type==="url");
   const sc = (card.stickers||[]).filter(s => s.status!=="discarded").length;
 
   return (
@@ -3354,11 +3636,24 @@ function WorkCard({ card, commentCount, connCount, onOpen, onEdit, onMove, onDra
               ))}
             </div>
           )}
+          {/* URL references */}
+          {urls.length > 0 && (
+            <div style={{ display:"flex", flexWrap:"wrap", gap:4, marginTop:6 }}>
+              {urls.map(u => (
+                <a key={u.id} href={u.url} target="_blank" rel="noopener noreferrer"
+                  style={{ background:T.blueBg, border:"1px solid "+T.blue+"44", borderRadius:4,
+                    padding:"2px 8px", display:"flex", gap:4, alignItems:"center", textDecoration:"none" }}>
+                  <span style={{ color:T.blue, fontSize:9 }}>⎋</span>
+                  <span style={{ color:T.blue, fontFamily:"var(--mono)", fontSize:10 }}>{u.label}</span>
+                </a>
+              ))}
+            </div>
+          )}
           {/* Footer */}
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginTop:10, flexWrap:"wrap", gap:4 }}>
             <span style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10 }}>@{card.author}</span>
             <div style={{ display:"flex", gap:3 }}>
-              {COLUMNS.filter(c => c.id!==currentCol).map(c => (
+              {canEdit && COLUMNS.filter(c => c.id!==currentCol).map(c => (
                 <button key={c.id} onClick={e => { e.stopPropagation(); onMove(c.id); }} title={c.label} className="mv-btn"
                   style={{ background:"var(--paper-2)", border:`1px solid ${c.color}30`,
                     color:c.color, cursor:"pointer", fontSize:10, padding:"2px 7px", borderRadius:4,
@@ -3381,7 +3676,8 @@ function CardReaderModal({ card, cardComments, connections, allCards, user, onEd
   const tc  = TYPE_COLOR[card.type] || T.accent;
   const tbg = TYPE_BG[card.type]    || T.accentBg;
   const imgs  = (card.attachments || []).filter(a => a.type === "image");
-  const files = (card.attachments || []).filter(a => a.type !== "image");
+  const files = (card.attachments || []).filter(a => a.type !== "image" && a.type !== "url");
+  const urls  = (card.attachments || []).filter(a => a.type === "url");
   const stickers = (card.stickers || []).filter(s => s.status !== "discarded");
   const col = COLUMNS.find(c => c.id === card.col);
   const connectedCards = (connections || [])
@@ -3524,6 +3820,33 @@ function CardReaderModal({ card, cardComments, connections, allCards, user, onEd
             </div>
           )}
 
+          {/* Referencias / enlaces */}
+          {urls.length > 0 && (
+            <div style={{ marginBottom:28 }}>
+              <div style={{ color:T.ink4, fontFamily:"var(--mono)", fontSize:10,
+                letterSpacing:"0.1em", marginBottom:10, textTransform:"uppercase" }}>
+                Referencias
+              </div>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:7 }}>
+                {urls.map(u => (
+                  <a key={u.id} href={u.url} target="_blank" rel="noopener noreferrer"
+                    style={{ background:T.blueBg, border:"1px solid "+T.blue+"44",
+                      borderRadius:9, padding:"8px 14px", display:"flex", gap:8, alignItems:"center",
+                      textDecoration:"none", transition:"all .15s" }}
+                    onMouseEnter={e => e.currentTarget.style.background=T.blue+"22"}
+                    onMouseLeave={e => e.currentTarget.style.background=T.blueBg}>
+                    <span style={{ color:T.blue, fontSize:15 }}>⎋</span>
+                    <div>
+                      <div style={{ color:T.blue, fontSize:12, fontWeight:600 }}>{u.label}</div>
+                      <div style={{ color:T.blue+"99", fontFamily:"var(--mono)", fontSize:9, marginTop:1,
+                        maxWidth:200, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{u.url}</div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Tarjetas conectadas */}
           {connectedCards.length > 0 && (
             <div style={{ marginBottom:28 }}>
@@ -3652,8 +3975,9 @@ function AddForm({ col, onAdd, onCancel }) {
 }
 
 // ─── EDIT CARD MODAL ─────────────────────────────────────────────────────────
-function EditCardModal({ card, cardComments, user, onSave, onDelete, onClose, onAddComment, allCards, onAddSticker, onUpdateSticker }) {
+function EditCardModal({ card, cardComments, user, onSave, onDelete, onClose, onAddComment, allCards, onAddSticker, onUpdateSticker, canEdit=true, canDelete=true }) {
   const isOwner = card.author === user.name;
+  const canEditTab = isOwner && canEdit; // only owner+canEdit sees the edit tab
   const [title, setTitle]     = useState(card.title||"");
   const [body, setBody]       = useState(card.body||"");
   const [type, setType]       = useState(card.type||"tarea");
@@ -3705,7 +4029,7 @@ function EditCardModal({ card, cardComments, user, onSave, onDelete, onClose, on
       {/* Tabs — Edit only visible to owner */}
       <div style={{ display:"flex", gap:0, marginBottom:20, borderBottom:"1px solid "+T.border }}>
         {[
-          isOwner ? ["edit", "✎ Editar"] : null,
+          canEditTab ? ["edit", "✎ Editar"] : null,
           ["comments", "◇ Comentarios" + (cardComments.length ? ` (${cardComments.length})` : "")],
           ["stickers", "▤ Stickers · notas" + (stickerCount > 0 ? ` (${stickerCount})` : "")],
         ].filter(Boolean).map(([id, lbl]) => {
@@ -3736,7 +4060,7 @@ function EditCardModal({ card, cardComments, user, onSave, onDelete, onClose, on
       </div>
 
 
-      {tab==="edit" && isOwner && (
+      {tab==="edit" && canEditTab && (
         <div>
           <OLabel>Título</OLabel>
           <OInput value={title} onChange={e=>setTitle(e.target.value)} style={{ marginBottom:12 }} autoFocus />
@@ -3752,21 +4076,23 @@ function EditCardModal({ card, cardComments, user, onSave, onDelete, onClose, on
             ))}
           </div>
           <OLabel>Adjuntos</OLabel>
-          <AttachZone atts={atts} onRemove={id=>setAtts(p=>p.filter(a=>a.id!==id))} onAdd={() => fileRef.current?.click()} loading={loading} />
+          <AttachZone atts={atts} onRemove={id=>setAtts(p=>p.filter(a=>a.id!==id))} onAdd={() => fileRef.current?.click()} loading={loading} onAddUrl={att => setAtts(p => [...p, att])} />
           <input ref={fileRef} type="file" accept={ACCEPTED} multiple onChange={handleFile} style={{ display:"none" }} />
           <div style={{ display:"flex", justifyContent:"space-between", marginTop:18, gap:8 }}>
-            {!confirmDel ? (
+            {canDelete && !confirmDel && (
               <button onClick={() => setConfirmDel(true)}
                 style={{ background:T.roseBg, border:"1px solid "+T.rose+"33", color:T.rose, padding:"8px 14px", borderRadius:7, cursor:"pointer", fontSize:13, fontFamily:"var(--sans)" }}>
                 ✕ Mover a papelera
               </button>
-            ) : (
+            )}
+            {canDelete && confirmDel && (
               <div style={{ display:"flex", gap:6, alignItems:"center" }}>
                 <span style={{ color:T.ink3, fontSize:12 }}>¿Confirmas?</span>
                 <button onClick={() => onDelete(card.id)} style={{ background:T.rose, border:"none", color:"#fff", padding:"6px 12px", borderRadius:6, cursor:"pointer", fontSize:12, fontFamily:"var(--sans)" }}>Sí, mover</button>
                 <button onClick={() => setConfirmDel(false)} style={{ background:T.bgPanel, border:"1px solid "+T.border, color:T.ink3, padding:"6px 10px", borderRadius:6, cursor:"pointer", fontSize:12 }}>No</button>
               </div>
             )}
+            {!canDelete && <div />}
             <div style={{ display:"flex", gap:8 }}>
               <OGhostBtn onClick={onClose}>Cancelar</OGhostBtn>
               <OBtn onClick={() => onSave(card.id,{title,body,type,attachments:atts})}>Guardar</OBtn>
@@ -4629,9 +4955,23 @@ function AIPanel({ board, concept, cards, cat, onClose }) {
 }
 
 // ─── ATTACH ZONE ──────────────────────────────────────────────────────────────
-function AttachZone({ atts, onRemove, onAdd, loading }) {
+function AttachZone({ atts, onRemove, onAdd, loading, onAddUrl }) {
+  const [urlMode, setUrlMode] = useState(false);
+  const [urlInput, setUrlInput] = useState("");
   const imgs  = atts.filter(a => a.type==="image");
-  const files = atts.filter(a => a.type!=="image");
+  const files = atts.filter(a => a.type!=="image" && a.type!=="url");
+  const urls  = atts.filter(a => a.type==="url");
+
+  function submitUrl() {
+    let u = urlInput.trim();
+    if (!u || !onAddUrl) return;
+    if (!u.startsWith("http")) u = "https://" + u;
+    let label = u;
+    try { label = new URL(u).hostname.replace(/^www\./, ""); } catch {}
+    onAddUrl({ id: genId(), url: u, label, type: "url" });
+    setUrlInput(""); setUrlMode(false);
+  }
+
   return (
     <div>
       {imgs.length>0 && (
@@ -4656,9 +4996,39 @@ function AttachZone({ atts, onRemove, onAdd, loading }) {
           ))}
         </div>
       )}
+      {urls.length>0 && (
+        <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginBottom:8 }}>
+          {urls.map(u => (
+            <div key={u.id} style={{ background:T.blueBg, border:"1px solid "+T.blue+"44", borderRadius:6, padding:"4px 10px", display:"flex", gap:5, alignItems:"center" }}>
+              <span style={{ color:T.blue, fontSize:10, flexShrink:0 }}>⎋</span>
+              <a href={u.url} target="_blank" rel="noopener noreferrer"
+                style={{ color:T.blue, fontFamily:"var(--mono)", fontSize:11, textDecoration:"none", maxWidth:120, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}
+                title={u.url}>
+                {u.label}
+              </a>
+              <button onClick={() => onRemove(u.id)} style={{ background:"none", border:"none", color:T.blue+"88", cursor:"pointer", fontSize:13, lineHeight:1 }}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
+      {/* URL input form */}
+      {urlMode ? (
+        <div style={{ display:"flex", gap:5, marginBottom:6 }}>
+          <OInput placeholder="https://…" value={urlInput} onChange={e => setUrlInput(e.target.value)}
+            onKeyDown={e => { if (e.key==="Enter") submitUrl(); if (e.key==="Escape") { setUrlMode(false); setUrlInput(""); } }}
+            autoFocus style={{ flex:1, fontSize:12 }} />
+          <button onClick={submitUrl} style={{ background:T.blue, border:"none", color:"#fff", padding:"0 12px", borderRadius:7, cursor:"pointer", fontSize:12, fontWeight:600, flexShrink:0 }}>↵</button>
+          <button onClick={() => { setUrlMode(false); setUrlInput(""); }} style={{ background:"none", border:"1px solid "+T.border, color:T.ink4, padding:"0 8px", borderRadius:7, cursor:"pointer", fontSize:12, flexShrink:0 }}>×</button>
+        </div>
+      ) : onAddUrl && (
+        <button onClick={() => setUrlMode(true)} className="att-btn"
+          style={{ background:"transparent", border:"1.5px dashed "+T.blue+"55", color:T.blue, padding:"6px 12px", borderRadius:7, fontSize:12, cursor:"pointer", display:"flex", alignItems:"center", gap:6, width:"100%", transition:"all .15s", fontFamily:"var(--sans)", marginBottom:5 }}>
+          ⎋ Añadir enlace de referencia
+        </button>
+      )}
       <button onClick={onAdd} className="att-btn"
         style={{ background:T.bgPanel, border:"1.5px dashed "+T.border2, color:T.ink3, padding:"7px 12px", borderRadius:7, fontSize:12, cursor:"pointer", display:"flex", alignItems:"center", gap:6, width:"100%", transition:"all .15s", fontFamily:"var(--sans)" }}>
-        {loading ? "↑ Procesando…" : "◎ Adjuntar"}
+        {loading ? "↑ Procesando…" : "◎ Adjuntar archivo"}
       </button>
     </div>
   );
