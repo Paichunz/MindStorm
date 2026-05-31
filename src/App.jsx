@@ -2258,19 +2258,16 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
     try { return JSON.parse(localStorage.getItem(SK.actlog(board.id)) || "[]"); } catch { return []; }
   });
   const [activityPanel, setActivityPanel] = useState(false);
-  // Roles — auto-director if user created the board, else stored or null (shows picker)
+  // Roles — never block on entry; always default to a usable role
   const [userRole, setUserRole]         = useState(() => {
     const stored = getL(SK.role(board.id), null);
     if (stored) return stored;
+    // Auto-director: user created this board (myboards) or name matches board.createdBy
     const myboards = getL(SK.myboards, []);
-    return myboards.includes(board.id) ? "director" : null;
+    const isCreator = myboards.includes(board.id) || board.createdBy === user.name;
+    return isCreator ? "director" : "editor"; // safe default — user opens picker via badge
   });
-  const [rolePickerOpen, setRolePickerOpen] = useState(() => {
-    const stored = getL(SK.role(board.id), null);
-    if (stored) return false;
-    const myboards = getL(SK.myboards, []);
-    return !myboards.includes(board.id);
-  });
+  const [rolePickerOpen, setRolePickerOpen] = useState(false); // only opens on badge click
   const [saveStatus, setSaveStatus]     = useState(""); // "" | "saving" | "saved" | "error"
   const saveTimerRef                    = useRef(null);
   const moveDebounceRef                 = useRef(null); // debounce timer for D&D card moves
@@ -2702,9 +2699,9 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
         </div>
       )}
 
-      {/* Role Picker Modal — shown once per non-owned board */}
+      {/* Role Picker Modal — opens via badge click */}
       {rolePickerOpen && (
-        <OOverlay onClose={() => { if (userRole) setRolePickerOpen(false); }}>
+        <OOverlay onClose={() => setRolePickerOpen(false)}>
           <OModalBox>
             <div style={{ textAlign:"center", marginBottom:20 }}>
               <div style={{ fontFamily:"var(--serif)", fontStyle:"italic", fontWeight:600, fontSize:22, color:T.ink, letterSpacing:"-0.02em", marginBottom:6 }}>¿Cuál es tu rol?</div>
@@ -2731,11 +2728,9 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
                 </button>
               ))}
             </div>
-            {userRole && (
-              <div style={{ marginTop:14, textAlign:"right" }}>
-                <OGhostBtn small onClick={() => setRolePickerOpen(false)}>Cancelar</OGhostBtn>
-              </div>
-            )}
+            <div style={{ marginTop:14, textAlign:"right" }}>
+              <OGhostBtn small onClick={() => setRolePickerOpen(false)}>Cancelar</OGhostBtn>
+            </div>
           </OModalBox>
         </OOverlay>
       )}
