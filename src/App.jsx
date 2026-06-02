@@ -77,6 +77,24 @@ const THEMES = {
     orange:"#EA580C", orangeBg:"rgba(234,88,12,0.09)",
     cyan:"#0891B2",   cyanBg:"rgba(8,145,178,0.09)",
   },
+  // ── Terminal — UI Diegética ───────────────────────────────────────────────
+  // Amber CRT phosphor sobre near-black cálido. Todo monospace.
+  // El software que existe dentro del mundo que estás construyendo.
+  terminal: {
+    id:"terminal", label:"Terminal", icon:"▸", isDark:true, isTerminal:true,
+    bg:"#0C0A06",     bgReal:"#0C0A06",   bgPanel:"#111009",   bgCard:"#181509",  bgHover:"#201D0C",
+    border:"rgba(212,150,12,0.16)",       border2:"rgba(212,150,12,0.30)",
+    ink:"#F0B820",  ink2:"#D4960C",  ink3:"#7A5C08",  ink4:"#3E2E04",
+    accent:"#D4960C",   accentBg:"rgba(212,150,12,0.14)",  accentHover:"#F0B820",
+    neon:"#F0B820",     neonSoft:"rgba(240,184,32,0.12)",
+    green:"#5C9E2A",    greenBg:"rgba(92,158,42,0.14)",
+    amber:"#F0B820",    amberBg:"rgba(240,184,32,0.12)",
+    rose:"#C84040",     roseBg:"rgba(200,64,64,0.12)",
+    blue:"#4A7EC0",     blueBg:"rgba(74,126,192,0.12)",
+    orange:"#D4840C",   orangeBg:"rgba(212,132,12,0.12)",
+    cyan:"#38A8B0",     cyanBg:"rgba(56,168,176,0.12)",
+    terra:"#D4840C",
+  },
 };
 
 // T is mutable — updated when theme changes
@@ -517,8 +535,257 @@ function resizeImage(file) {
 // ─── THEME OVERRIDE CSS ───────────────────────────────────────────────────────
 function getThemeCSS(id) {
   const t = THEMES[id];
-  if (!t || t.isDark) return "";
-  // All non-dark themes are light
+  if (!t) return "";
+  // Terminal: diegetic amber CRT theme — full override
+  if (t.isTerminal) return `
+    /* ─── TERMINAL THEME — Amber Phosphor CRT ─────────────────────── */
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+
+    :root {
+      --sans:  'JetBrains Mono', monospace;
+      --body:  'JetBrains Mono', monospace;
+      --serif: 'JetBrains Mono', monospace;
+      --mono:  'JetBrains Mono', monospace;
+      --r-sm:  0px;
+      --r-md:  0px;
+      --r-lg:  0px;
+      --r-pill: 2px;
+      --paper:       #0C0A06;
+      --paper-2:     #111009;
+      --paper-3:     #181509;
+      --card:        #181509;
+      --card-soft:   #111009;
+      --card-border: rgba(212,150,12,0.18);
+      --noir:        #F0B820;
+      --noir-2:      #D4960C;
+      --ink-0:       #F0B820;
+      --ink-1:       #D4960C;
+      --ink-2:       #A07010;
+      --ink-3:       #6A4A08;
+      --ink-4:       #3E2E04;
+      --terra:       #D4840C;
+      --terra-soft:  rgba(212,132,12,0.14);
+      --olive:       #5C9E2A;
+      --olive-soft:  rgba(92,158,42,0.14);
+      --sky:         #4A7EC0;
+      --sky-soft:    rgba(74,126,192,0.14);
+      --laton:       #D4960C;
+      --laton-soft:  rgba(212,150,12,0.14);
+      --line:        rgba(212,150,12,0.22);
+      --line-soft:   rgba(212,150,12,0.10);
+      --line-dot:    rgba(212,150,12,0.08);
+      --shadow-1: 0 0 0 1px rgba(212,150,12,0.08), 0 2px 10px rgba(0,0,0,0.5);
+      --shadow-2: 0 0 0 1px rgba(212,150,12,0.14), 0 0 16px rgba(212,150,12,0.06), 0 4px 20px rgba(0,0,0,0.6);
+      --shadow-3: 0 0 0 1px rgba(212,150,12,0.22), 0 0 28px rgba(212,150,12,0.10), 0 8px 32px rgba(0,0,0,0.7);
+    }
+
+    html, body {
+      background: #0C0A06 !important;
+      color: #F0B820 !important;
+      font-family: 'JetBrains Mono', monospace !important;
+    }
+
+    /* Phosphor scanlines over everything */
+    body::before {
+      content: '' !important;
+      position: fixed !important;
+      inset: 0 !important;
+      background-image: repeating-linear-gradient(
+        0deg,
+        transparent, transparent 2px,
+        rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px
+      ) !important;
+      background-size: 100% 4px !important;
+      pointer-events: none !important;
+      z-index: 9998 !important;
+      opacity: 1 !important;
+    }
+
+    /* Crosshair grid on board area */
+    .board-area {
+      background-image:
+        linear-gradient(rgba(212,150,12,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(212,150,12,0.04) 1px, transparent 1px) !important;
+      background-size: 28px 28px !important;
+    }
+
+    ::selection { background: rgba(212,150,12,0.25) !important; color: #F0B820 !important; }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #111009 !important; }
+    ::-webkit-scrollbar-thumb { background: rgba(212,150,12,0.3) !important; border-radius: 0 !important; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(212,150,12,0.55) !important; }
+
+    /* Focus */
+    :focus-visible { outline: 1px solid rgba(212,150,12,0.7) !important; outline-offset: 2px !important; }
+
+    /* ── Corner brackets: visible on all panels ── */
+    .hud-c::before, .hud-c::after {
+      opacity: 1 !important;
+      border-color: rgba(212,150,12,0.45) !important;
+      width: 10px !important; height: 10px !important;
+    }
+
+    /* ── HUD toolbar buttons — terminal panel controls ── */
+    .hud-btn {
+      background: transparent !important;
+      border: 1px solid rgba(212,150,12,0.22) !important;
+      color: #D4960C !important;
+      border-radius: 0 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.08em !important;
+      font-size: 10px !important;
+      font-family: 'JetBrains Mono', monospace !important;
+      box-shadow: none !important;
+    }
+    .hud-btn:hover {
+      background: rgba(212,150,12,0.08) !important;
+      border-color: rgba(212,150,12,0.50) !important;
+      color: #F0B820 !important;
+      box-shadow: 0 0 10px rgba(212,150,12,0.12) !important;
+      transform: none !important;
+    }
+    .hud-btn:active:not(.hud-btn-active) {
+      background: rgba(212,150,12,0.14) !important;
+      transform: none !important;
+    }
+    .hud-btn-active {
+      background: rgba(212,150,12,0.18) !important;
+      border-color: #D4960C !important;
+      color: #F0B820 !important;
+      box-shadow: inset 0 0 8px rgba(212,150,12,0.12) !important;
+    }
+
+    /* ── Board tiles (lobby) ── */
+    .tile {
+      background: #181509 !important;
+      border-color: rgba(212,150,12,0.16) !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+    .tile:hover {
+      box-shadow: 0 0 18px rgba(212,150,12,0.14), 0 0 0 1px rgba(212,150,12,0.30) !important;
+      border-color: rgba(212,150,12,0.35) !important;
+      transform: none !important;
+    }
+
+    /* ── Kanban work cards ── */
+    .wcard {
+      background: #181509 !important;
+      border-color: rgba(212,150,12,0.16) !important;
+      border-left-color: inherit !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+    .wcard:hover {
+      box-shadow: 0 0 14px rgba(212,150,12,0.10) !important;
+      border-color: rgba(212,150,12,0.28) !important;
+      transform: none !important;
+    }
+
+    /* ── Canvas MixCards ── */
+    .mcard {
+      background: #181509 !important;
+      border: 1px solid rgba(212,150,12,0.20) !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+    .mcard:hover {
+      box-shadow: 0 0 16px rgba(212,150,12,0.12) !important;
+      border-color: rgba(212,150,12,0.35) !important;
+    }
+    .mcard-head { border-bottom-color: rgba(212,150,12,0.14) !important; }
+    .mcard-title { font-style: normal !important; letter-spacing: 0.03em !important; }
+    .mcard-btns button {
+      background: transparent !important;
+      border-color: rgba(212,150,12,0.22) !important;
+      border-radius: 0 !important;
+      color: #D4960C !important;
+      box-shadow: none !important;
+    }
+    .mcard-btns button:hover {
+      background: rgba(212,150,12,0.08) !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+
+    /* ── Toasts ── */
+    .toast {
+      background: #111009 !important;
+      border-color: rgba(212,150,12,0.35) !important;
+      border-radius: 0 !important;
+      color: #D4960C !important;
+      box-shadow: 0 0 20px rgba(212,150,12,0.12) !important;
+    }
+
+    /* ── Glass components ── */
+    .glass {
+      background: rgba(24,21,9,0.92) !important;
+      border-color: rgba(212,150,12,0.20) !important;
+      backdrop-filter: none !important;
+    }
+
+    /* ── AI glow button ── */
+    .ai-glow {
+      border: 1px solid rgba(212,150,12,0.30) !important;
+      box-shadow: 0 0 10px rgba(212,150,12,0.10) !important;
+      animation: none !important;
+    }
+    .ai-glow::after { display: none !important; }
+
+    /* ── Orb background: off ── */
+    .orb-bg::before, .orb-bg::after { opacity: 0 !important; }
+
+    /* ── Add button ── */
+    .add-btn {
+      background: transparent !important;
+      border-color: rgba(212,150,12,0.22) !important;
+      color: #D4960C !important;
+      border-radius: 0 !important;
+    }
+    .add-btn:hover {
+      background: rgba(212,150,12,0.06) !important;
+      border-color: rgba(212,150,12,0.45) !important;
+    }
+
+    /* ── Move buttons on cards ── */
+    .mv-btn {
+      border-radius: 0 !important;
+    }
+
+    /* ── att-btn ── */
+    .att-btn { border-radius: 0 !important; }
+
+    /* ── Sticker pulse: amber ── */
+    @keyframes stickerPulse {
+      0%   { box-shadow: 0 0 0 0 rgba(212,150,12,0.6); }
+      70%  { box-shadow: 0 0 0 6px rgba(212,150,12,0); }
+      100% { box-shadow: 0 0 0 0 rgba(212,150,12,0); }
+    }
+
+    /* ── Input / textarea ── */
+    input, textarea, select {
+      font-family: 'JetBrains Mono', monospace !important;
+      border-radius: 0 !important;
+      background: #111009 !important;
+      color: #D4960C !important;
+      border-color: rgba(212,150,12,0.22) !important;
+    }
+    input::placeholder, textarea::placeholder { color: #6A4A08 !important; }
+    input:focus, textarea:focus {
+      border-color: rgba(212,150,12,0.50) !important;
+      box-shadow: 0 0 0 2px rgba(212,150,12,0.08) !important;
+      outline: none !important;
+    }
+
+    /* Spinner: amber */
+    .spinner {
+      border-color: rgba(212,150,12,0.20) !important;
+      border-top-color: #D4960C !important;
+    }
+  `;
+  if (t.isDark) return "";
+  // All non-dark, non-terminal themes are light
   return `
     html,body { background:${t.bg} !important; color:${t.ink} !important; }
     ::selection { background:${t.accentBg}; color:${t.ink}; }
@@ -988,10 +1255,11 @@ export default function App() {
   const [boardData, setBoardData]     = useState(null);
   const [restoring, setRestoring]     = useState(() => !!getL(SK.activeBoard, null) || false);
   const [themeId, setThemeIdRaw]      = useState(() => {
-    const stored = getL("mindstorm-theme", "estudio");
-    // Reject dark themes — estudio is the only active theme
-    const valid = THEMES[stored] && !THEMES[stored].isDark ? stored : "estudio";
-    if (valid !== stored) setL("mindstorm-theme", "estudio"); // overwrite stale dark pref
+    const stored = getL("mindstorm-theme", "terminal");
+    // Allow terminal + all light themes; reject legacy dark theme
+    const isValid = THEMES[stored] && (THEMES[stored].isTerminal || !THEMES[stored].isDark);
+    const valid = isValid ? stored : "terminal";
+    if (valid !== stored) setL("mindstorm-theme", "terminal"); // overwrite stale pref
     return valid;
   });
 
@@ -1000,10 +1268,14 @@ export default function App() {
     Object.assign(T, THEMES[id]);
     setL("mindstorm-theme", id);
     setThemeIdRaw(id);
+    document.documentElement.setAttribute("data-theme", id);
   };
 
   // Apply theme on first load
-  useEffect(() => { Object.assign(T, THEMES[themeId]); }, []);
+  useEffect(() => {
+    Object.assign(T, THEMES[themeId]);
+    document.documentElement.setAttribute("data-theme", themeId);
+  }, []);
 
   const loadBoards = useCallback(async () => {
     const allBoards = await dbGetBoards();
@@ -1137,8 +1409,8 @@ export default function App() {
 // ─── THEME SWITCHER ──────────────────────────────────────────────────────────
 function ThemeSwitcher() {
   const { themeId, setThemeId } = useTheme();
-  const swatches = { estudio:"#E85200", dark:"#F0EDE8", indigo:"#4338CA", bosque:"#15803D", aurora:"#7C3AED" };
-  const labels   = { estudio:"Estudio — luz editorial", dark:"Noche — oscuro refinado", indigo:"Índigo — concentración profunda", bosque:"Bosque — flujo creativo", aurora:"Aurora — imaginación y síntesis" };
+  const swatches = { estudio:"#E85200", dark:"#F0EDE8", indigo:"#4338CA", bosque:"#15803D", aurora:"#7C3AED", terminal:"#D4960C" };
+  const labels   = { estudio:"Estudio — luz editorial", dark:"Noche — oscuro refinado", indigo:"Índigo — concentración profunda", bosque:"Bosque — flujo creativo", aurora:"Aurora — imaginación y síntesis", terminal:"Terminal — UI diegética" };
   return (
     <div style={{ display:"flex", gap:7, alignItems:"center" }}>
       {Object.entries(THEMES).map(([id, th]) => (
