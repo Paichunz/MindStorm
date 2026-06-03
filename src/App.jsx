@@ -1256,10 +1256,13 @@ export default function App() {
   const [restoring, setRestoring]     = useState(() => !!getL(SK.activeBoard, null) || false);
   const [themeId, setThemeIdRaw]      = useState(() => {
     const stored = getL("mindstorm-theme", "terminal");
-    // Allow terminal + all light themes; reject legacy dark theme
+    // Allow terminal + all light themes; reject legacy dark-only theme
     const isValid = THEMES[stored] && (THEMES[stored].isTerminal || !THEMES[stored].isDark);
     const valid = isValid ? stored : "terminal";
     if (valid !== stored) setL("mindstorm-theme", "terminal"); // overwrite stale pref
+    // Sync T immediately so first render uses correct theme (no flash)
+    Object.assign(T, THEMES[valid]);
+    document.documentElement.setAttribute("data-theme", valid);
     return valid;
   });
 
@@ -1278,9 +1281,14 @@ export default function App() {
   }, []);
 
   const loadBoards = useCallback(async () => {
-    const allBoards = await dbGetBoards();
-    setBoards(allBoards);
-    return { mine: allBoards, all: allBoards };
+    try {
+      const allBoards = await dbGetBoards();
+      setBoards(allBoards);
+      return { mine: allBoards, all: allBoards };
+    } catch(e) {
+      console.error("loadBoards failed:", e);
+      return { mine: [], all: [] };
+    }
   }, []);
 
   // Open a board by ID (used for shared links and normal navigation)
@@ -1350,7 +1358,16 @@ export default function App() {
 
   async function createBoard(draft) {
     const board = { ...draft, id:genId(), createdAt:nowTs(), createdBy:user.name };
-    await dbCreateBoard(board, { cards:[], comments:{}, connections:[], canvasPositions:{cards:{},stickers:{}} });
+    try {
+      await dbCreateBoard(board, { cards:[], comments:{}, connections:[], canvasPositions:{cards:{},stickers:{}} });
+    } catch(e) {
+      console.error("createBoard failed:", e);
+      alert("Error al crear el proyecto: " + (e?.message || String(e)));
+      return;
+    }
+    // Register as owned board so role defaults to director
+    const mb = getL(SK.myboards, []);
+    if (!mb.includes(board.id)) setL(SK.myboards, [...mb, board.id]);
     await loadBoards();
     await openBoard(board, draft.password);
   }
@@ -1398,6 +1415,9 @@ export default function App() {
   const themeCtxVal = { themeId, setThemeId };
   return (
     <ThemeCtx.Provider value={themeCtxVal}>
+      {/* Global styles — applied on every screen (login, lobby, board) */}
+      <style>{GLOBAL_CSS}</style>
+      <style>{getThemeCSS(themeId)}</style>
       {!user && <JoinScreen sharedBoardId={sharedBoardId} onJoin={u => { setL(SK.user, u); setUser(u); }} />}
       {user && screen === "lobby" && <LobbyScreen user={user} boards={boards} myIds={getL(SK.myboards,[])} onOpen={openBoard} onCreate={createBoard} onDelete={deleteBoard} onImport={importBoard} onRefresh={loadBoards} onSignOut={() => { setL(SK.user,null); setUser(null); setBoards([]); }} />}
       {user && screen === "board" && activeBoard && boardData && <BoardScreen user={user} board={activeBoard} data={boardData} onSave={saveBoardData} onBack={() => { setL(SK.activeBoard, null); setScreen("lobby"); setActiveBoard(null); loadBoards(user); }} />}
@@ -1533,9 +1553,6 @@ function JoinScreen({ onJoin, sharedBoardId }) {
 
   return (
     <div style={{ minHeight:"100dvh", background:T.bg, display:"flex", fontFamily:"var(--sans)", position:"relative", overflow:"hidden" }}>
-      <style>{GLOBAL_CSS}</style>
-      <style>{getThemeCSS(themeId)}</style>
-
       {/* ── Left editorial panel (hidden on mobile) ── */}
       {!isMobile && (
         <div style={{
@@ -1805,8 +1822,6 @@ function LobbyScreen({ user, boards, myIds, onOpen, onCreate, onDelete, onRefres
   const { themeId } = useTheme();
   return (
     <div className="orb-bg" style={{ minHeight:"100vh", background:T.bg, display:"flex", fontFamily:"var(--sans)", position:"relative" }}>
-      <style>{GLOBAL_CSS}</style>
-      <style>{getThemeCSS(themeId)}</style>
       {!isMobile && <Sidebar user={user} boards={allBoards} onOpen={handleOpen} onSignOut={onSignOut} />}
       <div className="board-area" style={{ flex:1, padding: isMobile ? "16px 14px" : isTablet ? "24px 20px" : "32px 36px", overflowY:"auto", position:"relative", zIndex:1 }}>
         {/* Mobile top bar */}
@@ -2813,9 +2828,6 @@ function BoardScreen({ user, board, data, onSave, onBack }) {
   const { themeId } = useTheme();
   return (
     <div style={{ minHeight:"100vh", background:T.bg, display:"flex", flexDirection:"column", fontFamily:"var(--sans)" }}>
-      <style>{GLOBAL_CSS}</style>
-      <style>{getThemeCSS(themeId)}</style>
-
       {/* Toast */}
       {toast && (
         <div className="toast" style={{ position:"fixed", bottom:28, left:"50%", transform:"translateX(-50%)",
